@@ -681,3 +681,82 @@ When a rule changes:
 6. Review affected engines.
 
 AI agents must not silently change business rules.
+
+# 36. INVENTORY COSTING METHOD
+
+The initial inventory costing method is:
+
+Weighted Average Cost
+
+The method must be implemented consistently across:
+
+- inventory valuation
+- COGS
+- stock valuation
+- profit calculation
+- financial reporting
+
+The costing method must not change silently after transactions
+have been posted.
+
+---
+
+# 37. WEIGHTED AVERAGE COST
+
+Conceptually:
+
+Average Cost
+=
+Total Inventory Cost
+/
+Total Inventory Quantity
+
+Example:
+
+10 units × Rp10,000 = Rp100,000
+
+20 units × Rp12,000 = Rp240,000
+
+Total:
+
+30 units
+Rp340,000
+
+Average Cost:
+
+Rp340,000 / 30
+≈ Rp11,333.33
+
+A sale of 5 units therefore generates approximately:
+
+5 × Rp11,333.33
+≈ Rp56,666.67 COGS
+
+The exact internal precision and rounding policy must be defined
+by the Money and Costing engine.
+
+---
+
+# 38. COSTING INVARIANTS
+
+The inventory costing engine must maintain:
+
+1. Quantity cannot become invalid.
+2. Inventory cost must remain explainable.
+3. COGS must use the selected costing method.
+4. Historical costing results must not silently change.
+5. Rounding must be deterministic.
+6. Costing calculations must be tested independently.
+7. Inventory valuation and COGS must use the same costing rules.
+
+---
+
+# 39. COSTING METHOD CHANGE
+
+Changing from Weighted Average to another costing method is a
+major accounting decision.
+
+It must not be implemented as a simple configuration toggle
+after financial transactions exist.
+
+A future migration/revaluation strategy must be designed first.
