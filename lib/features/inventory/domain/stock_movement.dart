@@ -18,14 +18,26 @@ class StockMovement {
   final String? referenceId;
   final DateTime occurredAt;
 
-  const StockMovement({
+  StockMovement({
     required this.id,
     required this.productId,
     required this.quantity,
     required this.type,
     required this.occurredAt,
     this.referenceId,
-  });
+  }) {
+    if (id.isEmpty) {
+      throw ArgumentError(
+        'Stock movement ID cannot be empty.',
+      );
+    }
+
+    if (productId.isEmpty) {
+      throw ArgumentError(
+        'Stock movement product ID cannot be empty.',
+      );
+    }
+  }
 
   bool get isIncrease {
     switch (type) {

@@ -205,6 +205,51 @@ void main() {
       );
     });
 
+    test('rejects empty ledger product id', () {
+      expect(
+        () => StockLedger(productId: ''),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects empty stock movement id', () {
+      expect(
+        () => StockMovement(
+          id: '',
+          productId: productId,
+          quantity: Quantity(value: 1),
+          type: StockMovementType.purchase,
+          occurredAt: occurredAt,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects duplicate movement id', () {
+      var ledger = const StockLedger(
+        productId: productId,
+      );
+
+      ledger = ledger.addMovement(
+        movement(
+          id: 'movement-001',
+          quantity: 10,
+          type: StockMovementType.purchase,
+        ),
+      );
+
+      expect(
+        () => ledger.addMovement(
+          movement(
+            id: 'movement-001',
+            quantity: 5,
+            type: StockMovementType.purchase,
+          ),
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('rejects movement from another product', () {
       const ledger = StockLedger(
         productId: productId,

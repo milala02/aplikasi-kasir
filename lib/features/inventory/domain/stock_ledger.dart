@@ -37,6 +37,12 @@ class StockLedger {
   }
 
   StockLedger addMovement(StockMovement movement) {
+    if (productId.isEmpty) {
+      throw ArgumentError(
+        'Stock ledger product ID cannot be empty.',
+      );
+    }
+
     if (movement.productId != productId) {
       throw ArgumentError(
         'Stock movement product does not match ledger product.',
@@ -46,6 +52,12 @@ class StockLedger {
     if (movement.quantity.isZero) {
       throw ArgumentError(
         'Stock movement quantity cannot be zero.',
+      );
+    }
+
+    if (movements.any((existing) => existing.id == movement.id)) {
+      throw ArgumentError(
+        'Stock movement ID already exists.',
       );
     }
 
