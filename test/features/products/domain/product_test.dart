@@ -10,7 +10,7 @@ void main() {
         id: 'product-001',
         sku: 'SKU-001',
         name: 'Beras Premium',
-        unit: Unit.kilogram,
+        baseUnit: Unit.kilogram,
         purchasePrice: Money(
           minorUnits: 12000,
           currency: 'IDR',
@@ -24,7 +24,7 @@ void main() {
       expect(product.id, 'product-001');
       expect(product.sku, 'SKU-001');
       expect(product.name, 'Beras Premium');
-      expect(product.unit, Unit.kilogram);
+      expect(product.baseUnit, Unit.kilogram);
       expect(product.active, isTrue);
     });
 
@@ -33,7 +33,7 @@ void main() {
         id: 'product-002',
         sku: 'SKU-002',
         name: 'Minyak Goreng',
-        unit: Unit.liter,
+        baseUnit: Unit.liter,
         purchasePrice: Money(
           minorUnits: 15000,
           currency: 'IDR',
@@ -66,7 +66,7 @@ void main() {
         id: 'product-003',
         sku: 'SKU-003',
         name: 'Gula',
-        unit: Unit.kilogram,
+        baseUnit: Unit.kilogram,
         purchasePrice: Money(
           minorUnits: 14000,
           currency: 'IDR',
@@ -100,7 +100,7 @@ void main() {
         id: 'product-004',
         sku: 'SKU-004',
         name: 'Kopi',
-        unit: Unit.pack,
+        baseUnit: Unit.pack,
         purchasePrice: Money(
           minorUnits: 8000,
           currency: 'IDR',
@@ -117,12 +117,12 @@ void main() {
       expect(inactive.active, isFalse);
     });
 
-    test('products with identical values are equal', () {
+    test('products with the same id are equal', () {
       const first = Product(
         id: 'product-005',
         sku: 'SKU-005',
         name: 'Teh',
-        unit: Unit.box,
+        baseUnit: Unit.box,
         purchasePrice: Money(
           minorUnits: 5000,
           currency: 'IDR',
@@ -135,9 +135,28 @@ void main() {
 
       const second = Product(
         id: 'product-005',
-        sku: 'SKU-005',
+        sku: 'SKU-999',
+        name: 'Teh Premium',
+        baseUnit: Unit.box,
+        purchasePrice: Money(
+          minorUnits: 6000,
+          currency: 'IDR',
+        ),
+        sellingPrice: Money(
+          minorUnits: 9000,
+          currency: 'IDR',
+        ),
+      );
+
+      expect(first, equals(second));
+    });
+
+    test('products with different ids are not equal', () {
+      const first = Product(
+        id: 'product-006',
+        sku: 'SKU-006',
         name: 'Teh',
-        unit: Unit.box,
+        baseUnit: Unit.box,
         purchasePrice: Money(
           minorUnits: 5000,
           currency: 'IDR',
@@ -148,7 +167,22 @@ void main() {
         ),
       );
 
-      expect(first, equals(second));
+      const second = Product(
+        id: 'product-007',
+        sku: 'SKU-007',
+        name: 'Teh',
+        baseUnit: Unit.box,
+        purchasePrice: Money(
+          minorUnits: 5000,
+          currency: 'IDR',
+        ),
+        sellingPrice: Money(
+          minorUnits: 7000,
+          currency: 'IDR',
+        ),
+      );
+
+      expect(first, isNot(equals(second)));
     });
   });
 }

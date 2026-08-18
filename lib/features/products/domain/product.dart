@@ -5,7 +5,7 @@ class Product {
   final String id;
   final String sku;
   final String name;
-  final Unit unit;
+  final Unit baseUnit;
   final Money purchasePrice;
   final Money sellingPrice;
   final bool active;
@@ -14,7 +14,7 @@ class Product {
     required this.id,
     required this.sku,
     required this.name,
-    required this.unit,
+    required this.baseUnit,
     required this.purchasePrice,
     required this.sellingPrice,
     this.active = true,
@@ -24,7 +24,7 @@ class Product {
     String? id,
     String? sku,
     String? name,
-    Unit? unit,
+    Unit? baseUnit,
     Money? purchasePrice,
     Money? sellingPrice,
     bool? active,
@@ -33,7 +33,7 @@ class Product {
       id: id ?? this.id,
       sku: sku ?? this.sku,
       name: name ?? this.name,
-      unit: unit ?? this.unit,
+      baseUnit: baseUnit ?? this.baseUnit,
       purchasePrice: purchasePrice ?? this.purchasePrice,
       sellingPrice: sellingPrice ?? this.sellingPrice,
       active: active ?? this.active,
@@ -42,28 +42,11 @@ class Product {
 
   @override
   bool operator ==(Object other) {
-    return other is Product &&
-        other.id == id &&
-        other.sku == sku &&
-        other.name == name &&
-        other.unit == unit &&
-        other.purchasePrice == purchasePrice &&
-        other.sellingPrice == sellingPrice &&
-        other.active == active;
+    return other is Product && other.id == id;
   }
 
   @override
-  int get hashCode {
-    return Object.hash(
-      id,
-      sku,
-      name,
-      unit,
-      purchasePrice,
-      sellingPrice,
-      active,
-    );
-  }
+  int get hashCode => id.hashCode;
 
   @override
   String toString() {
@@ -71,7 +54,7 @@ class Product {
         'id: $id, '
         'sku: $sku, '
         'name: $name, '
-        'unit: $unit, '
+        'baseUnit: $baseUnit, '
         'purchasePrice: $purchasePrice, '
         'sellingPrice: $sellingPrice, '
         'active: $active'
