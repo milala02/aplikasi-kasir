@@ -7,7 +7,7 @@ class PurchaseItem {
   final Quantity quantity;
   final Money unitCost;
 
-  const PurchaseItem({
+  PurchaseItem({
     required this.id,
     required this.productId,
     required this.quantity,

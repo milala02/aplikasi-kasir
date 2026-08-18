@@ -10,7 +10,7 @@ class CostLayer {
   final DateTime acquiredAt;
   final String? purchaseId;
 
-  const CostLayer({
+  CostLayer({
     required this.id,
     required this.productId,
     required this.originalQuantity,
