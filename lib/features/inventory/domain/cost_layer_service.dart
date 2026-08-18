@@ -55,8 +55,9 @@ class CostLayerService {
 
       final availableValue = _scaleTo(layer.remainingQuantity, commonScale);
 
-      final consumedValue =
-          requestedValue < availableValue ? requestedValue : availableValue;
+      final consumedValue = requestedValue < availableValue
+          ? requestedValue
+          : availableValue;
 
       if (consumedValue <= 0) {
         continue;
@@ -70,7 +71,8 @@ class CostLayerService {
       final updatedLayer = layer.consume(consumedQuantity);
 
       final layerCost = Money(
-        minorUnits: layer.unitCost.minorUnits *
+        minorUnits:
+            layer.unitCost.minorUnits *
             consumedQuantity.value ~/
             _scaleFactor(consumedQuantity.scale),
         currency: layer.unitCost.currency,

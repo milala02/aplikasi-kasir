@@ -22,29 +22,19 @@ class CostLayer {
        assert(productId != ''),
        assert(originalQuantity.value > 0),
        assert(remainingQuantity.value >= 0),
-       assert(_isRemainingWithinOriginal(
-         originalQuantity,
-         remainingQuantity,
-       ));
+       assert(_isRemainingWithinOriginal(originalQuantity, remainingQuantity));
 
   static bool _isRemainingWithinOriginal(
     Quantity original,
     Quantity remaining,
   ) {
-    final commonScale =
-        original.scale > remaining.scale
-            ? original.scale
-            : remaining.scale;
+    final commonScale = original.scale > remaining.scale
+        ? original.scale
+        : remaining.scale;
 
-    final originalValue = _scaleQuantity(
-      original,
-      commonScale,
-    );
+    final originalValue = _scaleQuantity(original, commonScale);
 
-    final remainingValue = _scaleQuantity(
-      remaining,
-      commonScale,
-    );
+    final remainingValue = _scaleQuantity(remaining, commonScale);
 
     return remainingValue <= originalValue;
   }
@@ -58,32 +48,28 @@ class CostLayer {
         ? originalQuantity.scale
         : remainingQuantity.scale;
 
-    final original = _scaleQuantity(
-      originalQuantity,
-      commonScale,
-    );
+    final original = _scaleQuantity(originalQuantity, commonScale);
 
-    final remaining = _scaleQuantity(
-      remainingQuantity,
-      commonScale,
-    );
+    final remaining = _scaleQuantity(remainingQuantity, commonScale);
 
     return remaining <= original;
   }
 
   Money get originalTotalCost => Money(
-        minorUnits: unitCost.minorUnits *
-            originalQuantity.value ~/
-            _scaleFactor(originalQuantity.scale),
-        currency: unitCost.currency,
-      );
+    minorUnits:
+        unitCost.minorUnits *
+        originalQuantity.value ~/
+        _scaleFactor(originalQuantity.scale),
+    currency: unitCost.currency,
+  );
 
   Money get remainingValue => Money(
-        minorUnits: unitCost.minorUnits *
-            remainingQuantity.value ~/
-            _scaleFactor(remainingQuantity.scale),
-        currency: unitCost.currency,
-      );
+    minorUnits:
+        unitCost.minorUnits *
+        remainingQuantity.value ~/
+        _scaleFactor(remainingQuantity.scale),
+    currency: unitCost.currency,
+  );
 
   CostLayer consume(Quantity quantity) {
     if (!hasValidRemainingQuantity) {
@@ -100,19 +86,11 @@ class CostLayer {
         ? remainingQuantity.scale
         : quantity.scale;
 
-    final available = _scaleQuantity(
-      remainingQuantity,
-      commonScale,
-    );
-    final requested = _scaleQuantity(
-      quantity,
-      commonScale,
-    );
+    final available = _scaleQuantity(remainingQuantity, commonScale);
+    final requested = _scaleQuantity(quantity, commonScale);
 
     if (requested > available) {
-      throw ArgumentError(
-        'Cannot consume more than the remaining quantity.',
-      );
+      throw ArgumentError('Cannot consume more than the remaining quantity.');
     }
 
     return CostLayer(
@@ -126,10 +104,7 @@ class CostLayer {
     );
   }
 
-  static int _scaleQuantity(
-    Quantity quantity,
-    int targetScale,
-  ) {
+  static int _scaleQuantity(Quantity quantity, int targetScale) {
     if (quantity.scale == targetScale) {
       return quantity.value;
     }

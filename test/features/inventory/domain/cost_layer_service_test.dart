@@ -1,9 +1,9 @@
-import 'package:flutter_test/flutter_test.dart';
+import 'package:test/test.dart';
 import 'package:aplikasi_kasir/core/money/money.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
-import 'package:aplikasi_kasir/features/purchasing/domain/cost_layer.dart';
-import 'package:aplikasi_kasir/features/purchasing/domain/cost_layer_repository.dart';
-import 'package:aplikasi_kasir/features/purchasing/domain/cost_layer_service.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/cost_layer.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/cost_layer_repository.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/cost_layer_service.dart';
 
 void main() {
   group('CostLayerService', () {

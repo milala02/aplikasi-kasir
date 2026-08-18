@@ -19,19 +19,14 @@ class InMemoryCostLayerRepository implements CostLayerRepository {
   @override
   List<CostLayer> getAvailableByProductId(String productId) {
     return _layers.values
-        .where(
-          (layer) =>
-              layer.productId == productId && layer.isAvailable,
-        )
+        .where((layer) => layer.productId == productId && layer.isAvailable)
         .toList();
   }
 
   @override
   void save(CostLayer layer) {
     if (_layers.containsKey(layer.id)) {
-      throw StateError(
-        'Cost layer with id "${layer.id}" already exists.',
-      );
+      throw StateError('Cost layer with id "${layer.id}" already exists.');
     }
 
     _layers[layer.id] = layer;
@@ -40,9 +35,7 @@ class InMemoryCostLayerRepository implements CostLayerRepository {
   @override
   void update(CostLayer layer) {
     if (!_layers.containsKey(layer.id)) {
-      throw StateError(
-        'Cost layer with id "${layer.id}" does not exist.',
-      );
+      throw StateError('Cost layer with id "${layer.id}" does not exist.');
     }
 
     _layers[layer.id] = layer;
