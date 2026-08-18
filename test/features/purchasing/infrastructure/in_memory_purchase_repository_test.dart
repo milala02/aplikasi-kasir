@@ -53,7 +53,7 @@ void main() {
       final repository = InMemoryPurchaseRepository();
 
       repository.save(
-        createPurchase(),
+        createPurchase(referenceNumber: null),
       );
 
       expect(
