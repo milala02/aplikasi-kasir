@@ -12,6 +12,10 @@ class SaleUseCases {
   });
 
   Sale? getById(String id) {
+    if (id.isEmpty) {
+      throw ArgumentError('Sale ID cannot be empty.');
+    }
+
     return repository.getById(id);
   }
 
@@ -20,7 +24,7 @@ class SaleUseCases {
   }
 
   void create(Sale sale) {
-    repository.save(sale.id, sale);
+    repository.save(sale);
   }
 
   void addItem({
@@ -29,7 +33,7 @@ class SaleUseCases {
   }) {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).addItem(item);
-    repository.update(sale.id, updated.sale);
+    repository.update(updated.sale);
   }
 
   void removeItemAt({
@@ -38,7 +42,7 @@ class SaleUseCases {
   }) {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).removeItemAt(index);
-    repository.update(sale.id, updated.sale);
+    repository.update(updated.sale);
   }
 
   void applyDiscount({
@@ -47,7 +51,7 @@ class SaleUseCases {
   }) {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).withDiscount(discount);
-    repository.update(sale.id, updated.sale);
+    repository.update(updated.sale);
   }
 
   void applyTax({
@@ -56,7 +60,7 @@ class SaleUseCases {
   }) {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).withTax(tax);
-    repository.update(sale.id, updated.sale);
+    repository.update(updated.sale);
   }
 
   void delete(String saleId) {

@@ -215,13 +215,23 @@ class _FakeSaleRepository implements SaleRepository {
   List<Sale> getAll() => List.unmodifiable(_sales.values);
 
   @override
-  void save(String id, Sale sale) {
-    _sales[id] = sale;
+  Sale? getByInvoiceNumber(String invoiceNumber) {
+    for (final sale in _sales.values) {
+      if (sale.invoiceNumber == invoiceNumber) {
+        return sale;
+      }
+    }
+    return null;
   }
 
   @override
-  void update(String id, Sale sale) {
-    _sales[id] = sale;
+  void save(Sale sale) {
+    _sales[sale.id] = sale;
+  }
+
+  @override
+  void update(Sale sale) {
+    _sales[sale.id] = sale;
   }
 
   @override
