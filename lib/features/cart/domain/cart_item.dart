@@ -19,13 +19,13 @@ class CartItem {
     }
 
     if (unitPrice != product.sellingPrice &&
-        unitPrice.currency != product.sellingPrice.currency) {
+        this.unitPrice.currency != product.sellingPrice.currency) {
       throw ArgumentError(
         'Cart item price currency must match product currency.',
       );
     }
 
-    if (unitPrice.isNegative) {
+    if (this.unitPrice.isNegative) {
       throw ArgumentError(
         'Cart item unit price cannot be negative.',
       );
