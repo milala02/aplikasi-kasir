@@ -37,7 +37,7 @@ void main() {
     });
 
     test('calculates stock from movements', () {
-      var ledger = const StockLedger(
+      var ledger = StockLedger(
         productId: productId,
       );
 
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('supports stock adjustment', () {
-      var ledger = const StockLedger(
+      var ledger = StockLedger(
         productId: productId,
       );
 
@@ -146,7 +146,7 @@ void main() {
     });
 
     test('supports quantities with different scales', () {
-      var ledger = const StockLedger(
+      var ledger = StockLedger(
         productId: productId,
       );
 
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('rejects selling more stock than available', () {
-      var ledger = const StockLedger(
+      var ledger = StockLedger(
         productId: productId,
       );
 
@@ -226,7 +226,7 @@ void main() {
     });
 
     test('rejects duplicate movement id', () {
-      var ledger = const StockLedger(
+      var ledger = StockLedger(
         productId: productId,
       );
 

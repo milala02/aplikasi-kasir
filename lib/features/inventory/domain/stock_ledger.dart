@@ -5,10 +5,16 @@ class StockLedger {
   final String productId;
   final List<StockMovement> movements;
 
-  const StockLedger({
+  StockLedger({
     required this.productId,
     this.movements = const [],
-  });
+  }) {
+    if (productId.isEmpty) {
+      throw ArgumentError(
+        'Stock ledger product ID cannot be empty.',
+      );
+    }
+  }
 
   Quantity calculateBalance() {
     if (movements.isEmpty) {
@@ -37,12 +43,6 @@ class StockLedger {
   }
 
   StockLedger addMovement(StockMovement movement) {
-    if (productId.isEmpty) {
-      throw ArgumentError(
-        'Stock ledger product ID cannot be empty.',
-      );
-    }
-
     if (movement.productId != productId) {
       throw ArgumentError(
         'Stock movement product does not match ledger product.',
