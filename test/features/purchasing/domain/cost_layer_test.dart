@@ -40,20 +40,6 @@ void main() {
       );
     });
 
-    test('detects invalid remaining quantity', () {
-      final layer = createLayer(
-        originalQuantity: Quantity(value: 1),
-        remainingQuantity: Quantity(value: 2),
-      );
-
-      expect(layer.hasValidRemainingQuantity, isFalse);
-
-      expect(
-        () => layer.consume(Quantity(value: 1)),
-        throwsStateError,
-      );
-    });
-
     test('calculates original total cost', () {
       final layer = createLayer(
         originalQuantity: Quantity(

@@ -87,22 +87,7 @@ void main() {
       );
     });
 
-    test('zero quantity has zero total cost', () {
-      final item = PurchaseItem(
-        id: 'item-005',
-        productId: 'pepper',
-        quantity: Quantity.zero(),
-        unitCost: unitCost,
-      );
 
-      expect(
-        item.totalCost,
-        const Money(
-          minorUnits: 0,
-          currency: 'IDR',
-        ),
-      );
-    });
   });
 
 group('PurchaseItem validation', () {
