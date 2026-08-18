@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/inventory_service.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/stock_ledger.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 
 void main() {
   group('InventoryService', () {
