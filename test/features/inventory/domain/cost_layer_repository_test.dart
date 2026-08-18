@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/cost_layer_repository.dart';
 
 void main() {
