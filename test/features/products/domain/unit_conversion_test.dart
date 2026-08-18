@@ -6,7 +6,7 @@ import 'package:aplikasi_kasir/features/products/domain/unit_conversion.dart';
 void main() {
   group('UnitConversion', () {
     test('converts cartons to bottles', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -19,7 +19,7 @@ void main() {
     });
 
     test('converts packs to bottles', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.pack,
         to: Unit.bottle,
         multiplier: 6,
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('converts grams to kilograms', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.gram,
         to: Unit.kilogram,
         divisor: 1000,
@@ -45,7 +45,7 @@ void main() {
     });
 
     test('supports fractional quantities with scale', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('supports reverse conversion', () {
-      const cartonToBottle = UnitConversion(
+      final cartonToBottle = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -81,7 +81,7 @@ void main() {
     });
 
     test('reverse conversion rejects non-exact quantity', () {
-      const cartonToBottle = UnitConversion(
+      final cartonToBottle = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -96,7 +96,7 @@ void main() {
     });
 
     test('supports zero quantity', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -109,7 +109,7 @@ void main() {
     });
 
     test('preserves zero quantity scale', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
@@ -124,7 +124,7 @@ void main() {
     });
 
     test('rejects non-exact conversion', () {
-      const conversion = UnitConversion(
+      final conversion = UnitConversion(
         from: Unit.bottle,
         to: Unit.carton,
         divisor: 24,
@@ -189,13 +189,13 @@ void main() {
     });
 
     test('equal conversions have equal hash codes', () {
-      const first = UnitConversion(
+      final first = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,
       );
 
-      const second = UnitConversion(
+      final second = UnitConversion(
         from: Unit.carton,
         to: Unit.bottle,
         multiplier: 24,

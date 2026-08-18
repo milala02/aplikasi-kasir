@@ -7,7 +7,7 @@ class UnitConversion {
   final int multiplier;
   final int divisor;
 
-  const UnitConversion({
+  UnitConversion({
     required this.from,
     required this.to,
     this.multiplier = 1,
