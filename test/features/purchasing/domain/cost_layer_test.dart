@@ -258,7 +258,7 @@ CostLayer createLayer({
     id: 'layer-001',
     productId: 'pepper',
     originalQuantity: originalQuantity ?? Quantity(value: 1),
-    remainingQuantity: remainingQuantity ?? Quantity(value: 1),
+    remainingQuantity: remainingQuantity ?? originalQuantity ?? Quantity(value: 1),
     unitCost: const Money(
       minorUnits: 160000,
       currency: 'IDR',
