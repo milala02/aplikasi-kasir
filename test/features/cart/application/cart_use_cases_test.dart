@@ -233,11 +233,11 @@ void main() {
 }
 
 CartItem createCartItem({
-  Quantity quantity = const Quantity(value: 1),
+  Quantity? quantity,
 }) {
   return CartItem(
     product: createProduct(),
-    quantity: quantity,
+    quantity: quantity ?? Quantity(value: 1),
   );
 }
 
