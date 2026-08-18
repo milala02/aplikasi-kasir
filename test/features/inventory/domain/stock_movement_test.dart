@@ -3,7 +3,7 @@ import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 
 void main() {
-  group('StockMovement', {
+  group('StockMovement', () {
     test('rejects zero quantity', () {
       expect(
         () => StockMovement(
