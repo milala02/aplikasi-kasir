@@ -13,9 +13,7 @@ void main() {
       );
 
       expect(
-        conversion.convert(
-          Quantity(value: 1),
-        ),
+        conversion.convert(Quantity(value: 1)),
         Quantity(value: 24),
       );
     });
@@ -28,9 +26,7 @@ void main() {
       );
 
       expect(
-        conversion.convert(
-          Quantity(value: 2),
-        ),
+        conversion.convert(Quantity(value: 2)),
         Quantity(value: 12),
       );
     });
@@ -43,10 +39,29 @@ void main() {
       );
 
       expect(
-        conversion.convert(
-          Quantity(value: 2000),
-        ),
+        conversion.convert(Quantity(value: 2000)),
         Quantity(value: 2),
+      );
+    });
+
+    test('supports fractional quantities with scale', () {
+      const conversion = UnitConversion(
+        from: Unit.carton,
+        to: Unit.bottle,
+        multiplier: 24,
+      );
+
+      expect(
+        conversion.convert(
+          Quantity(
+            value: 500,
+            scale: 3,
+          ),
+        ),
+        Quantity(
+          value: 12000,
+          scale: 3,
+        ),
       );
     });
 
@@ -60,10 +75,23 @@ void main() {
       final bottleToCarton = cartonToBottle.reverse();
 
       expect(
-        bottleToCarton.convert(
-          Quantity(value: 48),
-        ),
+        bottleToCarton.convert(Quantity(value: 48)),
         Quantity(value: 2),
+      );
+    });
+
+    test('reverse conversion rejects non-exact quantity', () {
+      const cartonToBottle = UnitConversion(
+        from: Unit.carton,
+        to: Unit.bottle,
+        multiplier: 24,
+      );
+
+      final bottleToCarton = cartonToBottle.reverse();
+
+      expect(
+        () => bottleToCarton.convert(Quantity(value: 1)),
+        throwsArgumentError,
       );
     });
 
@@ -75,10 +103,23 @@ void main() {
       );
 
       expect(
-        conversion.convert(
-          Quantity.zero(),
-        ),
+        conversion.convert(Quantity.zero()),
         Quantity.zero(),
+      );
+    });
+
+    test('preserves zero quantity scale', () {
+      const conversion = UnitConversion(
+        from: Unit.carton,
+        to: Unit.bottle,
+        multiplier: 24,
+      );
+
+      expect(
+        conversion.convert(
+          Quantity.zero(scale: 3),
+        ),
+        Quantity.zero(scale: 3),
       );
     });
 
@@ -104,7 +145,16 @@ void main() {
           to: Unit.bottle,
           multiplier: 0,
         ),
-        throwsAssertionError,
+        throwsArgumentError,
+      );
+
+      expect(
+        () => UnitConversion(
+          from: Unit.carton,
+          to: Unit.bottle,
+          multiplier: -1,
+        ),
+        throwsArgumentError,
       );
     });
 
@@ -115,8 +165,44 @@ void main() {
           to: Unit.kilogram,
           divisor: 0,
         ),
-        throwsAssertionError,
+        throwsArgumentError,
       );
+
+      expect(
+        () => UnitConversion(
+          from: Unit.gram,
+          to: Unit.kilogram,
+          divisor: -1,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects conversion between the same unit', () {
+      expect(
+        () => UnitConversion(
+          from: Unit.kilogram,
+          to: Unit.kilogram,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('equal conversions have equal hash codes', () {
+      const first = UnitConversion(
+        from: Unit.carton,
+        to: Unit.bottle,
+        multiplier: 24,
+      );
+
+      const second = UnitConversion(
+        from: Unit.carton,
+        to: Unit.bottle,
+        multiplier: 24,
+      );
+
+      expect(first, equals(second));
+      expect(first.hashCode, second.hashCode);
     });
   });
 }

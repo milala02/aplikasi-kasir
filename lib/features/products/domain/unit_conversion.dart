@@ -12,8 +12,29 @@ class UnitConversion {
     required this.to,
     this.multiplier = 1,
     this.divisor = 1,
-  })  : assert(multiplier > 0),
-        assert(divisor > 0);
+  }) {
+    if (from == to) {
+      throw ArgumentError(
+        'Source and target units must be different.',
+      );
+    }
+
+    if (multiplier <= 0) {
+      throw ArgumentError.value(
+        multiplier,
+        'multiplier',
+        'Multiplier must be greater than zero.',
+      );
+    }
+
+    if (divisor <= 0) {
+      throw ArgumentError.value(
+        divisor,
+        'divisor',
+        'Divisor must be greater than zero.',
+      );
+    }
+  }
 
   Quantity convert(Quantity quantity) {
     if (quantity.isZero) {
