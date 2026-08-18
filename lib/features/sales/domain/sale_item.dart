@@ -9,7 +9,7 @@ class SaleItem {
   final Quantity quantity;
   final Money unitPrice;
 
-  const SaleItem({
+  SaleItem({
     required this.productId,
     required this.productName,
     required this.unit,

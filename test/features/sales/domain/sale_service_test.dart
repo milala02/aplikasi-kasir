@@ -18,7 +18,7 @@ void main() {
       return SaleItem(
         productId: productId,
         productName: 'Product',
-        unit: Unit.piece,
+        unit: Unit.pcs,
         quantity: Quantity(value: quantity),
         unitPrice: Money(
           minorUnits: price,

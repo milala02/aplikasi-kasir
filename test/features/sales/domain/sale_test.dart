@@ -7,7 +7,7 @@ import 'package:aplikasi_kasir/features/sales/domain/sale_item.dart';
 
 void main() {
   group('Sale', () {
-    const createdAt = DateTime(2026, 8, 18, 12, 0);
+    final createdAt = DateTime(2026, 8, 18, 12, 0);
 
     SaleItem item({
       required String id,

@@ -7,7 +7,7 @@ import 'package:aplikasi_kasir/features/sales/domain/sale_item.dart';
 void main() {
   group('SaleItem', () {
     test('creates a valid sale item', () {
-      const item = SaleItem(
+      final item = SaleItem(
         productId: 'product-001',
         productName: 'Beras Premium',
         unit: Unit.kilogram,
@@ -25,7 +25,7 @@ void main() {
     });
 
     test('calculates subtotal from quantity and unit price', () {
-      const item = SaleItem(
+      final item = SaleItem(
         productId: 'product-002',
         productName: 'Minyak Goreng',
         unit: Unit.liter,
@@ -46,7 +46,7 @@ void main() {
     });
 
     test('supports scaled quantity', () {
-      const item = SaleItem(
+      final item = SaleItem(
         productId: 'product-003',
         productName: 'Gula',
         unit: Unit.kilogram,
@@ -134,7 +134,7 @@ void main() {
     });
 
     test('items with identical values are equal', () {
-      const first = SaleItem(
+      final first = SaleItem(
         productId: 'product-001',
         productName: 'Beras',
         unit: Unit.kilogram,
@@ -145,7 +145,7 @@ void main() {
         ),
       );
 
-      const second = SaleItem(
+      final second = SaleItem(
         productId: 'product-001',
         productName: 'Beras',
         unit: Unit.kilogram,

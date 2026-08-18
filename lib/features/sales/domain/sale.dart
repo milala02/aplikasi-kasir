@@ -9,7 +9,7 @@ class Sale {
   final Money tax;
   final DateTime createdAt;
 
-  const Sale({
+  Sale({
     required this.id,
     required this.invoiceNumber,
     required this.items,
