@@ -9,7 +9,7 @@ void main() {
     final occurredAt = DateTime(2026, 8, 18, 10, 0);
 
     InventoryService createService() {
-      return const InventoryService(
+      return InventoryService(
         ledger: StockLedger(
           productId: productId,
         ),
