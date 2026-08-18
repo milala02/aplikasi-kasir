@@ -147,9 +147,10 @@ void main() {
     StockMovement(
       id: 'movement-002',
       productId: 'product-001',
-      quantity: const Quantity(
-        value: 500,
-        scale: 3,
+      quantity: Quantity(
+  value: 500,
+  scale: 3,
+),
       ),
       type: StockMovementType.sale,
       occurredAt: occurredAt,
@@ -158,7 +159,7 @@ void main() {
 
   expect(
     ledger.calculateBalance(),
-    const Quantity(
+     Quantity(
       value: 9500,
       scale: 3,
     ),
