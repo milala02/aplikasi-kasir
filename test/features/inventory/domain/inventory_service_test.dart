@@ -152,6 +152,143 @@ void main() {
       );
     });
 
+
+    test('adjusts stock upward', () {
+      final service = createService();
+
+      final updated = service.adjustStockIncrease(
+        movementId: 'movement-adjust-in',
+        quantity: Quantity(value: 7),
+        occurredAt: occurredAt,
+        referenceId: 'adjustment-001',
+      );
+
+      expect(updated.balance, Quantity(value: 7));
+      expect(
+        updated.ledger.movements.single.type,
+        StockMovementType.adjustmentIncrease,
+      );
+      expect(
+        updated.ledger.movements.single.referenceId,
+        'adjustment-001',
+      );
+    });
+
+    test('adjusts stock downward', () {
+      final service = createService().receiveStock(
+        movementId: 'movement-001',
+        quantity: Quantity(value: 10),
+        occurredAt: occurredAt,
+      );
+
+      final updated = service.adjustStockDecrease(
+        movementId: 'movement-002',
+        quantity: Quantity(value: 4),
+        occurredAt: occurredAt,
+        referenceId: 'adjustment-002',
+      );
+
+      expect(updated.balance, Quantity(value: 6));
+      expect(
+        updated.ledger.movements.last.type,
+        StockMovementType.adjustmentDecrease,
+      );
+    });
+
+    test('records damaged stock as a decrease', () {
+      final service = createService().receiveStock(
+        movementId: 'movement-001',
+        quantity: Quantity(value: 10),
+        occurredAt: occurredAt,
+      );
+
+      final updated = service.recordDamage(
+        movementId: 'movement-002',
+        quantity: Quantity(value: 2),
+        occurredAt: occurredAt,
+        referenceId: 'damage-001',
+      );
+
+      expect(updated.balance, Quantity(value: 8));
+      expect(
+        updated.ledger.movements.last.type,
+        StockMovementType.damage,
+      );
+      expect(
+        updated.ledger.movements.last.referenceId,
+        'damage-001',
+      );
+    });
+
+    test('records stock return in as an increase', () {
+      final service = createService();
+
+      final updated = service.returnStockIn(
+        movementId: 'movement-return-in',
+        quantity: Quantity(value: 3),
+        occurredAt: occurredAt,
+        referenceId: 'return-001',
+      );
+
+      expect(updated.balance, Quantity(value: 3));
+      expect(
+        updated.ledger.movements.single.type,
+        StockMovementType.returnIn,
+      );
+    });
+
+    test('records stock return out as a decrease', () {
+      final service = createService().receiveStock(
+        movementId: 'movement-001',
+        quantity: Quantity(value: 10),
+        occurredAt: occurredAt,
+      );
+
+      final updated = service.returnStockOut(
+        movementId: 'movement-002',
+        quantity: Quantity(value: 3),
+        occurredAt: occurredAt,
+        referenceId: 'return-002',
+      );
+
+      expect(updated.balance, Quantity(value: 7));
+      expect(
+        updated.ledger.movements.last.type,
+        StockMovementType.returnOut,
+      );
+    });
+
+    test('rejects decreasing stock below zero', () {
+      final service = createService().receiveStock(
+        movementId: 'movement-001',
+        quantity: Quantity(value: 5),
+        occurredAt: occurredAt,
+      );
+
+      expect(
+        () => service.adjustStockDecrease(
+          movementId: 'movement-002',
+          quantity: Quantity(value: 6),
+          occurredAt: occurredAt,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('does not modify the original service', () {
+      final service = createService();
+
+      final updated = service.adjustStockIncrease(
+        movementId: 'movement-001',
+        quantity: Quantity(value: 5),
+        occurredAt: occurredAt,
+      );
+
+      expect(service.balance, Quantity.zero());
+      expect(service.ledger.movements, isEmpty);
+      expect(updated.balance, Quantity(value: 5));
+    });
+
     test('supports quantities with different scales', () {
       final service = createService()
           .receiveStock(

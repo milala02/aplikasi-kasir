@@ -17,17 +17,12 @@ class InventoryService {
     required DateTime occurredAt,
     String? referenceId,
   }) {
-    final movement = StockMovement(
-      id: movementId,
-      productId: ledger.productId,
+    return _recordMovement(
+      movementId: movementId,
       quantity: quantity,
       type: StockMovementType.purchase,
-      referenceId: referenceId,
       occurredAt: occurredAt,
-    );
-
-    return InventoryService(
-      ledger: ledger.addMovement(movement),
+      referenceId: referenceId,
     );
   }
 
@@ -37,11 +32,102 @@ class InventoryService {
     required DateTime occurredAt,
     String? referenceId,
   }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.sale,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService adjustStockIncrease({
+    required String movementId,
+    required Quantity quantity,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.adjustmentIncrease,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService adjustStockDecrease({
+    required String movementId,
+    required Quantity quantity,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.adjustmentDecrease,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService recordDamage({
+    required String movementId,
+    required Quantity quantity,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.damage,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService returnStockIn({
+    required String movementId,
+    required Quantity quantity,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.returnIn,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService returnStockOut({
+    required String movementId,
+    required Quantity quantity,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
+    return _recordMovement(
+      movementId: movementId,
+      quantity: quantity,
+      type: StockMovementType.returnOut,
+      occurredAt: occurredAt,
+      referenceId: referenceId,
+    );
+  }
+
+  InventoryService _recordMovement({
+    required String movementId,
+    required Quantity quantity,
+    required StockMovementType type,
+    required DateTime occurredAt,
+    String? referenceId,
+  }) {
     final movement = StockMovement(
       id: movementId,
       productId: ledger.productId,
       quantity: quantity,
-      type: StockMovementType.sale,
+      type: type,
       referenceId: referenceId,
       occurredAt: occurredAt,
     );
