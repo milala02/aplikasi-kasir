@@ -2,9 +2,11 @@ import '../../../core/quantity/quantity.dart';
 import 'stock_movement.dart';
 
 class StockLedger {
+  final String productId;
   final List<StockMovement> movements;
 
   const StockLedger({
+    required this.productId,
     this.movements = const [],
   });
 
@@ -18,6 +20,12 @@ class StockLedger {
     );
 
     for (final movement in movements) {
+      if (movement.productId != productId) {
+        throw ArgumentError(
+          'Stock movement product does not match ledger product.',
+        );
+      }
+
       if (movement.isIncrease) {
         balance = balance.add(movement.quantity);
       } else {
@@ -29,21 +37,25 @@ class StockLedger {
   }
 
   StockLedger addMovement(StockMovement movement) {
+    if (movement.productId != productId) {
+      throw ArgumentError(
+        'Stock movement product does not match ledger product.',
+      );
+    }
+
     if (movement.quantity.isZero) {
       throw ArgumentError(
         'Stock movement quantity cannot be zero.',
       );
     }
 
-    // Quantity.subtract() automatically prevents
-    // the stock balance from becoming negative.
     if (!movement.isIncrease) {
       final currentBalance = calculateBalance();
-
       currentBalance.subtract(movement.quantity);
     }
 
     return StockLedger(
+      productId: productId,
       movements: [
         ...movements,
         movement,

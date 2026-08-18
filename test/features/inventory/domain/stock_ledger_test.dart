@@ -5,16 +5,18 @@ import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 
 void main() {
   group('StockLedger', () {
+    const productId = 'product-001';
     final occurredAt = DateTime(2026, 8, 18, 10, 0);
 
     StockMovement movement({
       required String id,
       required int quantity,
       required StockMovementType type,
+      String movementProductId = productId,
     }) {
       return StockMovement(
         id: id,
-        productId: 'product-001',
+        productId: movementProductId,
         quantity: Quantity(
           value: quantity,
         ),
@@ -24,7 +26,9 @@ void main() {
     }
 
     test('empty ledger has zero balance', () {
-      const ledger = StockLedger();
+      const ledger = StockLedger(
+        productId: productId,
+      );
 
       expect(
         ledger.calculateBalance(),
@@ -33,7 +37,9 @@ void main() {
     });
 
     test('calculates stock from movements', () {
-      var ledger = const StockLedger();
+      var ledger = const StockLedger(
+        productId: productId,
+      );
 
       ledger = ledger.addMovement(
         movement(
@@ -68,7 +74,9 @@ void main() {
     });
 
     test('supports stock adjustment', () {
-      var ledger = const StockLedger();
+      var ledger = const StockLedger(
+        productId: productId,
+      );
 
       ledger = ledger.addMovement(
         movement(
@@ -103,7 +111,9 @@ void main() {
     });
 
     test('does not modify the original ledger', () {
-      const original = StockLedger();
+      const original = StockLedger(
+        productId: productId,
+      );
 
       final updated = original.addMovement(
         movement(
@@ -115,10 +125,13 @@ void main() {
 
       expect(original.movements, isEmpty);
       expect(updated.movements, hasLength(1));
+      expect(updated.productId, productId);
     });
 
     test('rejects zero quantity movement', () {
-      const ledger = StockLedger();
+      const ledger = StockLedger(
+        productId: productId,
+      );
 
       expect(
         () => ledger.addMovement(
@@ -133,41 +146,44 @@ void main() {
     });
 
     test('supports quantities with different scales', () {
-  var ledger = const StockLedger();
+      var ledger = const StockLedger(
+        productId: productId,
+      );
 
-  ledger = ledger.addMovement(
-    movement(
-      id: 'movement-001',
-      quantity: 10,
-      type: StockMovementType.purchase,
-    ),
-  );
+      ledger = ledger.addMovement(
+        movement(
+          id: 'movement-001',
+          quantity: 10,
+          type: StockMovementType.purchase,
+        ),
+      );
 
-  ledger = ledger.addMovement(
-    StockMovement(
-      id: 'movement-002',
-      productId: 'product-001',
-      quantity: Quantity(
-  value: 500,
-  scale: 3,
-),
-      ),
-      type: StockMovementType.sale,
-      occurredAt: occurredAt,
-    ),
-  );
+      ledger = ledger.addMovement(
+        StockMovement(
+          id: 'movement-002',
+          productId: productId,
+          quantity: Quantity(
+            value: 500,
+            scale: 3,
+          ),
+          type: StockMovementType.sale,
+          occurredAt: occurredAt,
+        ),
+      );
 
-  expect(
-    ledger.calculateBalance(),
-     Quantity(
-      value: 9500,
-      scale: 3,
-    ),
-  );
-});
+      expect(
+        ledger.calculateBalance(),
+        Quantity(
+          value: 9500,
+          scale: 3,
+        ),
+      );
+    });
 
     test('rejects selling more stock than available', () {
-      var ledger = const StockLedger();
+      var ledger = const StockLedger(
+        productId: productId,
+      );
 
       ledger = ledger.addMovement(
         movement(
@@ -185,6 +201,48 @@ void main() {
             type: StockMovementType.sale,
           ),
         ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects movement from another product', () {
+      const ledger = StockLedger(
+        productId: productId,
+      );
+
+      expect(
+        () => ledger.addMovement(
+          movement(
+            id: 'movement-001',
+            quantity: 10,
+            type: StockMovementType.purchase,
+            movementProductId: 'product-002',
+          ),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects mixed products already present in ledger', () {
+      final ledger = StockLedger(
+        productId: productId,
+        movements: [
+          movement(
+            id: 'movement-001',
+            quantity: 10,
+            type: StockMovementType.purchase,
+          ),
+          movement(
+            id: 'movement-002',
+            quantity: 5,
+            type: StockMovementType.sale,
+            movementProductId: 'product-002',
+          ),
+        ],
+      );
+
+      expect(
+        () => ledger.calculateBalance(),
         throwsArgumentError,
       );
     });
