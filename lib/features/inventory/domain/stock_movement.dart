@@ -37,6 +37,12 @@ class StockMovement {
         'Stock movement product ID cannot be empty.',
       );
     }
+
+    if (quantity.isZero) {
+      throw ArgumentError(
+        'Stock movement quantity cannot be zero.',
+      );
+    }
   }
 
   bool get isIncrease {

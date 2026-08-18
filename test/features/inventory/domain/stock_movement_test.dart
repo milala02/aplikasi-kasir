@@ -3,7 +3,20 @@ import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 
 void main() {
-  group('StockMovement', () {
+  group('StockMovement', {
+    test('rejects zero quantity', () {
+      expect(
+        () => StockMovement(
+          id: 'movement-zero',
+          productId: 'product-001',
+          quantity: Quantity.zero(),
+          type: StockMovementType.purchase,
+          occurredAt: DateTime(2026, 8, 18),
+        ),
+        throwsArgumentError,
+      );
+    });
+
     final occurredAt = DateTime(2026, 8, 18, 10, 0);
 
     test('purchase increases stock', () {
