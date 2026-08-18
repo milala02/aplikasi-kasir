@@ -1,4 +1,4 @@
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:aplikasi_kasir/core/money/money.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/purchasing/domain/cost_layer.dart';
@@ -121,8 +121,9 @@ void main() {
       repository.save(second);
 
       expect(
-        () => CostLayerService(repository: repository)
-            .consume(productId: 'pepper', quantity: Quantity(value: 10)),
+        () =>
+            CostLayerService(repository: repository)
+                .consume(productId: 'pepper', quantity: Quantity(value: 10)),
         throwsArgumentError,
       );
 
@@ -158,8 +159,9 @@ void main() {
       repository.save(second);
 
       expect(
-        () => CostLayerService(repository: repository)
-            .consume(productId: 'pepper', quantity: Quantity(value: 6)),
+        () =>
+            CostLayerService(repository: repository)
+                .consume(productId: 'pepper', quantity: Quantity(value: 6)),
         throwsArgumentError,
       );
 
@@ -204,24 +206,27 @@ void main() {
 
     test('rejects empty product id', () {
       expect(
-        () => CostLayerService(repository: _FakeCostLayerRepository())
-            .consume(productId: '', quantity: Quantity(value: 1)),
+        () =>
+            CostLayerService(repository: _FakeCostLayerRepository())
+                .consume(productId: '', quantity: Quantity(value: 1)),
         throwsArgumentError,
       );
     });
 
     test('rejects zero quantity', () {
       expect(
-        () => CostLayerService(repository: _FakeCostLayerRepository())
-            .consume(productId: 'pepper', quantity: Quantity.zero()),
+        () =>
+            CostLayerService(repository: _FakeCostLayerRepository())
+                .consume(productId: 'pepper', quantity: Quantity.zero()),
         throwsArgumentError,
       );
     });
 
     test('rejects consumption when no layer is available', () {
       expect(
-        () => CostLayerService(repository: _FakeCostLayerRepository())
-            .consume(productId: 'pepper', quantity: Quantity(value: 1)),
+        () =>
+            CostLayerService(repository: _FakeCostLayerRepository())
+                .consume(productId: 'pepper', quantity: Quantity(value: 1)),
         throwsStateError,
       );
     });
