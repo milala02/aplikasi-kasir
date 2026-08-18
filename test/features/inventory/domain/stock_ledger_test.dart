@@ -26,7 +26,7 @@ void main() {
     }
 
     test('empty ledger has zero balance', () {
-      const ledger = StockLedger(
+      final ledger = StockLedger(
         productId: productId,
       );
 
@@ -111,7 +111,7 @@ void main() {
     });
 
     test('does not modify the original ledger', () {
-      const original = StockLedger(
+      final original = StockLedger(
         productId: productId,
       );
 
@@ -129,7 +129,7 @@ void main() {
     });
 
     test('rejects zero quantity movement', () {
-      const ledger = StockLedger(
+      final ledger = StockLedger(
         productId: productId,
       );
 
@@ -251,7 +251,7 @@ void main() {
     });
 
     test('rejects movement from another product', () {
-      const ledger = StockLedger(
+      final ledger = StockLedger(
         productId: productId,
       );
 
