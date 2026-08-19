@@ -1,6 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:aplikasi_kasir/features/receiving/domain/receiving.dart"
-  ]
-}

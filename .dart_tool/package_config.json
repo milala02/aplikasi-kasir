@@ -14,6 +14,12 @@
       "languageVersion": "3.11"
     },
     {
+      "name": "archive",
+      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/archive-4.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
       "name": "args",
       "rootUri": "file:///root/.pub-cache/hosted/pub.dev/args-2.7.0",
       "packageUri": "lib/",
@@ -87,9 +93,9 @@
     },
     {
       "name": "cli_util",
-      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/cli_util-0.5.2",
+      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/cli_util-0.4.2",
       "packageUri": "lib/",
-      "languageVersion": "3.7"
+      "languageVersion": "3.4"
     },
     {
       "name": "clock",
@@ -182,6 +188,12 @@
       "languageVersion": "3.11"
     },
     {
+      "name": "flutter_launcher_icons",
+      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/flutter_launcher_icons-0.13.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
       "name": "flutter_lints",
       "rootUri": "file:///root/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0",
       "packageUri": "lib/",
@@ -228,6 +240,12 @@
       "rootUri": "file:///root/.pub-cache/hosted/pub.dev/http_parser-4.1.2",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "image",
+      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/image-4.9.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "io",
@@ -390,6 +408,12 @@
       "rootUri": "file:///root/.pub-cache/hosted/pub.dev/pool-1.5.2",
       "packageUri": "lib/",
       "languageVersion": "3.4"
+    },
+    {
+      "name": "posix",
+      "rootUri": "file:///root/.pub-cache/hosted/pub.dev/posix-6.5.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
     },
     {
       "name": "pub_semver",
@@ -603,8 +627,8 @@
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.13.0",
+  "generatorVersion": "3.14.0-142.0.dev",
   "flutterRoot": "file:///content/flutter",
-  "flutterVersion": "3.47.0",
+  "flutterVersion": "3.48.0-1.0.pre-285",
   "pubCache": "file:///root/.pub-cache"
 }

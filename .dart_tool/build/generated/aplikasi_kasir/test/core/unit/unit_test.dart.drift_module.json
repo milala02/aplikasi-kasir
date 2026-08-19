@@ -1,7 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:flutter_test/flutter_test.dart",
-    "package:aplikasi_kasir/core/unit/unit.dart"
-  ]
-}

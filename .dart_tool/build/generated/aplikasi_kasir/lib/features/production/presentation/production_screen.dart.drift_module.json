@@ -1,9 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:flutter/material.dart",
-    "package:aplikasi_kasir/core/money/money.dart",
-    "package:aplikasi_kasir/features/inventory/domain/cost_layer_repository.dart",
-    "package:aplikasi_kasir/features/portioning/application/calculate_portion_use_case.dart"
-  ]
-}

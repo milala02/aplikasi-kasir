@@ -1,9 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:drift/drift.dart",
-    "package:aplikasi_kasir/core/database/app_database.dart",
-    "package:aplikasi_kasir/features/customers/domain/customer.dart",
-    "package:aplikasi_kasir/features/customers/domain/customer_repository.dart"
-  ]
-}

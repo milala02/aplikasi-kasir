@@ -1,9 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:aplikasi_kasir/features/cart/domain/cart.dart",
-    "package:aplikasi_kasir/features/cart/domain/cart_item.dart",
-    "package:aplikasi_kasir/features/cart/domain/cart_repository.dart",
-    "package:aplikasi_kasir/core/quantity/quantity.dart"
-  ]
-}

@@ -1,6 +1,0 @@
-{
-  "elements": {},
-  "imports": [
-    "package:aplikasi_kasir/features/customers/domain/customer.dart"
-  ]
-}
