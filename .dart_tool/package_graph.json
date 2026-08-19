@@ -8,6 +8,7 @@
       "version": "1.0.0+1",
       "dependencies": [
         "drift",
+        "fl_chart",
         "flutter",
         "path",
         "path_provider",
@@ -109,6 +110,14 @@
         "stream_channel",
         "test_api",
         "vector_math"
+      ]
+    },
+    {
+      "name": "fl_chart",
+      "version": "0.68.0",
+      "dependencies": [
+        "equatable",
+        "flutter"
       ]
     },
     {
@@ -564,6 +573,14 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "equatable",
+      "version": "2.1.0",
+      "dependencies": [
+        "collection",
+        "meta"
       ]
     },
     {
