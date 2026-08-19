@@ -73,7 +73,7 @@ class _DashboardAnalitikPageState extends State<DashboardAnalitikPage> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.15),
+                    color: Colors.grey.withValues(alpha: 0.15),
                     spreadRadius: 2,
                     blurRadius: 6,
                   ),
@@ -83,7 +83,7 @@ class _DashboardAnalitikPageState extends State<DashboardAnalitikPage> {
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   maxY: 1000,
-                  barTouchData: BarTouchDataEnabled(enabled: true),
+                  barTouchData: BarTouchData(enabled: true),
                   titlesData: FlTitlesData(
                     show: true,
                     topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
