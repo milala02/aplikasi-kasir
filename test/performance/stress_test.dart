@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:aplikasi_kasir/core/money/money.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
@@ -18,7 +19,7 @@ void main() {
     });
 
     test('Harus mampu memproses 10.000 transaksi dan menghitung analitik dalam waktu di bawah 1 detik', () {
-      print('Suntik 10.000 data transaksi...');
+      debugPrint('Suntik 10.000 data transaksi...');
       
       final startDate = DateTime(2026, 1, 1);
       
@@ -49,10 +50,10 @@ void main() {
       }
 
       expect(saleRepo.getAll().length, equals(10000));
-      print('✅ 10.000 transaksi berhasil masuk ke memori.');
+      debugPrint('✅ 10.000 transaksi berhasil masuk ke memori.');
 
       // 2. Mulai pengukur waktu (Stopwatch)
-      print('Memulai kalkulasi analitik keuangan (Omset, HPP FIFO, Margin)...');
+      debugPrint('Memulai kalkulasi analitik keuangan (Omset, HPP FIFO, Margin)...');
       final stopwatch = Stopwatch()..start();
 
       // Eksekusi perhitungan berat
@@ -66,9 +67,9 @@ void main() {
       // 10.000 struk * Rp 125.000 = Rp 1.250.000.000 (1.25 Miliar)
       final expectedOmsetMinor = 12500000 * 10000; 
 
-      print('⏱️ Waktu Eksekusi Analitik: $executionTime milidetik');
-      print('💰 Total Omset Terhitung: Rp ${summary.totalOmset.minorUnits ~/ 100}');
-      print('📈 Total Transaksi Terhitung: ${summary.totalTransactions}');
+      debugPrint('⏱️ Waktu Eksekusi Analitik: $executionTime milidetik');
+      debugPrint('💰 Total Omset Terhitung: Rp ${summary.totalOmset.minorUnits ~/ 100}');
+      debugPrint('📈 Total Transaksi Terhitung: ${summary.totalTransactions}');
 
       expect(summary.totalOmset.minorUnits, equals(expectedOmsetMinor));
       expect(summary.totalTransactions, equals(10000));

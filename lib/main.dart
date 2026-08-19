@@ -13,7 +13,9 @@ import 'core/theme/theme_controller.dart';
 // Repositories
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/customers/infrastructure/drift_customer_repository.dart';
+import 'features/customers/domain/customer_repository.dart';
 import 'features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
+import 'features/inventory/domain/cost_layer_repository.dart';
 import 'features/inventory/infrastructure/in_memory_inventory_repository.dart';
 import 'features/sales/infrastructure/in_memory_sale_repository.dart';
 
@@ -29,46 +31,74 @@ import 'features/sales/presentation/pos_controller.dart';
 import 'app/main_navigation_shell.dart';
 
 void main() async {
+  // 1. WAJIB: Inisialisasi binding native Flutter sebelum panggil plugin
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
     final prefs = await SharedPreferences.getInstance();
-  final authService = AuthService(prefs);
+    final authService = AuthService(prefs);
 
-  
-  final db = AppDatabase();
+    final db = AppDatabase();
 
-  final productRepo = DriftProductRepository(db);
-  await productRepo.init(); 
-  
-  final customerRepo = DriftCustomerRepository(db);
-  await customerRepo.init();
+    final productRepo = DriftProductRepository(db);
+    await productRepo.init(); 
+    
+    final customerRepo = DriftCustomerRepository(db);
+    await customerRepo.init();
 
-  final costLayerRepo = InMemoryCostLayerRepository();
-  final inventoryRepo = InMemoryInventoryRepository();
-  final saleRepo = InMemorySaleRepository();
+    final costLayerRepo = InMemoryCostLayerRepository();
+    final inventoryRepo = InMemoryInventoryRepository();
+    final saleRepo = InMemorySaleRepository();
 
-  final processSaleUseCase = ProcessSaleUseCase(saleRepository: saleRepo, inventoryRepository: inventoryRepo);
-  final financialAnalyticsUseCase = FinancialAnalyticsUseCase(saleRepository: saleRepo);
+    final processSaleUseCase = ProcessSaleUseCase(saleRepository: saleRepo, inventoryRepository: inventoryRepo);
+    final financialAnalyticsUseCase = FinancialAnalyticsUseCase(saleRepository: saleRepo);
 
-  final dashboardController = DashboardController(analyticsUseCase: financialAnalyticsUseCase, saleRepository: saleRepo);
-  final posController = POSController(productRepository: productRepo, customerRepository: customerRepo, processSaleUseCase: processSaleUseCase);
-  
-  // Inisiasi Kontrol Tema
-  final themeController = ThemeController();
+    final dashboardController = DashboardController(analyticsUseCase: financialAnalyticsUseCase, saleRepository: saleRepo);
+    final posController = POSController(productRepository: productRepo, customerRepository: customerRepo, processSaleUseCase: processSaleUseCase);
+    
+    final themeController = ThemeController();
 
-  runApp(KasirApp(
-    dashboardController: dashboardController,
-    posController: posController,
-    costLayerRepository: costLayerRepo,
-    customerRepository: customerRepo,
-    themeController: themeController,
-    authService: authService,
-  ));
+    runApp(KasirApp(
+      dashboardController: dashboardController,
+      posController: posController,
+      costLayerRepository: costLayerRepo,
+      customerRepository: customerRepo,
+      themeController: themeController,
+      authService: authService,
+    ));
+  } catch (e, stack) {
+    // 2. Tangkap error jika inisialisasi gagal dan tampilkan ke layar HP
+    runApp(MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Colors.red.shade900,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("⚠️ GAGAL INISIALISASI APLIKASI", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                  const SizedBox(height: 10),
+                  Text("Error: $e", style: const TextStyle(color: Colors.yellow, fontSize: 14)),
+                  const SizedBox(height: 10),
+                  Text("Stacktrace:\n$stack", style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+  }
 }
 
 class KasirApp extends StatefulWidget {
   final DashboardController dashboardController;
   final POSController posController;
-  final InMemoryCostLayerRepository costLayerRepository;
-  final DriftCustomerRepository customerRepository;
+  final CostLayerRepository costLayerRepository;
+  final CustomerRepository customerRepository;
   final ThemeController themeController;
   final AuthService authService;
 
@@ -100,7 +130,7 @@ class _KasirAppState extends State<KasirApp> {
   }
 
   void _onThemeChanged() {
-    setState(() {}); // Rebuild aplikasi saat tema berganti
+    setState(() {});
   }
 
   @override
@@ -114,11 +144,11 @@ class _KasirAppState extends State<KasirApp> {
       home: PinScreen(
         authService: widget.authService,
         child: MainNavigationShell(
-        dashboardController: widget.dashboardController,
-        posController: widget.posController,
-        costLayerRepository: widget.costLayerRepository,
-        customerRepository: widget.customerRepository,
-        themeController: widget.themeController,
+          dashboardController: widget.dashboardController,
+          posController: widget.posController,
+          costLayerRepository: widget.costLayerRepository,
+          customerRepository: widget.customerRepository,
+          themeController: widget.themeController,
         ),
       ),
     );

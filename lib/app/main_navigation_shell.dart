@@ -37,7 +37,12 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 800;
+    final width = MediaQuery.of(context).size.width;
+    
+    // 3-Tier Breakpoints
+    final isDesktop = width >= 1000;
+    final isTablet = width >= 600 && width < 1000;
+    // // final isMobile = width < 600;
 
     final pages = [
       DashboardScreen(controller: widget.dashboardController),
@@ -47,7 +52,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       CustomerScreen(customerRepository: widget.customerRepository),
     ];
 
-    // AppBar Khusus Mobile
     final mobileAppBar = AppBar(
       title: Row(
         children: [
@@ -70,25 +74,20 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           icon: Icon(widget.themeController.isDarkMode ? Icons.light_mode : Icons.dark_mode),
           onPressed: () => widget.themeController.toggleTheme(),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {},
-        ),
       ],
     );
 
+    // 1. TAMPILAN DESKTOP/LAPTOP (Full Sidebar Kiri)
     if (isDesktop) {
       return Scaffold(
         body: Row(
           children: [
-            // Sidebar Kiri (Dark Navy seperti di desain)
             Container(
               width: 250,
               color: AppTheme.sidebarDark,
               child: Column(
                 children: [
                   const SizedBox(height: 24),
-                  // Logo & Judul
                   ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.orange.shade100,
@@ -98,7 +97,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     subtitle: const Text('Bumbu & Kasir', style: TextStyle(color: Colors.white70, fontSize: 12)),
                   ),
                   const SizedBox(height: 24),
-                  // Menu Navigasi
                   Expanded(
                     child: ListView(
                       children: [
@@ -110,7 +108,6 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                       ],
                     ),
                   ),
-                  // Toggle Tema & Profil User di bawah
                   const Divider(color: Colors.white24),
                   ListTile(
                     leading: Icon(widget.themeController.isDarkMode ? Icons.light_mode : Icons.dark_mode, color: Colors.white70),
@@ -127,15 +124,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 ],
               ),
             ),
-            // Area Konten Utama
             Expanded(
               child: Scaffold(
-                appBar: AppBar(
-                  title: Text(
-                    _getPageTitle(_selectedIndex),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                appBar: AppBar(title: Text(_getPageTitle(_selectedIndex), style: const TextStyle(fontWeight: FontWeight.bold))),
                 body: pages[_selectedIndex],
               ),
             ),
@@ -144,7 +135,51 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       );
     }
 
-    // Tampilan Mobile
+    // 2. TAMPILAN TABLET (Navigation Rail Tipis)
+    if (isTablet) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              backgroundColor: AppTheme.sidebarDark,
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) => setState(() => _selectedIndex = index),
+              selectedIconTheme: const IconThemeData(color: Colors.white),
+              unselectedIconTheme: const IconThemeData(color: Colors.white70),
+              useIndicator: true,
+              indicatorColor: AppTheme.primaryBlue,
+              destinations: const [
+                NavigationRailDestination(icon: Icon(Icons.dashboard), label: Text('Dashboard')),
+                NavigationRailDestination(icon: Icon(Icons.point_of_sale), label: Text('POS')),
+                NavigationRailDestination(icon: Icon(Icons.blender), label: Text('Produksi')),
+                NavigationRailDestination(icon: Icon(Icons.inventory_2), label: Text('Stok')),
+                NavigationRailDestination(icon: Icon(Icons.people), label: Text('CRM')),
+              ],
+              trailing: Expanded(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: IconButton(
+                      icon: Icon(widget.themeController.isDarkMode ? Icons.light_mode : Icons.dark_mode, color: Colors.white70),
+                      onPressed: () => widget.themeController.toggleTheme(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Scaffold(
+                appBar: AppBar(title: Text(_getPageTitle(_selectedIndex), style: const TextStyle(fontWeight: FontWeight.bold))),
+                body: pages[_selectedIndex],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 3. TAMPILAN MOBILE (Bottom Navigation Bar)
     return Scaffold(
       appBar: mobileAppBar,
       body: pages[_selectedIndex],
