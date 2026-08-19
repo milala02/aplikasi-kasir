@@ -1,0 +1,13 @@
+{
+  "elements": {},
+  "imports": [
+    "package:flutter_test/flutter_test.dart",
+    "package:aplikasi_kasir/core/money/money.dart",
+    "package:aplikasi_kasir/core/quantity/quantity.dart",
+    "package:aplikasi_kasir/core/unit/unit.dart",
+    "package:aplikasi_kasir/features/dashboard/application/financial_analytics_use_case.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale_item.dart",
+    "package:aplikasi_kasir/features/sales/infrastructure/in_memory_sale_repository.dart"
+  ]
+}

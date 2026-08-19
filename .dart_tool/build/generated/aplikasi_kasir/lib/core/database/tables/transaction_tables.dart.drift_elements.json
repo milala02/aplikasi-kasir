@@ -1,0 +1,1 @@
+{"valid_import":true,"imports":[{"uri":"package:drift/drift.dart","transitive":false}],"elements":[{"kind":"table","name":"cost_layers_table","dart_name":"CostLayersTable"},{"kind":"table","name":"sales_table","dart_name":"SalesTable"},{"kind":"table","name":"sale_items_table","dart_name":"SaleItemsTable"}]}

@@ -1,0 +1,8 @@
+{
+  "elements": {},
+  "imports": [
+    "package:fl_chart/fl_chart.dart",
+    "package:flutter/material.dart",
+    "package:aplikasi_kasir/features/dashboard/presentation/dashboard_controller.dart"
+  ]
+}

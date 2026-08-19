@@ -1,0 +1,15 @@
+{
+  "elements": {},
+  "imports": [
+    "package:flutter_test/flutter_test.dart",
+    "package:aplikasi_kasir/core/money/money.dart",
+    "package:aplikasi_kasir/core/unit/unit.dart",
+    "package:aplikasi_kasir/features/customers/infrastructure/in_memory_customer_repository.dart",
+    "package:aplikasi_kasir/features/inventory/infrastructure/in_memory_inventory_repository.dart",
+    "package:aplikasi_kasir/features/products/domain/product.dart",
+    "package:aplikasi_kasir/features/products/infrastructure/in_memory_product_repository.dart",
+    "package:aplikasi_kasir/features/sales/application/process_sale_use_case.dart",
+    "package:aplikasi_kasir/features/sales/infrastructure/in_memory_sale_repository.dart",
+    "package:aplikasi_kasir/features/sales/presentation/pos_controller.dart"
+  ]
+}

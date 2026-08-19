@@ -1,0 +1,57 @@
+{
+  "elements": {
+    "TransactionDatabase": {
+      "id": {
+        "library_uri": "package:aplikasi_kasir/core/database/transaction_database.dart",
+        "name": "TransactionDatabase"
+      },
+      "declaration": {
+        "source_uri": "package:aplikasi_kasir/core/database/transaction_database.dart",
+        "offset": 334,
+        "name": "TransactionDatabase"
+      },
+      "references": [
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "cost_layers_table"
+        },
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "sales_table"
+        },
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "sale_items_table"
+        }
+      ],
+      "type": "database",
+      "tables": [
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "cost_layers_table"
+        },
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "sales_table"
+        },
+        {
+          "library_uri": "package:aplikasi_kasir/core/database/tables/transaction_tables.dart",
+          "name": "sale_items_table"
+        }
+      ],
+      "views": [],
+      "includes": [],
+      "queries": [],
+      "schema_version": 1,
+      "daos": [],
+      "has_constructor_arg": false
+    }
+  },
+  "imports": [
+    "package:drift/drift.dart",
+    "package:drift/native.dart",
+    "package:path_provider/path_provider.dart",
+    "package:path/path.dart",
+    "package:aplikasi_kasir/core/database/tables/transaction_tables.dart"
+  ]
+}
