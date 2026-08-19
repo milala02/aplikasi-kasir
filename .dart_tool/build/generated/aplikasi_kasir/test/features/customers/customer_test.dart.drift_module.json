@@ -1,0 +1,8 @@
+{
+  "elements": {},
+  "imports": [
+    "package:flutter_test/flutter_test.dart",
+    "package:aplikasi_kasir/features/customers/domain/customer.dart",
+    "package:aplikasi_kasir/features/customers/infrastructure/in_memory_customer_repository.dart"
+  ]
+}

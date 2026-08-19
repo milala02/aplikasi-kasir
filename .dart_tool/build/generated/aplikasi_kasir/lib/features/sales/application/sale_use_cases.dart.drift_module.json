@@ -1,0 +1,10 @@
+{
+  "elements": {},
+  "imports": [
+    "package:aplikasi_kasir/core/money/money.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale_item.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale_repository.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale_service.dart"
+  ]
+}

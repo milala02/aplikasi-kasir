@@ -1,0 +1,7 @@
+{
+  "elements": {},
+  "imports": [
+    "package:aplikasi_kasir/features/products/domain/product.dart",
+    "package:aplikasi_kasir/features/products/domain/product_repository.dart"
+  ]
+}

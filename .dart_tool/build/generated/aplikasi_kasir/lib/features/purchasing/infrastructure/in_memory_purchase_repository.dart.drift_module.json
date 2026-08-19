@@ -1,0 +1,7 @@
+{
+  "elements": {},
+  "imports": [
+    "package:aplikasi_kasir/features/purchasing/domain/purchase.dart",
+    "package:aplikasi_kasir/features/purchasing/domain/purchase_repository.dart"
+  ]
+}

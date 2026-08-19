@@ -1,0 +1,10 @@
+{
+  "elements": {},
+  "imports": [
+    "package:flutter_test/flutter_test.dart",
+    "package:aplikasi_kasir/core/money/money.dart",
+    "package:aplikasi_kasir/core/quantity/quantity.dart",
+    "package:aplikasi_kasir/core/unit/unit.dart",
+    "package:aplikasi_kasir/features/sales/domain/sale_item.dart"
+  ]
+}
