@@ -5,7 +5,7 @@ project_path = '/content/aplikasi-kasir'
 os.chdir(project_path)
 
 print("\n📦 1. Menginstal Java 17...")
-os.system('apt-get update -qq && apt-get install -y -qq openjdk-17-jdk-headless > /dev/null 2>&1')
+os.system('apt-get update -qq && apt-get install -y -qq openjdk-17-jdk-headless ninja-build > /dev/null 2>&1')
 java17_path = "/usr/lib/jvm/java-17-openjdk-amd64"
 os.environ["JAVA_HOME"] = java17_path
 os.environ["PATH"] = f"{java17_path}/bin:" + os.environ["PATH"]
