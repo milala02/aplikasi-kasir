@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 // Database
 import 'core/database/app_database.dart';
 
+// Tema
+import 'core/theme/app_theme.dart';
+import 'core/theme/theme_controller.dart';
+
 // Repositories
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/customers/infrastructure/drift_customer_repository.dart';
@@ -22,60 +26,44 @@ import 'features/sales/presentation/pos_controller.dart';
 import 'app/main_navigation_shell.dart';
 
 void main() async {
-  // Pastikan binding Flutter terinisialisasi sebelum memanggil platform channel (seperti path_provider untuk SQLite)
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Inisialisasi Database Lokal (SQLite / Drift)
   final db = AppDatabase();
 
-  // 2. Inisialisasi Repositories (Dependency Injection)
   final productRepo = DriftProductRepository(db);
-  await productRepo.init(); // Load cache dari SQLite
+  await productRepo.init(); 
   
   final customerRepo = DriftCustomerRepository(db);
-  await customerRepo.init(); // Load cache dari SQLite
+  await customerRepo.init();
 
-  // (Gunakan InMemory sementara untuk modul yang belum di-migrate ke Drift penuh di tutorial ini)
   final costLayerRepo = InMemoryCostLayerRepository();
   final inventoryRepo = InMemoryInventoryRepository();
   final saleRepo = InMemorySaleRepository();
 
-  // 3. Inisialisasi Use Cases
-  final processSaleUseCase = ProcessSaleUseCase(
-    saleRepository: saleRepo,
-    inventoryRepository: inventoryRepo,
-  );
-  
-  final financialAnalyticsUseCase = FinancialAnalyticsUseCase(
-    saleRepository: saleRepo,
-  );
+  final processSaleUseCase = ProcessSaleUseCase(saleRepository: saleRepo, inventoryRepository: inventoryRepo);
+  final financialAnalyticsUseCase = FinancialAnalyticsUseCase(saleRepository: saleRepo);
 
-  // 4. Inisialisasi State Management Controllers
-  final dashboardController = DashboardController(
-    analyticsUseCase: financialAnalyticsUseCase,
-    saleRepository: saleRepo,
-  );
+  final dashboardController = DashboardController(analyticsUseCase: financialAnalyticsUseCase, saleRepository: saleRepo);
+  final posController = POSController(productRepository: productRepo, customerRepository: customerRepo, processSaleUseCase: processSaleUseCase);
   
-  final posController = POSController(
-    productRepository: productRepo,
-    customerRepository: customerRepo,
-    processSaleUseCase: processSaleUseCase,
-  );
+  // Inisiasi Kontrol Tema
+  final themeController = ThemeController();
 
-  // 5. Jalankan Aplikasi
   runApp(KasirApp(
     dashboardController: dashboardController,
     posController: posController,
     costLayerRepository: costLayerRepo,
     customerRepository: customerRepo,
+    themeController: themeController,
   ));
 }
 
-class KasirApp extends StatelessWidget {
+class KasirApp extends StatefulWidget {
   final DashboardController dashboardController;
   final POSController posController;
   final InMemoryCostLayerRepository costLayerRepository;
   final DriftCustomerRepository customerRepository;
+  final ThemeController themeController;
 
   const KasirApp({
     super.key,
@@ -83,27 +71,44 @@ class KasirApp extends StatelessWidget {
     required this.posController,
     required this.costLayerRepository,
     required this.customerRepository,
+    required this.themeController,
   });
+
+  @override
+  State<KasirApp> createState() => _KasirAppState();
+}
+
+class _KasirAppState extends State<KasirApp> {
+  @override
+  void initState() {
+    super.initState();
+    widget.themeController.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.themeController.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {}); // Rebuild aplikasi saat tema berganti
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Kasir POS Warung',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-          elevation: 4,
-        ),
-      ),
+      themeMode: widget.themeController.themeMode,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       home: MainNavigationShell(
-        dashboardController: dashboardController,
-        posController: posController,
-        costLayerRepository: costLayerRepository,
-        customerRepository: customerRepository,
+        dashboardController: widget.dashboardController,
+        posController: widget.posController,
+        costLayerRepository: widget.costLayerRepository,
+        customerRepository: widget.customerRepository,
+        themeController: widget.themeController,
       ),
     );
   }

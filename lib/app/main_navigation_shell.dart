@@ -9,12 +9,15 @@ import '../features/inventory/presentation/inventory_screen.dart';
 import '../features/inventory/domain/cost_layer_repository.dart';
 import '../features/customers/presentation/customer_screen.dart';
 import '../features/customers/domain/customer_repository.dart';
+import '../core/theme/theme_controller.dart';
+import '../core/theme/app_theme.dart';
 
 class MainNavigationShell extends StatefulWidget {
   final DashboardController dashboardController;
   final POSController posController;
   final CostLayerRepository costLayerRepository;
   final CustomerRepository customerRepository;
+  final ThemeController themeController;
 
   const MainNavigationShell({
     super.key,
@@ -22,6 +25,7 @@ class MainNavigationShell extends StatefulWidget {
     required this.posController,
     required this.costLayerRepository,
     required this.customerRepository,
+    required this.themeController,
   });
 
   @override
@@ -43,51 +47,153 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       CustomerScreen(customerRepository: widget.customerRepository),
     ];
 
+    // AppBar Khusus Mobile
+    final mobileAppBar = AppBar(
+      title: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.orange.shade100,
+            child: const Icon(Icons.local_dining, color: Colors.orange),
+          ),
+          const SizedBox(width: 12),
+          const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('SMART WARUNG', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('Bumbu & Kasir', style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal)),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        IconButton(
+          icon: Icon(widget.themeController.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+          onPressed: () => widget.themeController.toggleTheme(),
+        ),
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () {},
+        ),
+      ],
+    );
+
     if (isDesktop) {
       return Scaffold(
         body: Row(
           children: [
-            NavigationRail(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) => setState(() => _selectedIndex = index),
-              labelType: NavigationRailLabelType.all,
-              leading: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
-                child: CircleAvatar(
-                  backgroundColor: Colors.blueAccent,
-                  child: Icon(Icons.storefront, color: Colors.white),
-                ),
+            // Sidebar Kiri (Dark Navy seperti di desain)
+            Container(
+              width: 250,
+              color: AppTheme.sidebarDark,
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  // Logo & Judul
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.orange.shade100,
+                      child: const Icon(Icons.local_dining, color: Colors.orange),
+                    ),
+                    title: const Text('SMART WARUNG', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Bumbu & Kasir', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  ),
+                  const SizedBox(height: 24),
+                  // Menu Navigasi
+                  Expanded(
+                    child: ListView(
+                      children: [
+                        _buildSidebarItem(icon: Icons.dashboard, title: 'Dashboard', index: 0),
+                        _buildSidebarItem(icon: Icons.point_of_sale, title: 'Penjualan / POS', index: 1),
+                        _buildSidebarItem(icon: Icons.blender, title: 'Produksi Bumbu', index: 2),
+                        _buildSidebarItem(icon: Icons.inventory_2, title: 'Inventory / Stok', index: 3),
+                        _buildSidebarItem(icon: Icons.people, title: 'Pelanggan & CRM', index: 4),
+                      ],
+                    ),
+                  ),
+                  // Toggle Tema & Profil User di bawah
+                  const Divider(color: Colors.white24),
+                  ListTile(
+                    leading: Icon(widget.themeController.isDarkMode ? Icons.light_mode : Icons.dark_mode, color: Colors.white70),
+                    title: const Text('Ganti Tema', style: TextStyle(color: Colors.white70)),
+                    onTap: () => widget.themeController.toggleTheme(),
+                  ),
+                  const ListTile(
+                    leading: CircleAvatar(child: Icon(Icons.person)),
+                    title: Text('Pemilik Warung', style: TextStyle(color: Colors.white)),
+                    subtitle: Text('Owner', style: TextStyle(color: Colors.white70)),
+                    trailing: Icon(Icons.expand_more, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
-              destinations: const [
-                NavigationRailDestination(icon: Icon(Icons.dashboard_outlined), selectedIcon: Icon(Icons.dashboard), label: Text('Dashboard')),
-                NavigationRailDestination(icon: Icon(Icons.point_of_sale_outlined), selectedIcon: Icon(Icons.point_of_sale), label: Text('Kasir POS')),
-                NavigationRailDestination(icon: Icon(Icons.blender_outlined), selectedIcon: Icon(Icons.blender), label: Text('Produksi')),
-                NavigationRailDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: Text('Stok FIFO')),
-                NavigationRailDestination(icon: Icon(Icons.people_alt_outlined), selectedIcon: Icon(Icons.people_alt), label: Text('Pelanggan')),
-              ],
             ),
-            const VerticalDivider(thickness: 1, width: 1),
-            Expanded(child: pages[_selectedIndex]),
+            // Area Konten Utama
+            Expanded(
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text(
+                    _getPageTitle(_selectedIndex),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                body: pages[_selectedIndex],
+              ),
+            ),
           ],
         ),
       );
     }
 
+    // Tampilan Mobile
     return Scaffold(
+      appBar: mobileAppBar,
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blueAccent,
+        selectedItemColor: AppTheme.primaryBlue,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Kasir'),
+          BottomNavigationBarItem(icon: Icon(Icons.home_filled), label: 'Beranda'),
+          BottomNavigationBarItem(icon: Icon(Icons.point_of_sale), label: 'Penjualan'),
           BottomNavigationBarItem(icon: Icon(Icons.blender), label: 'Produksi'),
-          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Stok'),
-          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Pelanggan'),
+          BottomNavigationBarItem(icon: Icon(Icons.inventory_2), label: 'Inventory'),
+          BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'Lainnya'),
         ],
+      ),
+    );
+  }
+
+  String _getPageTitle(int index) {
+    switch (index) {
+      case 0: return 'Selamat datang kembali 👋';
+      case 1: return 'Kasir POS';
+      case 2: return 'Produksi Bumbu';
+      case 3: return 'Manajemen Stok (FIFO)';
+      case 4: return 'Pelanggan & CRM';
+      default: return '';
+    }
+  }
+
+  Widget _buildSidebarItem({required IconData icon, required String title, required int index}) {
+    final isSelected = _selectedIndex == index;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? AppTheme.primaryBlue : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: isSelected ? Colors.white : Colors.white70),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.white70,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        onTap: () => setState(() => _selectedIndex = index),
       ),
     );
   }
