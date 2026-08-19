@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'core/security/auth_service.dart';
+import 'features/auth/presentation/pin_screen.dart';
 
 // Database
 import 'core/database/app_database.dart';
@@ -26,8 +29,10 @@ import 'features/sales/presentation/pos_controller.dart';
 import 'app/main_navigation_shell.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+    final prefs = await SharedPreferences.getInstance();
+  final authService = AuthService(prefs);
 
+  
   final db = AppDatabase();
 
   final productRepo = DriftProductRepository(db);
@@ -55,6 +60,7 @@ void main() async {
     costLayerRepository: costLayerRepo,
     customerRepository: customerRepo,
     themeController: themeController,
+    authService: authService,
   ));
 }
 
@@ -64,6 +70,7 @@ class KasirApp extends StatefulWidget {
   final InMemoryCostLayerRepository costLayerRepository;
   final DriftCustomerRepository customerRepository;
   final ThemeController themeController;
+  final AuthService authService;
 
   const KasirApp({
     super.key,
@@ -72,6 +79,7 @@ class KasirApp extends StatefulWidget {
     required this.costLayerRepository,
     required this.customerRepository,
     required this.themeController,
+    required this.authService,
   });
 
   @override
@@ -103,12 +111,15 @@ class _KasirAppState extends State<KasirApp> {
       themeMode: widget.themeController.themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: MainNavigationShell(
+      home: PinScreen(
+        authService: widget.authService,
+        child: MainNavigationShell(
         dashboardController: widget.dashboardController,
         posController: widget.posController,
         costLayerRepository: widget.costLayerRepository,
         customerRepository: widget.customerRepository,
         themeController: widget.themeController,
+        ),
       ),
     );
   }

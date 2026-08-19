@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.3
+  shared_preferences: ^2.2.3
   drift: ^2.20.0
   sqlite3_flutter_libs: ^0.5.24
   path_provider: ^2.1.4
