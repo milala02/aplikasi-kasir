@@ -1,6 +1,6 @@
+import 'package:drift/drift.dart';
+
 import '../../../../core/database/transaction_database.dart';
-import '../../../../core/money/money.dart';
-import '../../../../core/quantity/quantity.dart';
 import '../domain/cost_layer.dart';
 import '../domain/cost_layer_repository.dart';
 
@@ -25,15 +25,29 @@ class DriftCostLayerRepository implements CostLayerRepository {
   }
 
   @override
-  List<CostLayer> getAll() {
-    // Pada implementasi penuh, ini harusnya asynchronous. 
-    // Untuk kecocokan dengan arsitektur saat ini (synchronous abstraction), kita kembalikan list kosong sebagai placeholder, 
-    // atau menggunakan .getSync() jika didukung.
-    return []; 
+  void update(CostLayer costLayer) {
+    // Pada SQLite (Drift), operasi insertOrReplace merangkap sebagai update.
+    save(costLayer);
+  }
+
+  @override
+  CostLayer? getById(String id) {
+    // Placeholder sinkron (Integrasi database penuh nantinya butuh return tipe Future)
+    return null; 
+  }
+
+  @override
+  List<CostLayer> getByProductId(String productId) {
+    return [];
   }
 
   @override
   List<CostLayer> getAvailableByProductId(String productId) {
+    return [];
+  }
+  
+  // Disediakan tanpa anotasi @override jika dipanggil secara spesifik oleh UI
+  List<CostLayer> getAll() {
     return [];
   }
 }
