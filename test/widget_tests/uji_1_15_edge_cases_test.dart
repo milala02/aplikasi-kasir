@@ -20,7 +20,6 @@ void main() {
                       onChanged: (val) {
                         double valNum = double.tryParse(val) ?? 0.0;
                         setState(() {
-                          // Edge Case Protection: Jika negatif, jadikan 0
                           parsedAmount = valNum < 0 ? 0.0 : valNum;
                         });
                       },
@@ -33,11 +32,9 @@ void main() {
         ),
       );
 
-      // Input Angka Negatif (-50000)
       await tester.enterText(find.byKey(const Key('input_amount')), '-50000');
       await tester.pumpAndSettle();
 
-      // Dipastikan sistem menolak dan mengubahnya menjadi 0
       expect(find.text('Amount: 0'), findsOneWidget);
     });
 
@@ -68,11 +65,10 @@ void main() {
         ),
       );
 
-      // Input teks acak & simbol
-      await tester.enterText(find.byKey(const Key('input_amount')), 'abc@#$');
+      // Raw String Dart (r'abc@#$') menjamin tidak terjadi interpolasi parser
+      await tester.enterText(find.byKey(const Key('input_amount')), r'abc@#$');
       await tester.pumpAndSettle();
 
-      // Dipastikan fallback ke 0 tanpa melontarkan uncaught exception
       expect(find.text('Amount: 0'), findsOneWidget);
     });
 
@@ -103,7 +99,6 @@ void main() {
         ),
       );
 
-      // Input Rp 1.000.000.000 (1 Miliar)
       await tester.enterText(find.byKey(const Key('input_amount')), '1000000000');
       await tester.pumpAndSettle();
 
