@@ -14,18 +14,18 @@ void main() {
               builder: (context, setState) {
                 return Column(
                   children: [
-                    Text('Status: ${isProcessing ? "Processing" : "Idle"}'),
                     Text('Count: $transactionProcessCount', key: const Key('process_count')),
                     ElevatedButton(
                       key: const Key('btn_submit_transaction'),
-                      onPressed: isProcessing
-                          ? null // Tombol disable saat sedang memproses
-                          : () {
-                              setState(() {
-                                isProcessing = true;
-                                transactionProcessCount++;
-                              });
-                            },
+                      onPressed: () {
+                        // Synchronous guard check: menolak eksekusi jika flag sudah true
+                        if (isProcessing) return;
+                        isProcessing = true;
+                        
+                        setState(() {
+                          transactionProcessCount++;
+                        });
+                      },
                       child: const Text('Bayar Sekarang'),
                     ),
                   ],
@@ -36,17 +36,15 @@ void main() {
         ),
       );
 
-      // Verifikasi awal
       expect(find.text('Count: 0'), findsOneWidget);
 
-      // Tekan tombol pertama kali
+      // Tap pertama
       await tester.tap(find.byKey(const Key('btn_submit_transaction')));
-      
-      // Tekan lagi dengan cepat sebelum frame selesai dirender (simulasi double-tap)
+      // Tap kedua berurutan secara instan (sebelum render frame baru)
       await tester.tap(find.byKey(const Key('btn_submit_transaction')), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      // Jumlah transaksi harus tetap 1, tidak boleh 2
+      // Jumlah transaksi dipastikan tetap 1
       expect(find.text('Count: 1'), findsOneWidget);
     });
   });
