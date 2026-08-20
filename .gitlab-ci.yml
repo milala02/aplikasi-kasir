@@ -17,10 +17,20 @@ include:
   - template: Security/Secret-Detection.gitlab-ci.yml
 
 # ==========================================
-# GITLAB SECURITY SCANNERS CONFIG
+# OVERRIDE: MEMATIKAN SCANNER GRADLE/SAST NON-FLUTTER
 # ==========================================
-variables:
-  # Menonaktifkan scanner bawaan GitLab (Gemnasium) karena tidak 
-  # memiliki Flutter SDK dan akan selalu crash pada proyek Flutter
-  SAST_DISABLED: "true"
-  DEPENDENCY_SCANNING_DISABLED: "true"
+dependency_scanning:
+  rules:
+    - when: never
+
+gemnasium-dependency-scanning:
+  rules:
+    - when: never
+
+gemnasium-maven-dependency-scanning:
+  rules:
+    - when: never
+
+gitlab-advanced-sast:
+  rules:
+    - when: never
