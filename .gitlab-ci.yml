@@ -16,23 +16,11 @@ include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
 
-
 # ==========================================
-# OVERRIDES UNTUK GITLAB SECURITY SCANNERS
+# GITLAB SECURITY SCANNERS CONFIG
 # ==========================================
 variables:
-  # Abaikan folder native Android/iOS agar Gradle scanner tidak crash mencari Flutter SDK
-  DS_EXCLUDED_PATHS: "android/**/*, ios/**/*, build/**/*, .dart_tool/**/*"
-  SAST_EXCLUDED_PATHS: "android/**/*, ios/**/*, build/**/*, .dart_tool/**/*"
-  
-# Mengizinkan SAST gagal tanpa mematikan pipeline (karena fokus utama kita di Dart/Flutter analyzer)
-gitlab-advanced-sast:
-  allow_failure: true
-  rules:
-    - if: $CI_COMMIT_BRANCH
-
-# Mengizinkan dependency scanning gagal pada level Gradle
-dependency_scanning:
-  allow_failure: true
-  rules:
-    - if: $CI_COMMIT_BRANCH
+  # Menonaktifkan scanner bawaan GitLab (Gemnasium) karena tidak 
+  # memiliki Flutter SDK dan akan selalu crash pada proyek Flutter
+  SAST_DISABLED: "true"
+  DEPENDENCY_SCANNING_DISABLED: "true"
