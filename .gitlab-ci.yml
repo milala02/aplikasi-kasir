@@ -1,37 +1,25 @@
-# Pipeline khusus Flutter (Bebas dari scanner Java/Gradle bawaan GitLab)
-image: ghcr.io/cirruslabs/flutter:stable
+include:
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
 
-variables:
-  # Mematikan total Auto DevOps & template Security bawaan GitLab yang memicu Gradle
-  AUTO_DEVOPS_DISABLED: "1"
-  SAST_DISABLED: "true"
-  DEPENDENCY_SCANNING_DISABLED: "true"
+image: ghcr.io/cirruslabs/flutter:stable
 
 stages:
   - test
 
-flutter_analyze_and_test:
+flutter_test:
   stage: test
   script:
     - flutter pub get
     - flutter analyze
     - flutter test
 
-
-# ==========================================
-# TRICK: MENCEGAH CRASH PADA SCANNER GRADLE
-# ==========================================
-# Kita membuat file local.properties tiruan sesaat sebelum scanner berjalan
-# agar Gradle tidak crash saat mencari path Flutter SDK.
-
+# Mengizinkan scanner bawaan GitLab gagal tanpa menggagalkan pipeline utama
 dependency_scanning:
-  before_script:
-    - echo "flutter.sdk=/tmp" > android/local.properties
+  allow_failure: true
 
 gemnasium-dependency-scanning:
-  before_script:
-    - echo "flutter.sdk=/tmp" > android/local.properties
+  allow_failure: true
 
-gemnasium-maven-dependency-scanning:
-  before_script:
-    - echo "flutter.sdk=/tmp" > android/local.properties
+gitlab-advanced-sast:
+  allow_failure: true
