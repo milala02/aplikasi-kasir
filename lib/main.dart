@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'features/inventory/infrastructure/drift_inventory_repository.dart';
+import 'features/sales/infrastructure/drift_sale_repository.dart';
+import 'features/inventory/infrastructure/drift_cost_layer_repository.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/security/auth_service.dart';
 import 'features/auth/presentation/pin_screen.dart';
@@ -14,10 +18,7 @@ import 'core/theme/theme_controller.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/customers/infrastructure/drift_customer_repository.dart';
 import 'features/customers/domain/customer_repository.dart';
-import 'features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
 import 'features/inventory/domain/cost_layer_repository.dart';
-import 'features/inventory/infrastructure/in_memory_inventory_repository.dart';
-import 'features/sales/infrastructure/in_memory_sale_repository.dart';
 
 // Use Cases
 import 'features/sales/application/process_sale_use_case.dart';
@@ -46,9 +47,9 @@ void main() async {
     final customerRepo = DriftCustomerRepository(db);
     await customerRepo.init();
 
-    final costLayerRepo = InMemoryCostLayerRepository();
-    final inventoryRepo = InMemoryInventoryRepository();
-    final saleRepo = InMemorySaleRepository();
+    final costLayerRepo = DriftCostLayerRepository(db);
+    final inventoryRepo = DriftInventoryRepository(db);
+    final saleRepo = DriftSaleRepository(db);
 
     final processSaleUseCase = ProcessSaleUseCase(saleRepository: saleRepo, inventoryRepository: inventoryRepo);
     final financialAnalyticsUseCase = FinancialAnalyticsUseCase(saleRepository: saleRepo);

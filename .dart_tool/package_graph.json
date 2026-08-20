@@ -924,6 +924,16 @@
       ]
     },
     {
+      "name": "webdriver",
+      "version": "3.1.0",
+      "dependencies": [
+        "matcher",
+        "path",
+        "stack_trace",
+        "sync_http"
+      ]
+    },
+    {
       "name": "fuchsia_remote_debug_protocol",
       "version": "0.0.0",
       "dependencies": [
@@ -1013,11 +1023,9 @@
       ]
     },
     {
-      "name": "jni_util",
-      "version": "1.0.0",
-      "dependencies": [
-        "path"
-      ]
+      "name": "sync_http",
+      "version": "0.3.1",
+      "dependencies": []
     },
     {
       "name": "process",
@@ -1029,19 +1037,11 @@
       ]
     },
     {
-      "name": "webdriver",
-      "version": "3.1.0",
+      "name": "jni_util",
+      "version": "1.0.0",
       "dependencies": [
-        "matcher",
-        "path",
-        "stack_trace",
-        "sync_http"
+        "path"
       ]
-    },
-    {
-      "name": "sync_http",
-      "version": "0.3.1",
-      "dependencies": []
     }
   ],
   "configVersion": 1

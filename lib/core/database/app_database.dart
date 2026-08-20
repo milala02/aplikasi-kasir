@@ -52,7 +52,46 @@ class CostLayersTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [ProductsTable, CustomersTable, CostLayersTable])
+
+// --- TABEL PENJUALAN ---
+class SalesTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get invoiceNumber => text().unique()();
+  IntColumn get discountMinorUnits => integer()();
+  IntColumn get taxMinorUnits => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get soldAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class SaleItemsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get saleId => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  IntColumn get unitPriceMinorUnits => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// --- TABEL INVENTARIS / PERGERAKAN STOK ---
+class StockMovementsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  TextColumn get type => text()(); // 'in', 'out', 'adjustment'
+  TextColumn get referenceId => text().nullable()();
+  DateTimeColumn get occurredAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+
+@DriftDatabase(tables: [ProductsTable, CustomersTable, CostLayersTable, SalesTable, SaleItemsTable, StockMovementsTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 

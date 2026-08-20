@@ -65,13 +65,77 @@ class _InventoryScreenState extends State<InventoryScreen> {
       );
     }
   }
+  void _showAddStockDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E1E1E),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          left: 20, right: 20, top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Tambah Stok Barang', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 16),
+            TextField(
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Nama Barang',
+                labelStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Jumlah Stok',
+                labelStyle: const TextStyle(color: Colors.grey),
+                filled: true,
+                fillColor: Colors.black26,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, padding: const EdgeInsets.symmetric(vertical: 14)),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Simulasi: Barang ditambahkan ke Database!')));
+                },
+                child: const Text('Simpan Data', style: TextStyle(color: Colors.white, fontSize: 16)),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+
     final currentProductId = _productIdController.text.trim().isEmpty ? 'lada_biji' : _productIdController.text.trim();
     final activeLayers = widget.costLayerRepository.getAvailableByProductId(currentProductId);
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddStockDialog(context),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('Tambah Stok', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.orangeAccent,
+      ),
       appBar: AppBar(
         title: const Text('Gudang & Stok FIFO Layer'),
         actions: [
