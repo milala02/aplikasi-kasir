@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # FIX WARNING: Upgrade ke v5
+      # FIX: Menggunakan setup-java@v5 untuk menghilangkan peringatan Node.js 20
       - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # FIX WARNING: Upgrade ke v5
+      # FIX: Menggunakan setup-java@v5
       - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
@@ -58,7 +58,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      # FIX ERROR: Tambahkan flag bypass validasi AGP
+      # FIX: Menambahkan flag --android-skip-build-dependency-validation 
       - name: Build APK Debug with Secrets
         env:
           API_KEY: ${{ secrets.API_KEY }}
