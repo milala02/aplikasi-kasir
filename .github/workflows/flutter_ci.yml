@@ -12,7 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-java@v4
+      # FIX WARNING: Upgrade ke v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -43,7 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: actions/setup-java@v4
+      # FIX WARNING: Upgrade ke v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -56,8 +58,9 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      # FIX ERROR: Tambahkan flag bypass validasi AGP
       - name: Build APK Debug with Secrets
         env:
           API_KEY: ${{ secrets.API_KEY }}
           BASE_URL: ${{ secrets.BASE_URL }}
-        run: flutter build apk --debug
+        run: flutter build apk --debug --android-skip-build-dependency-validation
