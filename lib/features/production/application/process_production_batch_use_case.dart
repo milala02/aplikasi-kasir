@@ -112,7 +112,9 @@ class ProcessProductionBatchUseCase {
   static int _scaleQuantity(Quantity quantity, int targetScale) {
     if (quantity.scale == targetScale) return quantity.value;
     var factor = 1;
-    for (var i = 0; i < targetScale - quantity.scale; i++) factor *= 10;
+    for (var i = 0; i < targetScale - quantity.scale; i++) {
+      factor *= 10;
+    }
     return quantity.value * factor;
   }
 

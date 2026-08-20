@@ -26,7 +26,9 @@ class MaterialCostAllocation {
 
   static int _scaleFactor(int scale) {
     var result = 1;
-    for (var i = 0; i < scale; i++) result *= 10;
+    for (var i = 0; i < scale; i++) {
+      result *= 10;
+    }
     return result;
   }
 }
@@ -85,7 +87,9 @@ class ProductionBatch {
 
   static int _scaleFactor(int scale) {
     var result = 1;
-    for (var i = 0; i < scale; i++) result *= 10;
+    for (var i = 0; i < scale; i++) {
+      result *= 10;
+    }
     return result;
   }
 }

@@ -16,14 +16,16 @@ class DriftInventoryRepository implements InventoryRepository {
   }
 
   @override
-  List<StockMovement> getMovements(String productId) => [];
+  List<StockMovement> getMovements(String productId) {
+    return [];
+  }
 
   @override
   void saveLedger(StockLedger ledger) {}
 
   @override
   void recordMovement(StockMovement movement) {
-    db.into(db.stockMovementsTable).insert(
+    db.into(db.stockMovementsTable).insertOnConflictUpdate(
       StockMovementsTableCompanion.insert(
         id: movement.id,
         productId: movement.productId,

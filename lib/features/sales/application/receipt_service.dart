@@ -44,7 +44,7 @@ class ReceiptService {
       final qty = item.quantity.value;
       final price = item.unitPrice.minorUnits ~/ 100;
       final subtotal = item.subtotal.minorUnits ~/ 100;
-      buffer.writeln('$name');
+      buffer.writeln(name);
       buffer.writeln('  $qty x Rp $price = Rp $subtotal');
     }
 

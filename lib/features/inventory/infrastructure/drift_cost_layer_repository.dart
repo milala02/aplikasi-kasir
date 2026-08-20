@@ -17,7 +17,7 @@ class DriftCostLayerRepository implements CostLayerRepository {
 
   @override
   void save(CostLayer layer) {
-    db.into(db.costLayersTable).insert(
+    db.into(db.costLayersTable).insertOnConflictUpdate(
       CostLayersTableCompanion.insert(
         id: layer.id,
         productId: layer.productId,
@@ -32,5 +32,7 @@ class DriftCostLayerRepository implements CostLayerRepository {
   }
 
   @override
-  void update(CostLayer layer) {}
+  void update(CostLayer layer) {
+    save(layer);
+  }
 }
