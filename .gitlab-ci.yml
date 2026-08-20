@@ -16,3 +16,22 @@ flutter_analyze_and_test:
     - flutter pub get
     - flutter analyze
     - flutter test
+
+
+# ==========================================
+# TRICK: MENCEGAH CRASH PADA SCANNER GRADLE
+# ==========================================
+# Kita membuat file local.properties tiruan sesaat sebelum scanner berjalan
+# agar Gradle tidak crash saat mencari path Flutter SDK.
+
+dependency_scanning:
+  before_script:
+    - echo "flutter.sdk=/tmp" > android/local.properties
+
+gemnasium-dependency-scanning:
+  before_script:
+    - echo "flutter.sdk=/tmp" > android/local.properties
+
+gemnasium-maven-dependency-scanning:
+  before_script:
+    - echo "flutter.sdk=/tmp" > android/local.properties
