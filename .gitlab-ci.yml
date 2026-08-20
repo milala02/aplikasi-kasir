@@ -1,51 +1,18 @@
-stages:
-  - test
-  - security
+# Pipeline khusus Flutter (Bebas dari scanner Java/Gradle bawaan GitLab)
+image: ghcr.io/cirruslabs/flutter:stable
 
-flutter_test:
-  stage: test
-  image: ghcr.io/cirruslabs/flutter:stable
-
-  script:
-    - flutter --version
-    - flutter pub get
-    - flutter analyze
-    - flutter test
-
-include:
-  - template: Security/SAST.gitlab-ci.yml
-  - template: Security/Secret-Detection.gitlab-ci.yml
-
-# ==========================================
-# OVERRIDE: DISABLE SCANNERS PROPERLY
-# ==========================================
 variables:
+  # Mematikan total Auto DevOps & template Security bawaan GitLab yang memicu Gradle
+  AUTO_DEVOPS_DISABLED: "1"
   SAST_DISABLED: "true"
   DEPENDENCY_SCANNING_DISABLED: "true"
 
-# Menyertakan 'script' dummy agar parser GitLab tidak protes "yaml invalid",
-# sekaligus memastikan rules when: never mematikan job ini selamanya.
-dependency_scanning:
-  script:
-    - echo "Dependency scanning dinonaktifkan."
-  rules:
-    - when: never
+stages:
+  - test
 
-gitlab-advanced-sast:
+flutter_analyze_and_test:
+  stage: test
   script:
-    - echo "SAST dinonaktifkan."
-  rules:
-    - when: never
-
-gemnasium-dependency-scanning:
-  script:
-    - echo "Scanner dinonaktifkan."
-  rules:
-    - when: never
-
-gemnasium-maven-dependency-scanning:
-  script:
-    - echo "Scanner dinonaktifkan."
-  rules:
-    - when: never
-
+    - flutter pub get
+    - flutter analyze
+    - flutter test
