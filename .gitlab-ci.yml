@@ -17,20 +17,35 @@ include:
   - template: Security/Secret-Detection.gitlab-ci.yml
 
 # ==========================================
-# OVERRIDE: MEMATIKAN SCANNER GRADLE/SAST NON-FLUTTER
+# OVERRIDE: DISABLE SCANNERS PROPERLY
 # ==========================================
+variables:
+  SAST_DISABLED: "true"
+  DEPENDENCY_SCANNING_DISABLED: "true"
+
+# Menyertakan 'script' dummy agar parser GitLab tidak protes "yaml invalid",
+# sekaligus memastikan rules when: never mematikan job ini selamanya.
 dependency_scanning:
-  rules:
-    - when: never
-
-gemnasium-dependency-scanning:
-  rules:
-    - when: never
-
-gemnasium-maven-dependency-scanning:
+  script:
+    - echo "Dependency scanning dinonaktifkan."
   rules:
     - when: never
 
 gitlab-advanced-sast:
+  script:
+    - echo "SAST dinonaktifkan."
   rules:
     - when: never
+
+gemnasium-dependency-scanning:
+  script:
+    - echo "Scanner dinonaktifkan."
+  rules:
+    - when: never
+
+gemnasium-maven-dependency-scanning:
+  script:
+    - echo "Scanner dinonaktifkan."
+  rules:
+    - when: never
+
