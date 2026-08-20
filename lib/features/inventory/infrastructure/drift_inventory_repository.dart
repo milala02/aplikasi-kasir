@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' as d;
 import '../../../core/database/app_database.dart';
-import '../../../core/quantity/quantity.dart';
 import '../domain/inventory_repository.dart';
 import '../domain/stock_ledger.dart';
 import '../domain/stock_movement.dart';
@@ -17,9 +16,7 @@ class DriftInventoryRepository implements InventoryRepository {
   }
 
   @override
-  List<StockMovement> getMovements(String productId) {
-    return [];
-  }
+  List<StockMovement> getMovements(String productId) => [];
 
   @override
   void saveLedger(StockLedger ledger) {}
@@ -30,7 +27,7 @@ class DriftInventoryRepository implements InventoryRepository {
       StockMovementsTableCompanion.insert(
         id: movement.id,
         productId: movement.productId,
-        quantityValue: movement.quantity.value.toInt(), // Menggunakan .value
+        quantityValue: movement.quantity.value.toInt(),
         type: movement.type.toString(),
         referenceId: d.Value(movement.referenceId),
         occurredAt: movement.occurredAt,
