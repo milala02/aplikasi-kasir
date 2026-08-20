@@ -11,7 +11,7 @@ void main() {
       app.main();
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.byType(app.KasirApp), findsOneWidget);
+      expect(find.byType(app.MyApp), findsOneWidget);
       expect(find.textContaining('GAGAL INISIALISASI APLIKASI'), findsNothing);
     });
   });
