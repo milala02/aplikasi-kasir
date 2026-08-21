@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import '../data/pos_repository.dart';
 
@@ -101,16 +103,22 @@ class PosProvider with ChangeNotifier {
         'subtotal': qty * price,
       });
     }
+    
+    saveCartToStorage();
     notifyListeners();
   }
 
   void removeFromCart(String productId) {
     _cart.removeWhere((item) => item['id'] == productId);
+    
+    saveCartToStorage();
     notifyListeners();
   }
 
   void clearCart() {
     _cart.clear();
+    
+    saveCartToStorage();
     notifyListeners();
   }
 
@@ -150,6 +158,60 @@ class PosProvider with ChangeNotifier {
       return matchesQuery;
     }).toList();
     notifyListeners();
+  }
+
+
+  // =========================================================================
+  // SECURE CART PERSISTENCE (Anti-Ghost Cart Implementation)
+  // =========================================================================
+  Future<void> saveCartToStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Hanya menyimpan ID dan Qty untuk mencegah celah harga manipulatif
+      final List<Map<String, dynamic>> minimalCart = _cart.map((item) => {
+        'id': item['id'],
+        'qty': item['qty']
+      }).toList();
+      
+      await prefs.setString('pos_secure_cart', json.encode(minimalCart));
+    } catch (e) {
+      debugPrint("Gagal menyimpan keranjang: $e");
+    }
+  }
+
+  Future<void> loadSavedCart(List<Map<String, dynamic>> masterCatalog) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cartJson = prefs.getString('pos_secure_cart');
+      
+      if (cartJson != null) {
+        final List<dynamic> decoded = json.decode(cartJson);
+        _cart.clear();
+        
+        for (var savedItem in decoded) {
+          // Prinsip Zero-Trust: Cocokkan ID dengan katalog asli untuk mendapatkan harga terbaru!
+          final String targetId = savedItem['id'].toString();
+          final int qty = savedItem['qty'] ?? 1;
+          
+          final realProduct = masterCatalog.firstWhere(
+            (p) => p['id'].toString() == targetId,
+            orElse: () => <String, dynamic>{}, // Kembalikan map kosong jika produk sudah dihapus dari DB
+          );
+          
+          if (realProduct.isNotEmpty) {
+            _cart.add({
+              ...realProduct,
+              'qty': qty,
+            });
+          }
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("Gagal memuat keranjang, mereset: $e");
+      final prefs = await SharedPreferences.getInstance();
+      prefs.remove('pos_secure_cart');
+    }
   }
 
 }
