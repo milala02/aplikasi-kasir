@@ -27,3 +27,15 @@ subprojects {
         }
     }
 }
+
+
+// Memaksa penggunaan versi AndroidX yang stabil agar tidak meminta AGP 8.9.1
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.browser:browser:1.8.0")
+            force("androidx.core:core-ktx:1.15.0")
+            force("androidx.core:core:1.15.0")
+        }
+    }
+}
