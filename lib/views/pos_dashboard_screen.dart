@@ -1,3 +1,4 @@
+import 'widgets/barcode_scanner_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/pos_provider.dart';
@@ -87,17 +88,35 @@ class _PosDashboardScreenState extends State<PosDashboardScreen> {
                   decoration: InputDecoration(
                     hintText: 'Cari nama produk / scan barcode...',
                     prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.qr_code_scanner, color: Colors.blue),
+                    onPressed: () async {
+                      final scannedCode = await showDialog<String>(
+                        context: context,
+                        builder: (context) => const BarcodeScannerDialog(),
+                      );
+                      if (scannedCode != null && scannedCode.isNotEmpty) {
+                        setState(() {
+                          _searchController.text = scannedCode;
+                        });
+                      }
+                    },
+                  ),
+                  if (_searchController.text.isNotEmpty)
+                    IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                        });
+                      },
+                    ),
+                ],
+              ),
+                    
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),

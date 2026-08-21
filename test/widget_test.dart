@@ -1,20 +1,20 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aplikasi_kasir/main.dart';
 
 void main() {
-  setUpAll(() {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  });
+  testWidgets('Aplikasi merender InitialPinSetupScreen saat instalasi pertama', (WidgetTester tester) async {
+    // 1. Mock SharedPreferences agar tidak crash di environment test
+    SharedPreferences.setMockInitialValues({
+      'is_initial_setup_done': false,
+    });
+    
+    // 2. Render MyApp dengan state isSetupDone = false
+    await tester.pumpWidget(const MyApp(isSetupDone: false));
+    await tester.pumpAndSettle();
 
-  testWidgets('Aplikasi dapat dimuat tanpa error', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
-    
-    // Ganti pumpAndSettle dengan pump biasa untuk mengabaikan animasi infinite
-    // seperti CircularProgressIndicator atau kursor berkedip.
-    await tester.pump(const Duration(seconds: 2));
-    
-    expect(find.byType(MyApp), findsOneWidget);
+    // 3. Verifikasi UI: Pastikan layar Setup PIN yang muncul, bukan PosDashboard
+    expect(find.text('Selamat Datang di POS Kasir'), findsOneWidget);
+    expect(find.text('Buat PIN Owner (6 Digit)'), findsOneWidget);
   });
 }

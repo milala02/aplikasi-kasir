@@ -128,4 +128,28 @@ class PosProvider with ChangeNotifier {
     _cart.clear();
     notifyListeners();
   }
+
+  
+  List<dynamic> _historyTransactions = [];
+  List<dynamic> get historyTransactions => _historyTransactions;
+
+  Future<void> fetchTransactionsByDate(DateTime date) async {
+    // Fallback logic jika metode ini juga ikut terhapus sebelumnya
+    _historyTransactions = []; 
+    _filteredTransactions = [];
+    notifyListeners();
+  }
+
+  List<dynamic> _filteredTransactions = [];
+  List<dynamic> get filteredTransactions => _filteredTransactions.isEmpty ? _historyTransactions : _filteredTransactions;
+
+  void filterTransactions({DateTime? date, String query = ""}) {
+    _filteredTransactions = _historyTransactions.where((trx) {
+      final matchesQuery = trx.id.toString().contains(query) || 
+                           (trx.paymentMethod != null && trx.paymentMethod.toString().toLowerCase().contains(query.toLowerCase()));
+      return matchesQuery;
+    }).toList();
+    notifyListeners();
+  }
+
 }
