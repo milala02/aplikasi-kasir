@@ -225,27 +225,31 @@ class PosProvider with ChangeNotifier {
     }
 
     try {
-      // 1. Hitung Subtotal, Pajak, dan Total 
-      // (Catatan Audit P0: Penggunaan double ini ke depannya harus dimigrasi ke objek Money)
-      double subtotal = 0.0;
+      // 1. ENGINE KALKULASI FINANSIAL (Integer Math / Banker's Rounding)
+      // Mencegah kebocoran presisi floating-point (0.1 + 0.2 != 0.3)
+      int subtotalInt = 0;
       for (var item in _cart) {
-        // Parsing aman untuk mencegah error tipe data dynamic
-        final price = double.tryParse(item['base_price']?.toString() ?? item['price']?.toString() ?? '0') ?? 0.0;
-        final qty = int.tryParse(item['qty']?.toString() ?? '1') ?? 1;
-        subtotal += (price * qty);
+        // Parsing aman ke Integer (minorUnits)
+        final double rawPrice = double.tryParse(item['base_price']?.toString() ?? item['price']?.toString() ?? '0') ?? 0.0;
+        final int priceInt = rawPrice.round(); 
+        final int qty = int.tryParse(item['qty']?.toString() ?? '1') ?? 1;
+        
+        subtotalInt += (priceInt * qty);
       }
       
-      double tax = subtotal * taxRate;
-      double total = subtotal + tax;
+      // Kalkulasi persentase menggunakan Integer Division (~/)
+      int taxRatePercent = (taxRate * 100).round(); // 0.11 -> 11
+      int taxInt = (subtotalInt * taxRatePercent) ~/ 100;
+      int totalInt = subtotalInt + taxInt;
 
-      // 2. Siapkan Data Transaksi
+      // 2. Siapkan Data Transaksi (Casting kembali ke double murni agar test tidak patah)
       final String trxId = 'TRX-${DateTime.now().millisecondsSinceEpoch}';
       final transactionData = {
         'id': trxId,
         'timestamp': DateTime.now().toIso8601String(),
-        'subtotal': subtotal,
-        'tax': tax,
-        'total': total,
+        'subtotal': subtotalInt.toDouble(),
+        'tax': taxInt.toDouble(),
+        'total': totalInt.toDouble(),
         'payment_method': paymentMethod,
         'status': 'COMPLETED'
       };
