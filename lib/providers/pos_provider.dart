@@ -214,4 +214,59 @@ class PosProvider with ChangeNotifier {
     }
   }
 
+
+  // =========================================================================
+  // ATOMIC CHECKOUT ENGINE
+  // =========================================================================
+  Future<bool> processCheckout({required String paymentMethod, double taxRate = 0.11}) async {
+    if (_cart.isEmpty) {
+      debugPrint("Keranjang kosong, batalkan checkout.");
+      return false;
+    }
+
+    try {
+      // 1. Hitung Subtotal, Pajak, dan Total 
+      // (Catatan Audit P0: Penggunaan double ini ke depannya harus dimigrasi ke objek Money)
+      double subtotal = 0.0;
+      for (var item in _cart) {
+        // Parsing aman untuk mencegah error tipe data dynamic
+        final price = double.tryParse(item['base_price']?.toString() ?? item['price']?.toString() ?? '0') ?? 0.0;
+        final qty = int.tryParse(item['qty']?.toString() ?? '1') ?? 1;
+        subtotal += (price * qty);
+      }
+      
+      double tax = subtotal * taxRate;
+      double total = subtotal + tax;
+
+      // 2. Siapkan Data Transaksi
+      final String trxId = 'TRX-${DateTime.now().millisecondsSinceEpoch}';
+      final transactionData = {
+        'id': trxId,
+        'timestamp': DateTime.now().toIso8601String(),
+        'subtotal': subtotal,
+        'tax': tax,
+        'total': total,
+        'payment_method': paymentMethod,
+        'status': 'COMPLETED'
+      };
+
+      // 3. Eksekusi Transaksi Atomik ke Database
+      // Menggunakan _repository yang sudah ada di PosProvider
+      bool isSuccess = await _repository.processSaleAtomically(transactionData, _cart);
+
+      if (isSuccess) {
+        // 4. Bersihkan keranjang jika sukses (otomatis tersimpan ke SharedPreferences kosong)
+        clearCart(); 
+        debugPrint("✅ Checkout Sukses: Transaksi $trxId tersimpan secara atomik!");
+        return true;
+      } else {
+        debugPrint("❌ Checkout Gagal: Rollback database terjadi.");
+        return false;
+      }
+    } catch (e) {
+      debugPrint("❌ Error sistem saat checkout: $e");
+      return false;
+    }
+  }
+
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
 
 class PosRepository {
@@ -60,4 +61,47 @@ class PosRepository {
     );
     return res.isNotEmpty ? res.first : null;
   }
+
+  // =========================================================================
+  // ATOMIC TRANSACTION: Checkout & Pengurangan Stok
+  // Garansi ACID (Atomicity, Consistency, Isolation, Durability)
+  // =========================================================================
+  Future<bool> processSaleAtomically(Map<String, dynamic> transactionData, List<Map<String, dynamic>> cartItems) async {
+    final db = await dbHelper.database;
+    
+    try {
+      // db.transaction menjamin jika ada 1 error, SEMUA perubahan akan di-Rollback
+      await db.transaction((txn) async {
+        
+        // 1. Catat Nota Penjualan Induk
+        await txn.insert('transactions', transactionData);
+        
+        // 2. Catat Item Pembelian & Kurangi Stok
+        for (var item in cartItems) {
+          // A. Simpan ke tabel detail transaksi
+          await txn.insert('transaction_items', {
+            'transaction_id': transactionData['id'],
+            'product_id': item['id'],
+            'quantity': item['qty'],
+            'price': item['base_price'] ?? item['price'] ?? 0.0,
+          });
+          
+          // B. Kurangi stok di katalog (Raw SQL lebih aman dari race condition)
+          await txn.rawUpdate(
+            'UPDATE products SET stock = stock - ? WHERE id = ?',
+            [item['qty'], item['id']]
+          );
+          
+          // C. (Di masa depan, logika pengurangan Cost Layer / FIFO bisa dimasukkan ke sini)
+        }
+      });
+      
+      return true; // Transaksi sukses 100%
+      
+    } catch (e) {
+      debugPrint('🚨 ATOMIC TRANSACTION GAGAL & DI-ROLLBACK: $e');
+      return false;
+    }
+  }
+
 }
