@@ -1,38 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'providers/pos_provider.dart';
 import 'views/pos_dashboard_screen.dart';
+import 'views/initial_pin_setup_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+  final prefs = await SharedPreferences.getInstance();
+  final bool isSetupDone = prefs.getBool('is_initial_setup_done') ?? false;
+
+  runApp(MyApp(isSetupDone: isSetupDone));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isSetupDone;
+
+  const MyApp({super.key, this.isSetupDone = false});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => PosProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PosProvider()..loadProducts()),
+      ],
       child: MaterialApp(
-        title: 'POS Production',
+        title: 'POS Kasir',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            primary: Colors.blue,
-          ),
-          useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-          appBarTheme: const AppBarTheme(
-            elevation: 0,
-            centerTitle: false,
-            backgroundColor: Colors.white,
-            foregroundColor: Colors.black,
-          ),
+          primarySwatch: Colors.blue,
+          useMaterial3: false,
         ),
-        home: const PosDashboardScreen(),
+        home: isSetupDone ? const PosDashboardScreen() : const InitialPinSetupScreen(),
       ),
     );
   }
