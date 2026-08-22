@@ -1,3 +1,6 @@
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'database_helper.dart';
 
@@ -100,6 +103,83 @@ class PosRepository {
       
     } catch (e) {
       debugPrint('🚨 ATOMIC TRANSACTION GAGAL & DI-ROLLBACK: $e');
+      return false;
+    }
+  }
+
+
+  // =========================================================================
+  // SALTED SHA-256 SECURITY ENGINE (Anti-Rainbow Table)
+  // =========================================================================
+  static String generateSalt([int length = 16]) {
+    final rand = Random.secure();
+    final values = List<int>.generate(length, (i) => rand.nextInt(256));
+    return base64Url.encode(values).substring(0, length);
+  }
+
+  static String hashPinWithSalt(String pin, String salt) {
+    final bytes = utf8.encode(salt + pin);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  // Verifikasi PIN App / Kasir dengan Salt
+  Future<bool> verifyAppPinSalted(String userId, String rawInputPin) async {
+    try {
+      final db = await dbHelper.database;
+      final List<Map<String, dynamic>> res = await db.query(
+        'users',
+        where: 'id = ?',
+        whereArgs: [userId],
+        limit: 1,
+      );
+
+      if (res.isEmpty) return false;
+
+      final userData = res.first;
+      final storedHash = userData['app_pin_hash']?.toString() ?? '';
+      final storedSalt = userData['app_pin_salt']?.toString() ?? '';
+
+      // Jika user belum punya salt (fallback legacy), hitung sha256 biasa
+      if (storedSalt.isEmpty) {
+        final legacyHash = sha256.convert(utf8.encode(rawInputPin)).toString();
+        return storedHash == legacyHash || storedHash == rawInputPin;
+      }
+
+      final computedHash = hashPinWithSalt(rawInputPin, storedSalt);
+      return storedHash == computedHash;
+    } catch (e) {
+      debugPrint("Error verifyAppPinSalted: $e");
+      return false;
+    }
+  }
+
+  // Verifikasi PIN Supervisor dengan Salt
+  Future<bool> verifySupervisorPinSalted(String rawInputPin) async {
+    try {
+      final db = await dbHelper.database;
+      final List<Map<String, dynamic>> res = await db.query(
+        'users',
+        where: 'role = ?',
+        whereArgs: ['SUPERVISOR'],
+        limit: 1,
+      );
+
+      if (res.isEmpty) return false;
+
+      final supervisorData = res.first;
+      final storedHash = supervisorData['supervisor_pin_hash']?.toString() ?? '';
+      final storedSalt = supervisorData['supervisor_pin_salt']?.toString() ?? '';
+
+      if (storedSalt.isEmpty) {
+        final legacyHash = sha256.convert(utf8.encode(rawInputPin)).toString();
+        return storedHash == legacyHash || storedHash == rawInputPin;
+      }
+
+      final computedHash = hashPinWithSalt(rawInputPin, storedSalt);
+      return storedHash == computedHash;
+    } catch (e) {
+      debugPrint("Error verifySupervisorPinSalted: $e");
       return false;
     }
   }
