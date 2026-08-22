@@ -25,7 +25,7 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug
+      - name: Build APK Debug with Full Diagnostics
         run: |
           echo "🔨 Building Flutter APK (debug mode)..."
           echo "Using development environment defaults for local testing"
@@ -33,9 +33,17 @@ jobs:
           flutter build apk --debug \
             --dart-define=API_KEY="dev_key_placeholder" \
             --dart-define=BASE_URL="http://localhost:8000" \
-            -v
+            -v 2>&1 | tee build.log
           
           echo "✅ APK build completed successfully!"
+
+      - name: Save Build Logs on Failure
+        if: failure()
+        run: |
+          echo "=== GRADLE BUILD FAILURE DETAILS ==="
+          tail -n 200 build.log
+          ls -la build/app/outputs/flutter-apk/ 2>/dev/null || echo "APK directory not found"
+          find build -name "*.apk" 2>/dev/null || echo "No APK files found anywhere"
 
       - name: Upload APK Artifact
         if: success()
