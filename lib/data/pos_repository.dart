@@ -184,4 +184,71 @@ class PosRepository {
     }
   }
 
+
+  // =========================================================================
+  // MEMORY-EFFICIENT FIFO HPP ENGINE (SQL-Level Execution)
+  // =========================================================================
+  Future<double> deductStockAndCalculateFifoHpp(dynamic txn, String productId, int qtyToDeduct) async {
+    int remainingToDeduct = qtyToDeduct;
+    double totalHppCost = 0.0;
+
+    // Fetch batch barang berdasarkan urutan masuk tertua (First In, First Out)
+    final List<Map<String, dynamic>> layers = await txn.query(
+      'product_cost_layers',
+      where: 'product_id = ? AND remaining_qty > 0',
+      whereArgs: [productId],
+      orderBy: 'created_at ASC',
+    );
+
+    for (var layer in layers) {
+      if (remainingToDeduct <= 0) break;
+
+      final String layerId = layer['id'].toString();
+      final int layerQty = int.tryParse(layer['remaining_qty'].toString()) ?? 0;
+      final double costPrice = double.tryParse(layer['cost_price'].toString()) ?? 0.0;
+
+      if (layerQty <= remainingToDeduct) {
+        // Habiskan seluruh kuantitas di batch tertua ini
+        totalHppCost += (layerQty * costPrice);
+        remainingToDeduct -= layerQty;
+
+        await txn.update(
+          'product_cost_layers',
+          {'remaining_qty': 0},
+          where: 'id = ?',
+          whereArgs: [layerId],
+        );
+      } else {
+        // Potong sebagian dari batch ini
+        totalHppCost += (remainingToDeduct * costPrice);
+        final int newRemaining = layerQty - remainingToDeduct;
+        remainingToDeduct = 0;
+
+        await txn.update(
+          'product_cost_layers',
+          {'remaining_qty': newRemaining},
+          where: 'id = ?',
+          whereArgs: [layerId],
+        );
+      }
+    }
+
+    // Backup Fallback: Jika barang masuk tidak mencukupi di layer (legacy product), gunakan cost_price produk utama
+    if (remainingToDeduct > 0) {
+      final List<Map<String, dynamic>> prod = await txn.query(
+        'products',
+        columns: ['cost_price'],
+        where: 'id = ?',
+        whereArgs: [productId],
+        limit: 1,
+      );
+      if (prod.isNotEmpty) {
+        final double fallbackCost = double.tryParse(prod.first['cost_price'].toString()) ?? 0.0;
+        totalHppCost += (remainingToDeduct * fallbackCost);
+      }
+    }
+
+    return totalHppCost;
+  }
+
 }
