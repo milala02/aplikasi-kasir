@@ -48,9 +48,14 @@ android {
 
     // CRITICAL FIX: Workaround for blue_thermal_printer plugin configuration issues
     // This prevents silent build failures where Gradle completes but produces no APK
-    packagingOptions {
-        exclude "META-INF/proguard/androidx-*.pro"
-        exclude "META-INF/proguard/androidx-*.txt"
+    // Using modern AGP 8.11.1+ syntax (packaging instead of deprecated packagingOptions)
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/proguard/androidx-*.pro",
+                "META-INF/proguard/androidx-*.txt"
+            )
+        }
     }
 
     // Additional compatibility for Android 12+
