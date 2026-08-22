@@ -122,6 +122,18 @@ class DatabaseHelper {
     final db = _database;
     if (db != null) {
       await db.close();
+    // Tabel Batch HPP (FIFO Cost Layer)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS product_cost_layers (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        cost_price REAL NOT NULL,
+        remaining_qty INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
+      )
+    ''');
+
     }
   }
 }

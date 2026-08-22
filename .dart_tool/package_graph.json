@@ -7,7 +7,6 @@
       "name": "aplikasi_kasir",
       "version": "1.0.0+1",
       "dependencies": [
-        "blue_thermal_printer",
         "crypto",
         "cupertino_icons",
         "drift",
@@ -20,7 +19,6 @@
         "provider",
         "shared_preferences",
         "sqflite",
-        "sqlite3_flutter_libs",
         "url_launcher"
       ],
       "devDependencies": [
@@ -179,13 +177,6 @@
       ]
     },
     {
-      "name": "blue_thermal_printer",
-      "version": "1.2.3",
-      "dependencies": [
-        "flutter"
-      ]
-    },
-    {
       "name": "shared_preferences",
       "version": "2.5.5",
       "dependencies": [
@@ -218,13 +209,6 @@
         "stack_trace",
         "stream_channel",
         "web"
-      ]
-    },
-    {
-      "name": "sqlite3_flutter_libs",
-      "version": "0.5.42",
-      "dependencies": [
-        "flutter"
       ]
     },
     {
