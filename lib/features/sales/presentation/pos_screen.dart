@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../products/domain/product.dart';
 import 'pos_controller.dart';
@@ -204,9 +205,7 @@ class _POSScreenState extends State<POSScreen> {
                           final inv = 'INV-${DateTime.now().millisecondsSinceEpoch}';
                           final success = widget.controller.checkout(invoiceNumber: inv);
                           if (success) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Transaksi $inv Berhasil!')),
-                            );
+                            _showReceiptDialog(context, widget.controller);
                           }
                         },
                   child: const Text('BAYAR / CHECKOUT', style: TextStyle(color: Colors.white, fontSize: 16)),
@@ -216,6 +215,67 @@ class _POSScreenState extends State<POSScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showReceiptDialog(BuildContext context, POSController controller) {
+    final sale = controller.lastCompletedSale;
+    if (sale == null) return;
+
+    final receiptText = controller.generateWhatsAppReceipt();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.receipt_long, color: Colors.green),
+            const SizedBox(width: 8),
+            Text('Transaksi ${sale.invoiceNumber} Berhasil!'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Preview Struk:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  receiptText ?? '',
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+          if (receiptText != null)
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              icon: const Icon(Icons.send, color: Colors.white),
+              label: const Text('Kirim via WhatsApp', style: TextStyle(color: Colors.white)),
+              onPressed: () async {
+                final encoded = Uri.encodeComponent(receiptText);
+                final url = Uri.parse('https://wa.me/?text=$encoded');
+                if (await canLaunchUrl(url)) {
+                  await launchUrl(url, mode: LaunchMode.externalApplication);
+                }
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+            ),
+        ],
+      ),
     );
   }
 }
