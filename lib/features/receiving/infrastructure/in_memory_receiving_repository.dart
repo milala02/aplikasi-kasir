@@ -10,6 +10,9 @@ class InMemoryReceivingRepository implements ReceivingRepository {
   }
 
   @override
+  List<Receiving> getAll() => _receivings.values.toList();
+
+  @override
   List<Receiving> getByPurchaseId(String purchaseId) {
     return _receivings.values
         .where((receiving) => receiving.purchaseId == purchaseId)
