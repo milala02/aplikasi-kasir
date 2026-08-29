@@ -12,10 +12,17 @@ import 'features/customers/infrastructure/drift_customer_repository.dart';
 import 'features/dashboard/application/financial_analytics_use_case.dart';
 import 'features/dashboard/presentation/dashboard_controller.dart';
 import 'features/inventory/domain/cost_layer_repository.dart';
+import 'features/inventory/domain/cost_layer_service.dart';
 import 'features/inventory/infrastructure/drift_cost_layer_repository.dart';
+import 'features/orders/application/fulfill_order_use_case.dart';
+import 'features/orders/application/order_payment_use_case.dart';
+import 'features/orders/application/process_stock_out_use_case.dart';
+import 'features/orders/application/submit_order_use_case.dart';
+import 'features/orders/infrastructure/in_memory_order_repository.dart';
 import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
+import 'features/production/application/process_production_batch_use_case.dart';
 import 'features/purchasing/domain/purchase_repository.dart';
 import 'features/purchasing/infrastructure/drift_purchase_repository.dart';
 import 'features/receiving/application/receive_goods_use_case.dart';
@@ -50,14 +57,40 @@ void main() async {
   final receivingRepo = DriftReceivingRepository(db);
 
   // 4. Use cases
+  // Sale = financial record (tanpa konsumsi stok). Stok dikonsumsi saat
+  // stock-out (handover/pickup) melalui ProcessStockOutUseCase.
   final processSaleUseCase = ProcessSaleUseCase(
     saleRepository: saleRepo,
+  );
+
+  final orderRepository = InMemoryOrderRepository();
+  final submitOrderUseCase = SubmitOrderUseCase(
+    processSaleUseCase: processSaleUseCase,
+    saleRepository: saleRepo,
+    orderRepository: orderRepository,
+  );
+  final orderPaymentUseCase = OrderPaymentUseCase(
+    orderRepository: orderRepository,
+  );
+  final processStockOutUseCase = ProcessStockOutUseCase(
+    costLayerService: CostLayerService(repository: costLayerRepo),
+    costLayerRepository: costLayerRepo,
     inventoryRepository: inventoryRepo,
+    saleRepository: saleRepo,
+  );
+  final fulfillOrderUseCase = FulfillOrderUseCase(
+    orderRepository: orderRepository,
+    saleRepository: saleRepo,
+    processStockOutUseCase: processStockOutUseCase,
   );
   final receiveGoodsUseCase = ReceiveGoodsUseCase(
     receivingRepository: receivingRepo,
     inventoryRepository: inventoryRepo,
     costLayerRepository: costLayerRepo,
+  );
+  final processProductionBatchUseCase = ProcessProductionBatchUseCase(
+    costLayerRepository: costLayerRepo,
+    inventoryRepository: inventoryRepo,
   );
 
   // 5. Controllers
@@ -70,7 +103,10 @@ void main() async {
   final posController = POSController(
     productRepository: productRepo,
     customerRepository: customerRepo,
-    processSaleUseCase: processSaleUseCase,
+    submitOrderUseCase: submitOrderUseCase,
+    orderPaymentUseCase: orderPaymentUseCase,
+    fulfillOrderUseCase: fulfillOrderUseCase,
+    saleRepository: saleRepo,
   );
 
   runApp(MyApp(
@@ -84,6 +120,7 @@ void main() async {
     purchaseRepository: purchaseRepo,
     receivingRepository: receivingRepo,
     receiveGoodsUseCase: receiveGoodsUseCase,
+    processProductionBatchUseCase: processProductionBatchUseCase,
   ));
 }
 
@@ -98,6 +135,7 @@ class MyApp extends StatelessWidget {
   final PurchaseRepository purchaseRepository;
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
+  final ProcessProductionBatchUseCase processProductionBatchUseCase;
 
   const MyApp({
     super.key,
@@ -111,6 +149,7 @@ class MyApp extends StatelessWidget {
     required this.purchaseRepository,
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
+    required this.processProductionBatchUseCase,
   });
 
   @override
@@ -137,6 +176,7 @@ class MyApp extends StatelessWidget {
               purchaseRepository: purchaseRepository,
               receivingRepository: receivingRepository,
               receiveGoodsUseCase: receiveGoodsUseCase,
+              processProductionBatchUseCase: processProductionBatchUseCase,
             ),
           ),
         );

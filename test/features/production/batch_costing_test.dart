@@ -3,6 +3,7 @@ import 'package:aplikasi_kasir/core/money/money.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/core/result/result.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/cost_layer.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 import 'package:aplikasi_kasir/features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
 import 'package:aplikasi_kasir/features/inventory/infrastructure/in_memory_inventory_repository.dart';
 import 'package:aplikasi_kasir/features/recipes/domain/recipe.dart';
@@ -198,6 +199,159 @@ void main() {
       expect(batch.totalBatchCost.minorUnits, equals(50000000));
       // HPP per kg = Rp 500.000 / 10 kg = Rp 50.000 / kg
       expect(batch.unitCost.minorUnits, equals(5000000));
+    });
+
+    test(
+        'Test 8: FIFO deterministik berdasarkan acquiredAt walau layer di-insert tidak urut',
+        () async {
+      // Insert layer terbaru lebih dulu (bukan urutan FIFO).
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_new',
+          productId: 'cabai',
+          originalQuantity: Quantity(value: 10, scale: 0),
+          remainingQuantity: Quantity(value: 10, scale: 0),
+          unitCost: const Money(minorUnits: 3500000, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_old',
+          productId: 'cabai',
+          originalQuantity: Quantity(value: 10, scale: 0),
+          remainingQuantity: Quantity(value: 10, scale: 0),
+          unitCost: const Money(minorUnits: 3000000, currency: 'IDR'),
+          acquiredAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      );
+
+      final recipe = Recipe(
+        id: 'rec_04',
+        name: 'Bumbu Cabai',
+        items: [
+          RecipeItem(
+            productId: 'cabai',
+            quantityRequired: Quantity(value: 12, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 8, scale: 0),
+      );
+
+      final result = await useCase.execute(
+        batchId: 'batch_027',
+        batchNumber: 'BATCH-027',
+        recipe: recipe,
+        producedAt: DateTime.now(),
+      );
+
+      expect(result, isA<Success>());
+      final batch = (result as Success).value;
+      // FIFO: 10 kg @ 30.000 (layer_old) + 2 kg @ 35.000 (layer_new) = Rp 370.000
+      expect(batch.totalMaterialCost.minorUnits, equals(37000000));
+
+      final oldLayer = await costLayerRepo.getById('layer_old');
+      expect(oldLayer!.remainingQuantity.value, equals(0));
+
+      final newLayer = await costLayerRepo.getById('layer_new');
+      expect(newLayer!.remainingQuantity.value, equals(8));
+    });
+
+    test('Test 9: Tie-break FIFO berdasarkan id saat acquiredAt sama',
+        () async {
+      final acquiredAt = DateTime.now();
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_z',
+          productId: 'kunyit',
+          originalQuantity: Quantity(value: 5, scale: 0),
+          remainingQuantity: Quantity(value: 5, scale: 0),
+          unitCost: const Money(minorUnits: 3000000, currency: 'IDR'),
+          acquiredAt: acquiredAt,
+        ),
+      );
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_a',
+          productId: 'kunyit',
+          originalQuantity: Quantity(value: 5, scale: 0),
+          remainingQuantity: Quantity(value: 5, scale: 0),
+          unitCost: const Money(minorUnits: 2500000, currency: 'IDR'),
+          acquiredAt: acquiredAt,
+        ),
+      );
+
+      final recipe = Recipe(
+        id: 'rec_05',
+        name: 'Bumbu Kunyit',
+        items: [
+          RecipeItem(
+            productId: 'kunyit',
+            quantityRequired: Quantity(value: 5, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 4, scale: 0),
+      );
+
+      final result = await useCase.execute(
+        batchId: 'batch_028',
+        batchNumber: 'BATCH-028',
+        recipe: recipe,
+        producedAt: DateTime.now(),
+      );
+
+      expect(result, isA<Success>());
+      final batch = (result as Success).value;
+      // acquiredAt sama -> id terkecil ('layer_a') dikonsumsi duluan: 5 @ 25.000
+      expect(batch.totalMaterialCost.minorUnits, equals(12500000));
+
+      final layerA = await costLayerRepo.getById('layer_a');
+      expect(layerA!.remainingQuantity.value, equals(0));
+
+      final layerZ = await costLayerRepo.getById('layer_z');
+      expect(layerZ!.remainingQuantity.value, equals(5));
+    });
+
+    test('Test 10: Stock movement outbound tercatat di inventory repository',
+        () async {
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_001',
+          productId: 'bawang_merah',
+          originalQuantity: Quantity(value: 10, scale: 0),
+          remainingQuantity: Quantity(value: 10, scale: 0),
+          unitCost: const Money(minorUnits: 3000000, currency: 'IDR'),
+          acquiredAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      );
+
+      final recipe = Recipe(
+        id: 'rec_06',
+        name: 'Bumbu Utama',
+        items: [
+          RecipeItem(
+            productId: 'bawang_merah',
+            quantityRequired: Quantity(value: 7, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 5, scale: 0),
+      );
+
+      final result = await useCase.execute(
+        batchId: 'batch_029',
+        batchNumber: 'BATCH-029',
+        recipe: recipe,
+        producedAt: DateTime.now(),
+      );
+
+      expect(result, isA<Success>());
+
+      final movements = await inventoryRepo.getMovements('bawang_merah');
+      expect(movements, hasLength(1));
+      expect(movements.first.id, equals('mov_prod_batch_029_bawang_merah'));
+      expect(movements.first.quantity.value, equals(7));
+      expect(movements.first.type, equals(StockMovementType.sale));
+      expect(movements.first.referenceId, equals('batch_029'));
     });
   });
 }

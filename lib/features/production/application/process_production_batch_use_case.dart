@@ -33,6 +33,14 @@ class ProcessProductionBatchUseCase {
         final availableLayers =
             await costLayerRepository.getAvailableByProductId(item.productId);
 
+        // FIFO deterministik: urutkan berdasarkan acquiredAt, lalu id
+        // (repository tidak menjamin urutan layer yang dikembalikan).
+        availableLayers.sort((a, b) {
+          final acquired = a.acquiredAt.compareTo(b.acquiredAt);
+          if (acquired != 0) return acquired;
+          return a.id.compareTo(b.id);
+        });
+
         // Hitung total sisa stok di semua layer
         var totalAvailable = 0;
         final targetScale = item.quantityRequired.scale;
@@ -87,7 +95,7 @@ class ProcessProductionBatchUseCase {
           referenceId: batchId,
           occurredAt: producedAt,
         );
-        inventoryRepository.recordMovement(movement);
+        await inventoryRepository.recordMovement(movement);
       }
 
       // 3. Buat Production Batch Result

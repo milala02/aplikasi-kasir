@@ -9,6 +9,7 @@ import '../features/dashboard/presentation/dashboard_controller.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/inventory/domain/cost_layer_repository.dart';
 import '../features/inventory/presentation/inventory_screen.dart';
+import '../features/production/application/process_production_batch_use_case.dart';
 import '../features/production/presentation/production_screen.dart';
 import '../features/products/domain/product_repository.dart';
 import '../features/purchasing/domain/purchase_repository.dart';
@@ -45,6 +46,7 @@ class MainNavigationShell extends StatefulWidget {
   final ProductRepository productRepository;
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
+  final ProcessProductionBatchUseCase processProductionBatchUseCase;
 
   const MainNavigationShell({
     super.key,
@@ -58,6 +60,7 @@ class MainNavigationShell extends StatefulWidget {
     required this.productRepository,
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
+    required this.processProductionBatchUseCase,
   });
 
   @override
@@ -89,7 +92,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         title: 'Produksi Bumbu',
         label: 'Produksi',
         page: ProductionAndPortioningScreen(
-            costLayerRepository: widget.costLayerRepository),
+            costLayerRepository: widget.costLayerRepository,
+            productionUseCase: widget.processProductionBatchUseCase),
       ),
       _NavItem(
         icon: Icons.inventory_2,

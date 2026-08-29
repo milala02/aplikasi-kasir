@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import '../../../core/money/money.dart';
 import '../../inventory/domain/cost_layer_repository.dart';
 import '../../portioning/application/calculate_portion_use_case.dart';
+import '../application/process_production_batch_use_case.dart';
 
 class ProductionAndPortioningScreen extends StatefulWidget {
   final CostLayerRepository costLayerRepository;
+  final ProcessProductionBatchUseCase productionUseCase;
 
   const ProductionAndPortioningScreen({
     super.key,
     required this.costLayerRepository,
+    required this.productionUseCase,
   });
 
   @override
@@ -141,14 +144,16 @@ class _ProductionAndPortioningScreenState
                   color: Colors.white),
               label: const Text('PROSES PRODUKSI & POTONG STOK FIFO',
                   style: TextStyle(color: Colors.white, fontSize: 16)),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text(
-                          'Simulasi Produksi Bumbu Berhasil! HPP FIFO Dihitung.')),
-                );
-              },
+              // Belum aktif: ProcessProductionBatchUseCase membutuhkan
+              // Recipe, dan data komposisi resep belum tersedia di aplikasi.
+              onPressed: null,
             ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '⚠️ Tombol produksi belum aktif: data resep/komposisi bahan '
+            'belum tersedia.',
+            style: TextStyle(fontSize: 13, color: Colors.orange),
           ),
         ],
       ),

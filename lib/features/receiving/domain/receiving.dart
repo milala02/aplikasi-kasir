@@ -46,5 +46,15 @@ class Receiving {
     if (items.isEmpty) {
       throw ArgumentError('Receiving items cannot be empty.');
     }
+
+    // Satu penerimaan tidak boleh memuat dua item dengan productId sama:
+    // mencegah ID collision pada movement/cost layer dan partial state.
+    final seenProductIds = <String>{};
+    for (final item in items) {
+      if (!seenProductIds.add(item.productId)) {
+        throw ArgumentError(
+            'Receiving cannot contain duplicate products (${item.productId}).');
+      }
+    }
   }
 }
