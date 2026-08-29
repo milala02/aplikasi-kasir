@@ -8,6 +8,7 @@ enum StockMovementType {
   damage,
   returnIn,
   returnOut,
+  production,
 }
 
 class StockMovement {
@@ -50,6 +51,7 @@ class StockMovement {
       case StockMovementType.purchase:
       case StockMovementType.adjustmentIncrease:
       case StockMovementType.returnIn:
+      case StockMovementType.production:
         return true;
 
       case StockMovementType.sale:
