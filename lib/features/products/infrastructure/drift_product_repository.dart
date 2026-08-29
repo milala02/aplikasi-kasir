@@ -38,12 +38,12 @@ class DriftProductRepository implements ProductRepository {
   List<Product> getActive() => _cache.values.where((p) => p.active).toList();
 
   @override
-  void save(Product product) {
+  Future<void> save(Product product) async {
     if (_cache.containsKey(product.id)) {
       throw ArgumentError('Product ID already exists.');
     }
-    _cache[product.id] = product;
-    db.into(db.productsTable).insert(
+
+    await db.into(db.productsTable).insert(
           ProductsTableCompanion.insert(
             id: product.id,
             sku: product.sku,
@@ -57,15 +57,17 @@ class DriftProductRepository implements ProductRepository {
           ),
           mode: InsertMode.insertOrReplace,
         );
+
+    _cache[product.id] = product;
   }
 
   @override
-  void update(Product product) {
+  Future<void> update(Product product) async {
     if (!_cache.containsKey(product.id)) {
       throw ArgumentError('Product not found.');
     }
-    _cache[product.id] = product;
-    db.update(db.productsTable).replace(
+
+    await db.update(db.productsTable).replace(
           ProductsTableData(
             id: product.id,
             sku: product.sku,
@@ -78,12 +80,16 @@ class DriftProductRepository implements ProductRepository {
             active: product.active,
           ),
         );
+
+    _cache[product.id] = product;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
+    await (db.delete(db.productsTable)..where((tbl) => tbl.id.equals(id)))
+        .go();
+
     _cache.remove(id);
-    (db.delete(db.productsTable)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Product _toDomain(ProductsTableData data) {

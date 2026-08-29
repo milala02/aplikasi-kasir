@@ -7,12 +7,12 @@ import 'package:aplikasi_kasir/features/products/domain/product_repository.dart'
 
 void main() {
   group('ProductUseCases', () {
-    test('creates and retrieves a product', () {
+    test('creates and retrieves a product', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
       final product = createProduct();
 
-      useCases.create(product);
+      await useCases.create(product);
 
       expect(useCases.getById(product.id), equals(product));
       expect(useCases.getBySku(product.sku), equals(product));
@@ -20,43 +20,43 @@ void main() {
       expect(useCases.getActive(), contains(product));
     });
 
-    test('rejects duplicate product id', () {
+    test('rejects duplicate product id', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      useCases.create(createProduct());
+      await useCases.create(createProduct());
 
-      expect(
-        () => useCases.create(
+      await expectLater(
+        useCases.create(
           createProduct(),
         ),
         throwsArgumentError,
       );
     });
 
-    test('rejects duplicate SKU', () {
+    test('rejects duplicate SKU', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      useCases.create(createProduct());
+      await useCases.create(createProduct());
 
       final duplicateSku = createProduct().copyWith(
         id: 'product-002',
       );
 
-      expect(
-        () => useCases.create(duplicateSku),
+      await expectLater(
+        useCases.create(duplicateSku),
         throwsArgumentError,
       );
     });
 
-    test('updates product prices', () {
+    test('updates product prices', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      useCases.create(createProduct());
+      await useCases.create(createProduct());
 
-      useCases.updatePrices(
+      await useCases.updatePrices(
         productId: 'product-001',
         purchasePrice: const Money(
           minorUnits: 13000,
@@ -87,35 +87,35 @@ void main() {
       );
     });
 
-    test('activates and deactivates a product', () {
+    test('activates and deactivates a product', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      useCases.create(createProduct());
+      await useCases.create(createProduct());
 
-      useCases.deactivate('product-001');
+      await useCases.deactivate('product-001');
       expect(useCases.getById('product-001')?.active, isFalse);
 
-      useCases.activate('product-001');
+      await useCases.activate('product-001');
       expect(useCases.getById('product-001')?.active, isTrue);
     });
 
-    test('deletes an existing product', () {
+    test('deletes an existing product', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      useCases.create(createProduct());
-      useCases.delete('product-001');
+      await useCases.create(createProduct());
+      await useCases.delete('product-001');
 
       expect(useCases.getById('product-001'), isNull);
     });
 
-    test('rejects operations for missing products', () {
+    test('rejects operations for missing products', () async {
       final repository = _FakeProductRepository();
       final useCases = ProductUseCases(repository: repository);
 
-      expect(
-        () => useCases.updatePrices(
+      await expectLater(
+        useCases.updatePrices(
           productId: 'missing',
           purchasePrice: const Money(
             minorUnits: 10000,
@@ -129,18 +129,18 @@ void main() {
         throwsArgumentError,
       );
 
-      expect(
-        () => useCases.activate('missing'),
+      await expectLater(
+        useCases.activate('missing'),
         throwsArgumentError,
       );
 
-      expect(
-        () => useCases.deactivate('missing'),
+      await expectLater(
+        useCases.deactivate('missing'),
         throwsArgumentError,
       );
 
-      expect(
-        () => useCases.delete('missing'),
+      await expectLater(
+        useCases.delete('missing'),
         throwsArgumentError,
       );
     });
@@ -191,17 +191,17 @@ class _FakeProductRepository implements ProductRepository {
   }
 
   @override
-  void save(Product product) {
+  Future<void> save(Product product) async {
     _products[product.id] = product;
   }
 
   @override
-  void update(Product product) {
+  Future<void> update(Product product) async {
     _products[product.id] = product;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _products.remove(id);
   }
 }

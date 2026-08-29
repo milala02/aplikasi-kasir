@@ -10,7 +10,7 @@ void main() {
       expect(ProductRepository, isNotNull);
     });
 
-    test('repository contract exposes product operations', () {
+    test('repository contract exposes product operations', () async {
       final repository = _FakeProductRepository();
 
       final product = Product(
@@ -28,7 +28,7 @@ void main() {
         ),
       );
 
-      repository.save(product);
+      await repository.save(product);
 
       expect(repository.getById('product-001'), equals(product));
       expect(repository.getBySku('SKU-001'), equals(product));
@@ -36,7 +36,7 @@ void main() {
       expect(repository.getActive(), contains(product));
     });
 
-    test('repository can update and delete a product', () {
+    test('repository can update and delete a product', () async {
       final repository = _FakeProductRepository();
 
       final product = Product(
@@ -54,7 +54,7 @@ void main() {
         ),
       );
 
-      repository.save(product);
+      await repository.save(product);
 
       final updated = product.copyWith(
         sellingPrice: const Money(
@@ -63,7 +63,7 @@ void main() {
         ),
       );
 
-      repository.update(updated);
+      await repository.update(updated);
 
       expect(
         repository.getById('product-002')?.sellingPrice,
@@ -73,7 +73,7 @@ void main() {
         ),
       );
 
-      repository.deleteById('product-002');
+      await repository.deleteById('product-002');
 
       expect(repository.getById('product-002'), isNull);
     });
@@ -107,17 +107,17 @@ class _FakeProductRepository implements ProductRepository {
   }
 
   @override
-  void save(Product product) {
+  Future<void> save(Product product) async {
     _products[product.id] = product;
   }
 
   @override
-  void update(Product product) {
+  Future<void> update(Product product) async {
     _products[product.id] = product;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _products.remove(id);
   }
 }

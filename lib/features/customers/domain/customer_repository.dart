@@ -4,7 +4,7 @@ abstract interface class CustomerRepository {
   Customer? getById(String id);
   Customer? getByPhoneNumber(String phoneNumber);
   List<Customer> getAll();
-  void save(Customer customer);
-  void update(Customer customer);
-  void deleteById(String id);
+  Future<void> save(Customer customer);
+  Future<void> update(Customer customer);
+  Future<void> deleteById(String id);
 }

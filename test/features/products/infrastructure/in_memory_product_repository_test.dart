@@ -6,17 +6,17 @@ import 'package:aplikasi_kasir/features/products/infrastructure/in_memory_produc
 
 void main() {
   group('InMemoryProductRepository', () {
-    test('saves and retrieves products', () {
+    test('saves and retrieves products', () async {
       final repository = InMemoryProductRepository();
       final product = createProduct();
 
-      repository.save(product);
+      await repository.save(product);
 
       expect(repository.getById(product.id), equals(product));
       expect(repository.getBySku(product.sku), equals(product));
     });
 
-    test('returns active products only', () {
+    test('returns active products only', () async {
       final repository = InMemoryProductRepository();
       final active = createProduct();
       final inactive = active.copyWith(
@@ -25,45 +25,45 @@ void main() {
         active: false,
       );
 
-      repository.save(active);
-      repository.save(inactive);
+      await repository.save(active);
+      await repository.save(inactive);
 
       expect(repository.getAll(), hasLength(2));
       expect(repository.getActive(), [active]);
     });
 
-    test('rejects duplicate id', () {
+    test('rejects duplicate id', () async {
       final repository = InMemoryProductRepository();
       final product = createProduct();
 
-      repository.save(product);
+      await repository.save(product);
 
-      expect(
-        () => repository.save(product),
+      await expectLater(
+        repository.save(product),
         throwsArgumentError,
       );
     });
 
-    test('rejects duplicate sku', () {
+    test('rejects duplicate sku', () async {
       final repository = InMemoryProductRepository();
       final product = createProduct();
       final duplicateSku = product.copyWith(
         id: 'product-002',
       );
 
-      repository.save(product);
+      await repository.save(product);
 
-      expect(
-        () => repository.save(duplicateSku),
+      await expectLater(
+        repository.save(duplicateSku),
         throwsArgumentError,
       );
     });
 
-    test('updates an existing product', () {
+    test('updates an existing product', () async {
       final repository = InMemoryProductRepository();
       final product = createProduct();
 
-      repository.save(product);
+      await repository.save(product);
 
       final updated = product.copyWith(
         sellingPrice: const Money(
@@ -72,17 +72,17 @@ void main() {
         ),
       );
 
-      repository.update(updated);
+      await repository.update(updated);
 
       expect(repository.getById(product.id), equals(updated));
     });
 
-    test('deletes a product', () {
+    test('deletes a product', () async {
       final repository = InMemoryProductRepository();
       final product = createProduct();
 
-      repository.save(product);
-      repository.deleteById(product.id);
+      await repository.save(product);
+      await repository.deleteById(product.id);
 
       expect(repository.getById(product.id), isNull);
     });

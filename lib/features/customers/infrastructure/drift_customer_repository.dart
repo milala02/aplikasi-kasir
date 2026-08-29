@@ -36,12 +36,12 @@ class DriftCustomerRepository implements CustomerRepository {
   List<Customer> getAll() => _cache.values.toList();
 
   @override
-  void save(Customer customer) {
+  Future<void> save(Customer customer) async {
     if (_cache.containsKey(customer.id)) {
       throw ArgumentError('Customer ID already exists.');
     }
-    _cache[customer.id] = customer;
-    db.into(db.customersTable).insert(
+
+    await db.into(db.customersTable).insert(
           CustomersTableCompanion.insert(
             id: customer.id,
             name: customer.name,
@@ -52,15 +52,17 @@ class DriftCustomerRepository implements CustomerRepository {
           ),
           mode: InsertMode.insertOrReplace,
         );
+
+    _cache[customer.id] = customer;
   }
 
   @override
-  void update(Customer customer) {
+  Future<void> update(Customer customer) async {
     if (!_cache.containsKey(customer.id)) {
       throw ArgumentError('Customer not found.');
     }
-    _cache[customer.id] = customer;
-    db.update(db.customersTable).replace(
+
+    await db.update(db.customersTable).replace(
           CustomersTableData(
             id: customer.id,
             name: customer.name,
@@ -70,12 +72,16 @@ class DriftCustomerRepository implements CustomerRepository {
             createdAt: customer.createdAt,
           ),
         );
+
+    _cache[customer.id] = customer;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
+    await (db.delete(db.customersTable)..where((tbl) => tbl.id.equals(id)))
+        .go();
+
     _cache.remove(id);
-    (db.delete(db.customersTable)..where((tbl) => tbl.id.equals(id))).go();
   }
 
   Customer _toDomain(CustomersTableData data) {

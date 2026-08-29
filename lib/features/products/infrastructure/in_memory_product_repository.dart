@@ -31,7 +31,7 @@ class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
-  void save(Product product) {
+  Future<void> save(Product product) async {
     if (_products.containsKey(product.id)) {
       throw ArgumentError('Product ID already exists.');
     }
@@ -44,7 +44,7 @@ class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
-  void update(Product product) {
+  Future<void> update(Product product) async {
     if (!_products.containsKey(product.id)) {
       throw ArgumentError('Product not found.');
     }
@@ -59,7 +59,7 @@ class InMemoryProductRepository implements ProductRepository {
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _products.remove(id);
   }
 }

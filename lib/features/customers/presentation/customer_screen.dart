@@ -28,7 +28,7 @@ class _CustomerScreenState extends State<CustomerScreen> {
     super.dispose();
   }
 
-  void _addCustomer() {
+  Future<void> _addCustomer() async {
     final name = _nameController.text.trim();
     final phone = _phoneController.text.trim();
     final address = _addressController.text.trim();
@@ -48,13 +48,23 @@ class _CustomerScreenState extends State<CustomerScreen> {
       createdAt: DateTime.now(),
     );
 
-    widget.customerRepository.save(newCustomer);
+    try {
+      await widget.customerRepository.save(newCustomer);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan pelanggan: $e')),
+      );
+      return;
+    }
 
     _nameController.clear();
     _phoneController.clear();
     _addressController.clear();
 
     setState(() {});
+
+    if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Pelanggan $name berhasil ditambahkan!')),

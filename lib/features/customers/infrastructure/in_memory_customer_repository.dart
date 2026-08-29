@@ -22,7 +22,7 @@ class InMemoryCustomerRepository implements CustomerRepository {
   List<Customer> getAll() => _customers.values.toList();
 
   @override
-  void save(Customer customer) {
+  Future<void> save(Customer customer) async {
     if (_customers.containsKey(customer.id)) {
       throw ArgumentError('Customer ID already exists.');
     }
@@ -30,7 +30,7 @@ class InMemoryCustomerRepository implements CustomerRepository {
   }
 
   @override
-  void update(Customer customer) {
+  Future<void> update(Customer customer) async {
     if (!_customers.containsKey(customer.id)) {
       throw ArgumentError('Customer not found.');
     }
@@ -38,7 +38,7 @@ class InMemoryCustomerRepository implements CustomerRepository {
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _customers.remove(id);
   }
 

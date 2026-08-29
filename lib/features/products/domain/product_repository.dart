@@ -9,9 +9,9 @@ abstract interface class ProductRepository {
 
   List<Product> getActive();
 
-  void save(Product product);
+  Future<void> save(Product product);
 
-  void update(Product product);
+  Future<void> update(Product product);
 
-  void deleteById(String id);
+  Future<void> deleteById(String id);
 }

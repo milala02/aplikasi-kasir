@@ -28,7 +28,7 @@ class ProductUseCases {
     return repository.getActive();
   }
 
-  void create(Product product) {
+  Future<void> create(Product product) async {
     if (repository.getById(product.id) != null) {
       throw ArgumentError('Product ID already exists.');
     }
@@ -37,21 +37,21 @@ class ProductUseCases {
       throw ArgumentError('Product SKU already exists.');
     }
 
-    repository.save(product);
+    await repository.save(product);
   }
 
-  void updatePrices({
+  Future<void> updatePrices({
     required String productId,
     required Money purchasePrice,
     required Money sellingPrice,
-  }) {
+  }) async {
     final product = repository.getById(productId);
 
     if (product == null) {
       throw ArgumentError('Product not found.');
     }
 
-    repository.update(
+    await repository.update(
       service.updatePrices(
         product: product,
         purchasePrice: purchasePrice,
@@ -60,31 +60,31 @@ class ProductUseCases {
     );
   }
 
-  void activate(String productId) {
+  Future<void> activate(String productId) async {
     final product = repository.getById(productId);
 
     if (product == null) {
       throw ArgumentError('Product not found.');
     }
 
-    repository.update(service.activate(product));
+    await repository.update(service.activate(product));
   }
 
-  void deactivate(String productId) {
+  Future<void> deactivate(String productId) async {
     final product = repository.getById(productId);
 
     if (product == null) {
       throw ArgumentError('Product not found.');
     }
 
-    repository.update(service.deactivate(product));
+    await repository.update(service.deactivate(product));
   }
 
-  void delete(String productId) {
+  Future<void> delete(String productId) async {
     if (repository.getById(productId) == null) {
       throw ArgumentError('Product not found.');
     }
 
-    repository.deleteById(productId);
+    await repository.deleteById(productId);
   }
 }
