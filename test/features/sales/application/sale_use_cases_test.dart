@@ -17,20 +17,20 @@ void main() {
       useCases = SaleUseCases(repository: repository);
     });
 
-    test('creates and retrieves a sale', () {
+    test('creates and retrieves a sale', () async {
       final sale = createSale();
 
-      useCases.create(sale);
+      await useCases.create(sale);
 
       expect(useCases.getById('sale-001'), equals(sale));
       expect(useCases.getAll(), contains(sale));
     });
 
-    test('adds an item to a sale', () {
+    test('adds an item to a sale', () async {
       final sale = createSale();
-      useCases.create(sale);
+      await useCases.create(sale);
 
-      useCases.addItem(
+      await useCases.addItem(
         saleId: 'sale-001',
         item: createSecondItem(),
       );
@@ -42,7 +42,7 @@ void main() {
       expect(updated.items.last.productId, 'product-002');
     });
 
-    test('removes an item from a sale', () {
+    test('removes an item from a sale', () async {
       final sale = Sale(
         id: 'sale-001',
         invoiceNumber: 'INV-001',
@@ -61,9 +61,9 @@ void main() {
         createdAt: DateTime(2026, 1, 1),
       );
 
-      useCases.create(sale);
+      await useCases.create(sale);
 
-      useCases.removeItemAt(
+      await useCases.removeItemAt(
         saleId: 'sale-001',
         index: 1,
       );
@@ -75,10 +75,10 @@ void main() {
       );
     });
 
-    test('applies discount', () {
-      useCases.create(createSale());
+    test('applies discount', () async {
+      await useCases.create(createSale());
 
-      useCases.applyDiscount(
+      await useCases.applyDiscount(
         saleId: 'sale-001',
         discount: const Money(
           minorUnits: 1000,
@@ -95,10 +95,10 @@ void main() {
       );
     });
 
-    test('applies tax', () {
-      useCases.create(createSale());
+    test('applies tax', () async {
+      await useCases.create(createSale());
 
-      useCases.applyTax(
+      await useCases.applyTax(
         saleId: 'sale-001',
         tax: const Money(
           minorUnits: 500,
@@ -115,10 +115,10 @@ void main() {
       );
     });
 
-    test('deletes an existing sale', () {
-      useCases.create(createSale());
+    test('deletes an existing sale', () async {
+      await useCases.create(createSale());
 
-      useCases.delete('sale-001');
+      await useCases.delete('sale-001');
 
       expect(useCases.getById('sale-001'), isNull);
     });
@@ -130,9 +130,9 @@ void main() {
       );
     });
 
-    test('rejects unknown sale when adding item', () {
-      expect(
-        () => useCases.addItem(
+    test('rejects unknown sale when adding item', () async {
+      await expectLater(
+        useCases.addItem(
           saleId: 'unknown',
           item: createItem(),
         ),
@@ -140,15 +140,15 @@ void main() {
       );
     });
 
-    test('rejects unknown sale when deleting', () {
-      expect(
-        () => useCases.delete('unknown'),
+    test('rejects unknown sale when deleting', () async {
+      await expectLater(
+        useCases.delete('unknown'),
         throwsArgumentError,
       );
     });
 
-    test('returns an unmodifiable sale list', () {
-      useCases.create(createSale());
+    test('returns an unmodifiable sale list', () async {
+      await useCases.create(createSale());
 
       final sales = useCases.getAll();
 
@@ -225,17 +225,17 @@ class _FakeSaleRepository implements SaleRepository {
   }
 
   @override
-  void save(Sale sale) {
+  Future<void> save(Sale sale) async {
     _sales[sale.id] = sale;
   }
 
   @override
-  void update(Sale sale) {
+  Future<void> update(Sale sale) async {
     _sales[sale.id] = sale;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _sales.remove(id);
   }
 }

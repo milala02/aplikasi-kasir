@@ -3173,15 +3173,56 @@ class $SaleItemsTableTable extends SaleItemsTable
   late final GeneratedColumn<int> quantityValue = GeneratedColumn<int>(
       'quantity_value', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _quantityScaleMeta =
+      const VerificationMeta('quantityScale');
+  @override
+  late final GeneratedColumn<int> quantityScale = GeneratedColumn<int>(
+      'quantity_scale', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _productNameMeta =
+      const VerificationMeta('productName');
+  @override
+  late final GeneratedColumn<String> productName = GeneratedColumn<String>(
+      'product_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _unitPriceMinorUnitsMeta =
       const VerificationMeta('unitPriceMinorUnits');
   @override
   late final GeneratedColumn<int> unitPriceMinorUnits = GeneratedColumn<int>(
       'unit_price_minor_units', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _unitCostMinorUnitsMeta =
+      const VerificationMeta('unitCostMinorUnits');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, saleId, productId, quantityValue, unitPriceMinorUnits];
+  late final GeneratedColumn<int> unitCostMinorUnits = GeneratedColumn<int>(
+      'unit_cost_minor_units', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _unitCostCurrencyMeta =
+      const VerificationMeta('unitCostCurrency');
+  @override
+  late final GeneratedColumn<String> unitCostCurrency = GeneratedColumn<String>(
+      'unit_cost_currency', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        saleId,
+        productId,
+        quantityValue,
+        quantityScale,
+        productName,
+        unit,
+        unitPriceMinorUnits,
+        unitCostMinorUnits,
+        unitCostCurrency
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -3217,6 +3258,22 @@ class $SaleItemsTableTable extends SaleItemsTable
     } else if (isInserting) {
       context.missing(_quantityValueMeta);
     }
+    if (data.containsKey('quantity_scale')) {
+      context.handle(
+          _quantityScaleMeta,
+          quantityScale.isAcceptableOrUnknown(
+              data['quantity_scale']!, _quantityScaleMeta));
+    }
+    if (data.containsKey('product_name')) {
+      context.handle(
+          _productNameMeta,
+          productName.isAcceptableOrUnknown(
+              data['product_name']!, _productNameMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
     if (data.containsKey('unit_price_minor_units')) {
       context.handle(
           _unitPriceMinorUnitsMeta,
@@ -3224,6 +3281,18 @@ class $SaleItemsTableTable extends SaleItemsTable
               data['unit_price_minor_units']!, _unitPriceMinorUnitsMeta));
     } else if (isInserting) {
       context.missing(_unitPriceMinorUnitsMeta);
+    }
+    if (data.containsKey('unit_cost_minor_units')) {
+      context.handle(
+          _unitCostMinorUnitsMeta,
+          unitCostMinorUnits.isAcceptableOrUnknown(
+              data['unit_cost_minor_units']!, _unitCostMinorUnitsMeta));
+    }
+    if (data.containsKey('unit_cost_currency')) {
+      context.handle(
+          _unitCostCurrencyMeta,
+          unitCostCurrency.isAcceptableOrUnknown(
+              data['unit_cost_currency']!, _unitCostCurrencyMeta));
     }
     return context;
   }
@@ -3242,8 +3311,18 @@ class $SaleItemsTableTable extends SaleItemsTable
           .read(DriftSqlType.string, data['${effectivePrefix}product_id'])!,
       quantityValue: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}quantity_value'])!,
+      quantityScale: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}quantity_scale'])!,
+      productName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_name']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit']),
       unitPriceMinorUnits: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}unit_price_minor_units'])!,
+      unitCostMinorUnits: attachedDatabase.typeMapping.read(
+          DriftSqlType.int, data['${effectivePrefix}unit_cost_minor_units']),
+      unitCostCurrency: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}unit_cost_currency']),
     );
   }
 
@@ -3259,13 +3338,23 @@ class SaleItemsTableData extends DataClass
   final String saleId;
   final String productId;
   final int quantityValue;
+  final int quantityScale;
+  final String? productName;
+  final String? unit;
   final int unitPriceMinorUnits;
+  final int? unitCostMinorUnits;
+  final String? unitCostCurrency;
   const SaleItemsTableData(
       {required this.id,
       required this.saleId,
       required this.productId,
       required this.quantityValue,
-      required this.unitPriceMinorUnits});
+      required this.quantityScale,
+      this.productName,
+      this.unit,
+      required this.unitPriceMinorUnits,
+      this.unitCostMinorUnits,
+      this.unitCostCurrency});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3273,7 +3362,20 @@ class SaleItemsTableData extends DataClass
     map['sale_id'] = Variable<String>(saleId);
     map['product_id'] = Variable<String>(productId);
     map['quantity_value'] = Variable<int>(quantityValue);
+    map['quantity_scale'] = Variable<int>(quantityScale);
+    if (!nullToAbsent || productName != null) {
+      map['product_name'] = Variable<String>(productName);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
     map['unit_price_minor_units'] = Variable<int>(unitPriceMinorUnits);
+    if (!nullToAbsent || unitCostMinorUnits != null) {
+      map['unit_cost_minor_units'] = Variable<int>(unitCostMinorUnits);
+    }
+    if (!nullToAbsent || unitCostCurrency != null) {
+      map['unit_cost_currency'] = Variable<String>(unitCostCurrency);
+    }
     return map;
   }
 
@@ -3283,7 +3385,18 @@ class SaleItemsTableData extends DataClass
       saleId: Value(saleId),
       productId: Value(productId),
       quantityValue: Value(quantityValue),
+      quantityScale: Value(quantityScale),
+      productName: productName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productName),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
       unitPriceMinorUnits: Value(unitPriceMinorUnits),
+      unitCostMinorUnits: unitCostMinorUnits == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCostMinorUnits),
+      unitCostCurrency: unitCostCurrency == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCostCurrency),
     );
   }
 
@@ -3295,8 +3408,13 @@ class SaleItemsTableData extends DataClass
       saleId: serializer.fromJson<String>(json['saleId']),
       productId: serializer.fromJson<String>(json['productId']),
       quantityValue: serializer.fromJson<int>(json['quantityValue']),
+      quantityScale: serializer.fromJson<int>(json['quantityScale']),
+      productName: serializer.fromJson<String?>(json['productName']),
+      unit: serializer.fromJson<String?>(json['unit']),
       unitPriceMinorUnits:
           serializer.fromJson<int>(json['unitPriceMinorUnits']),
+      unitCostMinorUnits: serializer.fromJson<int?>(json['unitCostMinorUnits']),
+      unitCostCurrency: serializer.fromJson<String?>(json['unitCostCurrency']),
     );
   }
   @override
@@ -3307,7 +3425,12 @@ class SaleItemsTableData extends DataClass
       'saleId': serializer.toJson<String>(saleId),
       'productId': serializer.toJson<String>(productId),
       'quantityValue': serializer.toJson<int>(quantityValue),
+      'quantityScale': serializer.toJson<int>(quantityScale),
+      'productName': serializer.toJson<String?>(productName),
+      'unit': serializer.toJson<String?>(unit),
       'unitPriceMinorUnits': serializer.toJson<int>(unitPriceMinorUnits),
+      'unitCostMinorUnits': serializer.toJson<int?>(unitCostMinorUnits),
+      'unitCostCurrency': serializer.toJson<String?>(unitCostCurrency),
     };
   }
 
@@ -3316,13 +3439,27 @@ class SaleItemsTableData extends DataClass
           String? saleId,
           String? productId,
           int? quantityValue,
-          int? unitPriceMinorUnits}) =>
+          int? quantityScale,
+          Value<String?> productName = const Value.absent(),
+          Value<String?> unit = const Value.absent(),
+          int? unitPriceMinorUnits,
+          Value<int?> unitCostMinorUnits = const Value.absent(),
+          Value<String?> unitCostCurrency = const Value.absent()}) =>
       SaleItemsTableData(
         id: id ?? this.id,
         saleId: saleId ?? this.saleId,
         productId: productId ?? this.productId,
         quantityValue: quantityValue ?? this.quantityValue,
+        quantityScale: quantityScale ?? this.quantityScale,
+        productName: productName.present ? productName.value : this.productName,
+        unit: unit.present ? unit.value : this.unit,
         unitPriceMinorUnits: unitPriceMinorUnits ?? this.unitPriceMinorUnits,
+        unitCostMinorUnits: unitCostMinorUnits.present
+            ? unitCostMinorUnits.value
+            : this.unitCostMinorUnits,
+        unitCostCurrency: unitCostCurrency.present
+            ? unitCostCurrency.value
+            : this.unitCostCurrency,
       );
   SaleItemsTableData copyWithCompanion(SaleItemsTableCompanion data) {
     return SaleItemsTableData(
@@ -3332,9 +3469,21 @@ class SaleItemsTableData extends DataClass
       quantityValue: data.quantityValue.present
           ? data.quantityValue.value
           : this.quantityValue,
+      quantityScale: data.quantityScale.present
+          ? data.quantityScale.value
+          : this.quantityScale,
+      productName:
+          data.productName.present ? data.productName.value : this.productName,
+      unit: data.unit.present ? data.unit.value : this.unit,
       unitPriceMinorUnits: data.unitPriceMinorUnits.present
           ? data.unitPriceMinorUnits.value
           : this.unitPriceMinorUnits,
+      unitCostMinorUnits: data.unitCostMinorUnits.present
+          ? data.unitCostMinorUnits.value
+          : this.unitCostMinorUnits,
+      unitCostCurrency: data.unitCostCurrency.present
+          ? data.unitCostCurrency.value
+          : this.unitCostCurrency,
     );
   }
 
@@ -3345,14 +3494,28 @@ class SaleItemsTableData extends DataClass
           ..write('saleId: $saleId, ')
           ..write('productId: $productId, ')
           ..write('quantityValue: $quantityValue, ')
-          ..write('unitPriceMinorUnits: $unitPriceMinorUnits')
+          ..write('quantityScale: $quantityScale, ')
+          ..write('productName: $productName, ')
+          ..write('unit: $unit, ')
+          ..write('unitPriceMinorUnits: $unitPriceMinorUnits, ')
+          ..write('unitCostMinorUnits: $unitCostMinorUnits, ')
+          ..write('unitCostCurrency: $unitCostCurrency')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, saleId, productId, quantityValue, unitPriceMinorUnits);
+  int get hashCode => Object.hash(
+      id,
+      saleId,
+      productId,
+      quantityValue,
+      quantityScale,
+      productName,
+      unit,
+      unitPriceMinorUnits,
+      unitCostMinorUnits,
+      unitCostCurrency);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3361,7 +3524,12 @@ class SaleItemsTableData extends DataClass
           other.saleId == this.saleId &&
           other.productId == this.productId &&
           other.quantityValue == this.quantityValue &&
-          other.unitPriceMinorUnits == this.unitPriceMinorUnits);
+          other.quantityScale == this.quantityScale &&
+          other.productName == this.productName &&
+          other.unit == this.unit &&
+          other.unitPriceMinorUnits == this.unitPriceMinorUnits &&
+          other.unitCostMinorUnits == this.unitCostMinorUnits &&
+          other.unitCostCurrency == this.unitCostCurrency);
 }
 
 class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
@@ -3369,14 +3537,24 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
   final Value<String> saleId;
   final Value<String> productId;
   final Value<int> quantityValue;
+  final Value<int> quantityScale;
+  final Value<String?> productName;
+  final Value<String?> unit;
   final Value<int> unitPriceMinorUnits;
+  final Value<int?> unitCostMinorUnits;
+  final Value<String?> unitCostCurrency;
   final Value<int> rowid;
   const SaleItemsTableCompanion({
     this.id = const Value.absent(),
     this.saleId = const Value.absent(),
     this.productId = const Value.absent(),
     this.quantityValue = const Value.absent(),
+    this.quantityScale = const Value.absent(),
+    this.productName = const Value.absent(),
+    this.unit = const Value.absent(),
     this.unitPriceMinorUnits = const Value.absent(),
+    this.unitCostMinorUnits = const Value.absent(),
+    this.unitCostCurrency = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SaleItemsTableCompanion.insert({
@@ -3384,7 +3562,12 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
     required String saleId,
     required String productId,
     required int quantityValue,
+    this.quantityScale = const Value.absent(),
+    this.productName = const Value.absent(),
+    this.unit = const Value.absent(),
     required int unitPriceMinorUnits,
+    this.unitCostMinorUnits = const Value.absent(),
+    this.unitCostCurrency = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         saleId = Value(saleId),
@@ -3396,7 +3579,12 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
     Expression<String>? saleId,
     Expression<String>? productId,
     Expression<int>? quantityValue,
+    Expression<int>? quantityScale,
+    Expression<String>? productName,
+    Expression<String>? unit,
     Expression<int>? unitPriceMinorUnits,
+    Expression<int>? unitCostMinorUnits,
+    Expression<String>? unitCostCurrency,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3404,8 +3592,14 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
       if (saleId != null) 'sale_id': saleId,
       if (productId != null) 'product_id': productId,
       if (quantityValue != null) 'quantity_value': quantityValue,
+      if (quantityScale != null) 'quantity_scale': quantityScale,
+      if (productName != null) 'product_name': productName,
+      if (unit != null) 'unit': unit,
       if (unitPriceMinorUnits != null)
         'unit_price_minor_units': unitPriceMinorUnits,
+      if (unitCostMinorUnits != null)
+        'unit_cost_minor_units': unitCostMinorUnits,
+      if (unitCostCurrency != null) 'unit_cost_currency': unitCostCurrency,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3415,14 +3609,24 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
       Value<String>? saleId,
       Value<String>? productId,
       Value<int>? quantityValue,
+      Value<int>? quantityScale,
+      Value<String?>? productName,
+      Value<String?>? unit,
       Value<int>? unitPriceMinorUnits,
+      Value<int?>? unitCostMinorUnits,
+      Value<String?>? unitCostCurrency,
       Value<int>? rowid}) {
     return SaleItemsTableCompanion(
       id: id ?? this.id,
       saleId: saleId ?? this.saleId,
       productId: productId ?? this.productId,
       quantityValue: quantityValue ?? this.quantityValue,
+      quantityScale: quantityScale ?? this.quantityScale,
+      productName: productName ?? this.productName,
+      unit: unit ?? this.unit,
       unitPriceMinorUnits: unitPriceMinorUnits ?? this.unitPriceMinorUnits,
+      unitCostMinorUnits: unitCostMinorUnits ?? this.unitCostMinorUnits,
+      unitCostCurrency: unitCostCurrency ?? this.unitCostCurrency,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3442,8 +3646,23 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
     if (quantityValue.present) {
       map['quantity_value'] = Variable<int>(quantityValue.value);
     }
+    if (quantityScale.present) {
+      map['quantity_scale'] = Variable<int>(quantityScale.value);
+    }
+    if (productName.present) {
+      map['product_name'] = Variable<String>(productName.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
     if (unitPriceMinorUnits.present) {
       map['unit_price_minor_units'] = Variable<int>(unitPriceMinorUnits.value);
+    }
+    if (unitCostMinorUnits.present) {
+      map['unit_cost_minor_units'] = Variable<int>(unitCostMinorUnits.value);
+    }
+    if (unitCostCurrency.present) {
+      map['unit_cost_currency'] = Variable<String>(unitCostCurrency.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -3458,7 +3677,12 @@ class SaleItemsTableCompanion extends UpdateCompanion<SaleItemsTableData> {
           ..write('saleId: $saleId, ')
           ..write('productId: $productId, ')
           ..write('quantityValue: $quantityValue, ')
+          ..write('quantityScale: $quantityScale, ')
+          ..write('productName: $productName, ')
+          ..write('unit: $unit, ')
           ..write('unitPriceMinorUnits: $unitPriceMinorUnits, ')
+          ..write('unitCostMinorUnits: $unitCostMinorUnits, ')
+          ..write('unitCostCurrency: $unitCostCurrency, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5528,7 +5752,12 @@ typedef $$SaleItemsTableTableCreateCompanionBuilder = SaleItemsTableCompanion
   required String saleId,
   required String productId,
   required int quantityValue,
+  Value<int> quantityScale,
+  Value<String?> productName,
+  Value<String?> unit,
   required int unitPriceMinorUnits,
+  Value<int?> unitCostMinorUnits,
+  Value<String?> unitCostCurrency,
   Value<int> rowid,
 });
 typedef $$SaleItemsTableTableUpdateCompanionBuilder = SaleItemsTableCompanion
@@ -5537,7 +5766,12 @@ typedef $$SaleItemsTableTableUpdateCompanionBuilder = SaleItemsTableCompanion
   Value<String> saleId,
   Value<String> productId,
   Value<int> quantityValue,
+  Value<int> quantityScale,
+  Value<String?> productName,
+  Value<String?> unit,
   Value<int> unitPriceMinorUnits,
+  Value<int?> unitCostMinorUnits,
+  Value<String?> unitCostCurrency,
   Value<int> rowid,
 });
 
@@ -5562,8 +5796,25 @@ class $$SaleItemsTableTableFilterComposer
   ColumnFilters<int> get quantityValue => $composableBuilder(
       column: $table.quantityValue, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<int> get unitPriceMinorUnits => $composableBuilder(
       column: $table.unitPriceMinorUnits,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get unitCostMinorUnits => $composableBuilder(
+      column: $table.unitCostMinorUnits,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unitCostCurrency => $composableBuilder(
+      column: $table.unitCostCurrency,
       builder: (column) => ColumnFilters(column));
 }
 
@@ -5589,8 +5840,26 @@ class $$SaleItemsTableTableOrderingComposer
       column: $table.quantityValue,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get unitPriceMinorUnits => $composableBuilder(
       column: $table.unitPriceMinorUnits,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get unitCostMinorUnits => $composableBuilder(
+      column: $table.unitCostMinorUnits,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unitCostCurrency => $composableBuilder(
+      column: $table.unitCostCurrency,
       builder: (column) => ColumnOrderings(column));
 }
 
@@ -5615,8 +5884,23 @@ class $$SaleItemsTableTableAnnotationComposer
   GeneratedColumn<int> get quantityValue => $composableBuilder(
       column: $table.quantityValue, builder: (column) => column);
 
+  GeneratedColumn<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale, builder: (column) => column);
+
+  GeneratedColumn<String> get productName => $composableBuilder(
+      column: $table.productName, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
   GeneratedColumn<int> get unitPriceMinorUnits => $composableBuilder(
       column: $table.unitPriceMinorUnits, builder: (column) => column);
+
+  GeneratedColumn<int> get unitCostMinorUnits => $composableBuilder(
+      column: $table.unitCostMinorUnits, builder: (column) => column);
+
+  GeneratedColumn<String> get unitCostCurrency => $composableBuilder(
+      column: $table.unitCostCurrency, builder: (column) => column);
 }
 
 class $$SaleItemsTableTableTableManager extends RootTableManager<
@@ -5650,7 +5934,12 @@ class $$SaleItemsTableTableTableManager extends RootTableManager<
             Value<String> saleId = const Value.absent(),
             Value<String> productId = const Value.absent(),
             Value<int> quantityValue = const Value.absent(),
+            Value<int> quantityScale = const Value.absent(),
+            Value<String?> productName = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
             Value<int> unitPriceMinorUnits = const Value.absent(),
+            Value<int?> unitCostMinorUnits = const Value.absent(),
+            Value<String?> unitCostCurrency = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SaleItemsTableCompanion(
@@ -5658,7 +5947,12 @@ class $$SaleItemsTableTableTableManager extends RootTableManager<
             saleId: saleId,
             productId: productId,
             quantityValue: quantityValue,
+            quantityScale: quantityScale,
+            productName: productName,
+            unit: unit,
             unitPriceMinorUnits: unitPriceMinorUnits,
+            unitCostMinorUnits: unitCostMinorUnits,
+            unitCostCurrency: unitCostCurrency,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -5666,7 +5960,12 @@ class $$SaleItemsTableTableTableManager extends RootTableManager<
             required String saleId,
             required String productId,
             required int quantityValue,
+            Value<int> quantityScale = const Value.absent(),
+            Value<String?> productName = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
             required int unitPriceMinorUnits,
+            Value<int?> unitCostMinorUnits = const Value.absent(),
+            Value<String?> unitCostCurrency = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               SaleItemsTableCompanion.insert(
@@ -5674,7 +5973,12 @@ class $$SaleItemsTableTableTableManager extends RootTableManager<
             saleId: saleId,
             productId: productId,
             quantityValue: quantityValue,
+            quantityScale: quantityScale,
+            productName: productName,
+            unit: unit,
             unitPriceMinorUnits: unitPriceMinorUnits,
+            unitCostMinorUnits: unitCostMinorUnits,
+            unitCostCurrency: unitCostCurrency,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0

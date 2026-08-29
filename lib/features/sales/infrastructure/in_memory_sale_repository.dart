@@ -22,7 +22,7 @@ class InMemorySaleRepository implements SaleRepository {
   List<Sale> getAll() => _sales.values.toList();
 
   @override
-  void save(Sale sale) {
+  Future<void> save(Sale sale) async {
     if (_sales.containsKey(sale.id)) {
       throw ArgumentError('Sale ID already exists.');
     }
@@ -33,7 +33,7 @@ class InMemorySaleRepository implements SaleRepository {
   }
 
   @override
-  void update(Sale sale) {
+  Future<void> update(Sale sale) async {
     if (!_sales.containsKey(sale.id)) {
       throw ArgumentError('Sale not found.');
     }
@@ -41,7 +41,7 @@ class InMemorySaleRepository implements SaleRepository {
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _sales.remove(id);
   }
 

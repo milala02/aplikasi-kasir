@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../orders/domain/order.dart';
 import '../../products/domain/product.dart';
 import 'pos_controller.dart';
 
@@ -208,36 +209,60 @@ class _POSScreenState extends State<POSScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      backgroundColor: Colors.green),
-                  onPressed: cart.items.isEmpty
-                      ? null
-                      : () async {
-                          final inv =
-                              'INV-${DateTime.now().millisecondsSinceEpoch}';
-                          final success = await widget.controller.checkout(
-                            invoiceNumber: inv,
-                          );
-
-                          if (!mounted) return;
-
-                          if (success) {
-                            _showReceiptDialog(context, widget.controller);
-                          }
-                        },
-                  child: const Text('BAYAR / CHECKOUT',
-                      style: TextStyle(color: Colors.white, fontSize: 16)),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.green),
+                      onPressed: cart.items.isEmpty
+                          ? null
+                          : () => _checkout(OrderPaymentMethod.qris),
+                      child: const Text('BAYAR (QRIS)',
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 16)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          backgroundColor: Colors.orange),
+                      onPressed: cart.items.isEmpty
+                          ? null
+                          : () => _checkout(OrderPaymentMethod.cash),
+                      child: const Text('BAYAR (TUNAI)',
+                          style:
+                              TextStyle(color: Colors.white, fontSize: 16)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  Future<void> _checkout(OrderPaymentMethod paymentMethod) async {
+    final inv = 'INV-${DateTime.now().millisecondsSinceEpoch}';
+    final success = await widget.controller.checkout(
+      invoiceNumber: inv,
+      paymentMethod: paymentMethod,
+    );
+
+    if (!mounted) return;
+
+    if (success) {
+      _showReceiptDialog(context, widget.controller);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Checkout gagal.')),
+      );
+    }
   }
 
   void _showReceiptDialog(BuildContext context, POSController controller) {
@@ -282,6 +307,74 @@ class _POSScreenState extends State<POSScreen> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Tutup'),
+          ),
+          ListenableBuilder(
+            listenable: controller,
+            builder: (dialogContext, _) {
+              final order = controller.lastOrder;
+              if (order == null) {
+                return const SizedBox.shrink();
+              }
+
+              if (order.status == OrderStatus.pendingPayment ||
+                  order.status == OrderStatus.paymentFailed) {
+                return ElevatedButton.icon(
+                  icon: const Icon(Icons.qr_code),
+                  label: const Text('Konfirmasi QRIS'),
+                  onPressed: () async {
+                    final ok =
+                        await controller.confirmPaymentForLastOrder();
+                    if (!ctx.mounted) return;
+                    if (!ok) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                            content: Text('Gagal mengonfirmasi pembayaran.')),
+                      );
+                    }
+                  },
+                );
+              }
+
+              if (order.status == OrderStatus.paid) {
+                return ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green),
+                  icon: const Icon(Icons.handshake_outlined,
+                      color: Colors.white),
+                  label: const Text('Serahkan Barang',
+                      style: TextStyle(color: Colors.white)),
+                  onPressed: () async {
+                    final ok = await controller.completeHandover();
+                    if (!mounted || !ctx.mounted) return;
+                    if (ok) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Barang diserahkan — stok & HPP FIFO terpotong.')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Gagal memproses penyerahan barang.')),
+                      );
+                    }
+                  },
+                );
+              }
+
+              if (order.status == OrderStatus.completed) {
+                return const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: Text('✓ Selesai',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green)),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
           if (receiptText != null)
             ElevatedButton.icon(

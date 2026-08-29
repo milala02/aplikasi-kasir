@@ -14,11 +14,11 @@ void main() {
       expect(repository, isA<SaleRepository>());
     });
 
-    test('repository exposes sale lookup and storage operations', () {
+    test('repository exposes sale lookup and storage operations', () async {
       final repository = _FakeSaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
+      await repository.save(sale);
 
       expect(repository.getById('sale-001'), equals(sale));
       expect(
@@ -28,11 +28,11 @@ void main() {
       expect(repository.getAll(), contains(sale));
     });
 
-    test('repository can update and delete a sale', () {
+    test('repository can update and delete a sale', () async {
       final repository = _FakeSaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
+      await repository.save(sale);
 
       final updated = Sale(
         id: sale.id,
@@ -46,11 +46,11 @@ void main() {
         createdAt: sale.createdAt,
       );
 
-      repository.update(updated);
+      await repository.update(updated);
 
       expect(repository.getById('sale-001'), equals(updated));
 
-      repository.deleteById('sale-001');
+      await repository.deleteById('sale-001');
 
       expect(repository.getById('sale-001'), isNull);
     });
@@ -112,17 +112,17 @@ class _FakeSaleRepository implements SaleRepository {
   List<Sale> getAll() => List.unmodifiable(_sales.values);
 
   @override
-  void save(Sale sale) {
+  Future<void> save(Sale sale) async {
     _sales[sale.id] = sale;
   }
 
   @override
-  void update(Sale sale) {
+  Future<void> update(Sale sale) async {
     _sales[sale.id] = sale;
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     _sales.remove(id);
   }
 }

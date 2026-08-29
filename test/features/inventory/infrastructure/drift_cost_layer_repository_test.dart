@@ -8,7 +8,9 @@ import 'package:aplikasi_kasir/core/money/money.dart';
 import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/cost_layer.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/cost_layer_service.dart';
+import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 import 'package:aplikasi_kasir/features/inventory/infrastructure/drift_cost_layer_repository.dart';
+import 'package:aplikasi_kasir/features/inventory/infrastructure/drift_inventory_repository.dart';
 
 void main() {
   group('DriftCostLayerRepository', () {
@@ -151,6 +153,18 @@ void main() {
           acquired_at INTEGER NOT NULL
         )
       ''');
+      // sale_items_table juga dibuat ulang dalam bentuk skema v2 (tanpa
+      // kolom HPP) agar migrasi benar-benar menambahkan kolom tersebut.
+      await initialDb.customStatement('DROP TABLE sale_items_table');
+      await initialDb.customStatement('''
+        CREATE TABLE sale_items_table (
+          id TEXT NOT NULL PRIMARY KEY,
+          sale_id TEXT NOT NULL,
+          product_id TEXT NOT NULL,
+          quantity_value INTEGER NOT NULL,
+          unit_price_minor_units INTEGER NOT NULL
+        )
+      ''');
       await initialDb.customStatement('PRAGMA user_version = 2');
       final oldAcquiredAtSeconds =
           DateTime(2026, 8, 1).millisecondsSinceEpoch ~/ 1000;
@@ -202,6 +216,113 @@ void main() {
 
       final newLayer = await repository.getById('new_layer');
       expect(newLayer!.purchaseId, 'po_002');
+    });
+
+    test('migrates an existing v1 database through the full chain to v7',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('drift_v1_mig');
+      final file = File('${dir.path}/app.sqlite');
+      addTearDown(() async {
+        await dir.delete(recursive: true);
+      });
+
+      // Buat database v1 (schema lama) secara manual.
+      final initialDb = AppDatabase(NativeDatabase(file));
+
+      // v1 stock_movements_table: tanpa quantity_scale.
+      await initialDb.customStatement('DROP TABLE stock_movements_table');
+      await initialDb.customStatement('''
+        CREATE TABLE stock_movements_table (
+          id TEXT NOT NULL PRIMARY KEY,
+          product_id TEXT NOT NULL,
+          quantity_value INTEGER NOT NULL,
+          type TEXT NOT NULL,
+          reference_id TEXT,
+          occurred_at INTEGER NOT NULL
+        )
+      ''');
+
+      // v1 cost_layers_table: tanpa purchase_id.
+      await initialDb.customStatement('DROP TABLE cost_layers_table');
+      await initialDb.customStatement('''
+        CREATE TABLE cost_layers_table (
+          id TEXT NOT NULL PRIMARY KEY,
+          product_id TEXT NOT NULL,
+          original_quantity_value INTEGER NOT NULL,
+          original_quantity_scale INTEGER NOT NULL,
+          remaining_quantity_value INTEGER NOT NULL,
+          remaining_quantity_scale INTEGER NOT NULL,
+          unit_cost_minor_units INTEGER NOT NULL,
+          unit_cost_currency TEXT NOT NULL,
+          acquired_at INTEGER NOT NULL
+        )
+      ''');
+
+      // v1 sale_items_table: tanpa kolom HPP/nama/unit/skala.
+      await initialDb.customStatement('DROP TABLE sale_items_table');
+      await initialDb.customStatement('''
+        CREATE TABLE sale_items_table (
+          id TEXT NOT NULL PRIMARY KEY,
+          sale_id TEXT NOT NULL,
+          product_id TEXT NOT NULL,
+          quantity_value INTEGER NOT NULL,
+          unit_price_minor_units INTEGER NOT NULL
+        )
+      ''');
+
+      // Data legacy v1.
+      final legacySeconds = DateTime(2026, 8, 1).millisecondsSinceEpoch ~/ 1000;
+      await initialDb.customStatement(
+        'INSERT INTO stock_movements_table '
+        '(id, product_id, quantity_value, type, reference_id, occurred_at) '
+        "VALUES ('mov_old', 'pepper', 5, 'purchase', 'po_old', ?)",
+        [legacySeconds],
+      );
+      await initialDb.customStatement(
+        'INSERT INTO cost_layers_table '
+        '(id, product_id, original_quantity_value, original_quantity_scale, '
+        'remaining_quantity_value, remaining_quantity_scale, '
+        'unit_cost_minor_units, unit_cost_currency, acquired_at) '
+        "VALUES ('layer_old', 'pepper', 10, 0, 10, 0, 160000, 'IDR', ?)",
+        [legacySeconds],
+      );
+
+      await initialDb.customStatement('PRAGMA user_version = 1');
+      await initialDb.close();
+
+      // Buka ulang: migrasi v1 -> v7 harus berjalan dan data lama terbaca.
+      final db = AppDatabase(NativeDatabase(file));
+      addTearDown(() async {
+        await db.close();
+      });
+
+      // v1 -> v2: kolom quantity_scale ditambahkan, baris lama terbaca (default 0).
+      final inventoryRepo = DriftInventoryRepository(db);
+      final movements = await inventoryRepo.getMovements('pepper');
+      expect(movements, hasLength(1));
+      expect(movements.first.quantity, Quantity(value: 5, scale: 0));
+
+      // v1 -> v3: purchaseId null untuk layer lama.
+      final costLayerRepo = DriftCostLayerRepository(db);
+      final oldLayer = await costLayerRepo.getById('layer_old');
+      expect(oldLayer, isNotNull);
+      expect(oldLayer!.purchaseId, isNull);
+      expect(oldLayer.remainingQuantity, Quantity(value: 10));
+
+      // Penulisan baru pasca-migrasi tetap berfungsi (dengan skala quantity).
+      await inventoryRepo.recordMovement(
+        StockMovement(
+          id: 'mov_new',
+          productId: 'pepper',
+          quantity: Quantity(value: 2, scale: 1),
+          type: StockMovementType.purchase,
+          referenceId: 'po_new',
+          occurredAt: DateTime(2026, 8, 2),
+        ),
+      );
+      final afterInsert = await inventoryRepo.getMovements('pepper');
+      expect(afterInsert, hasLength(2));
+      expect(afterInsert.last.quantity, Quantity(value: 2, scale: 1));
     });
   });
 }

@@ -9,12 +9,18 @@ class SaleItem {
   final Quantity quantity;
   final Money unitPrice;
 
+  /// HPP per unit hasil konsumsi FIFO cost layer.
+  /// Null untuk data lama (sebelum HPP per item disimpan) — pembaca wajib
+  /// menangani null secara eksplisit.
+  final Money? unitCost;
+
   SaleItem({
     required this.productId,
     required this.productName,
     required this.unit,
     required this.quantity,
     required this.unitPrice,
+    this.unitCost,
   }) {
     if (productId.isEmpty) {
       throw ArgumentError('Sale item product ID cannot be empty.');
@@ -31,9 +37,24 @@ class SaleItem {
     if (unitPrice.isNegative) {
       throw ArgumentError('Sale item unit price cannot be negative.');
     }
+
+    if (unitCost?.isNegative == true) {
+      throw ArgumentError('Sale item unit cost cannot be negative.');
+    }
   }
 
   Money get subtotal => unitPrice.multiply(quantity.value);
+
+  SaleItem withUnitCost(Money cost) {
+    return SaleItem(
+      productId: productId,
+      productName: productName,
+      unit: unit,
+      quantity: quantity,
+      unitPrice: unitPrice,
+      unitCost: cost,
+    );
+  }
 
   @override
   bool operator ==(Object other) {
@@ -42,7 +63,8 @@ class SaleItem {
         other.productName == productName &&
         other.unit == unit &&
         other.quantity == quantity &&
-        other.unitPrice == unitPrice;
+        other.unitPrice == unitPrice &&
+        other.unitCost == unitCost;
   }
 
   @override
@@ -53,6 +75,7 @@ class SaleItem {
       unit,
       quantity,
       unitPrice,
+      unitCost,
     );
   }
 
@@ -63,7 +86,8 @@ class SaleItem {
         'productName: $productName, '
         'unit: $unit, '
         'quantity: $quantity, '
-        'unitPrice: $unitPrice'
+        'unitPrice: $unitPrice, '
+        'unitCost: $unitCost'
         ')';
   }
 }

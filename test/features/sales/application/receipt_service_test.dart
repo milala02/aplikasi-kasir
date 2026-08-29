@@ -47,6 +47,34 @@ void main() {
       expect(receiptText, contains('*TOTAL: Rp 100000*'));
     });
 
+    test('Total struk mengikuti Sale.total (diskon & pajak diperhitungkan)',
+        () {
+      final sale = Sale(
+        id: 'sale_103',
+        invoiceNumber: 'INV-20260819-003',
+        items: [
+          SaleItem(
+            productId: 'p1',
+            productName: 'Bumbu Utama Batch #023',
+            unit: Unit.pcs,
+            quantity: Quantity(value: 2, scale: 0),
+            unitPrice: const Money(minorUnits: 5000000, currency: 'IDR'),
+          ),
+        ],
+        discount: const Money(
+            minorUnits: 1000000, currency: 'IDR'), // Rp 10.000
+        tax: const Money(minorUnits: 100000, currency: 'IDR'), // Rp 1.000
+        createdAt: DateTime(2026, 8, 19, 10, 0),
+      );
+
+      final receiptText = service.generateWhatsAppReceipt(sale);
+
+      // Subtotal 100.000 - diskon 10.000 + pajak 1.000 = 91.000.
+      expect(receiptText, contains('Diskon  : -Rp 10000'));
+      expect(receiptText, contains('Pajak   : +Rp 1000'));
+      expect(receiptText, contains('*TOTAL: Rp 91000*'));
+    });
+
     test('Harus menghasilkan byte ESC/POS printer thermal', () {
       final sale = Sale(
         id: 'sale_102',

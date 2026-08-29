@@ -125,7 +125,12 @@ class SaleItemsTable extends Table {
   TextColumn get saleId => text()();
   TextColumn get productId => text()();
   IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  TextColumn get productName => text().nullable()();
+  TextColumn get unit => text().nullable()();
   IntColumn get unitPriceMinorUnits => integer()();
+  IntColumn get unitCostMinorUnits => integer().nullable()();
+  TextColumn get unitCostCurrency => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -161,7 +166,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -183,6 +188,19 @@ class AppDatabase extends _$AppDatabase {
           if (from < 5) {
             await m.createTable(purchasesTable);
             await m.createTable(purchaseItemsTable);
+          }
+          if (from < 6) {
+            // Kolom HPP per sale item (nullable agar data lama tetap terbaca).
+            await m.addColumn(
+                saleItemsTable, saleItemsTable.unitCostMinorUnits);
+            await m.addColumn(saleItemsTable, saleItemsTable.unitCostCurrency);
+          }
+          if (from < 7) {
+            // Kolom detail item agar tidak terdegradasi saat reload
+            // (nama produk, unit, skala quantity).
+            await m.addColumn(saleItemsTable, saleItemsTable.quantityScale);
+            await m.addColumn(saleItemsTable, saleItemsTable.productName);
+            await m.addColumn(saleItemsTable, saleItemsTable.unit);
           }
         },
       );

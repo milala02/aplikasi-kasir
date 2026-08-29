@@ -1,6 +1,5 @@
 import '../../customers/domain/customer.dart';
 import '../domain/sale.dart';
-import '../../../core/money/money.dart';
 
 class ReceiptService {
   final String storeName;
@@ -12,18 +11,6 @@ class ReceiptService {
     this.storeAddress = 'Jl. Bintara Jaya, Bekasi',
     this.storePhone = '081234567890',
   });
-
-  Money _calculateTotal(Sale sale) {
-    if (sale.items.isEmpty) {
-      return const Money(minorUnits: 0, currency: 'IDR');
-    }
-    var totalMinor = 0;
-    final currency = sale.items.first.unitPrice.currency;
-    for (final item in sale.items) {
-      totalMinor += item.subtotal.minorUnits;
-    }
-    return Money(minorUnits: totalMinor, currency: currency);
-  }
 
   /// Menghasilkan format Teks Struk Rapi untuk WhatsApp
   String generateWhatsAppReceipt(Sale sale, {Customer? customer}) {
@@ -49,7 +36,14 @@ class ReceiptService {
     }
 
     buffer.writeln('------------------------------');
-    final total = _calculateTotal(sale).minorUnits ~/ 100;
+    // Total konsisten dengan Sale.total (subtotal - diskon + pajak).
+    if (!sale.discount.isZero) {
+      buffer.writeln('Diskon  : -Rp ${sale.discount.minorUnits ~/ 100}');
+    }
+    if (!sale.tax.isZero) {
+      buffer.writeln('Pajak   : +Rp ${sale.tax.minorUnits ~/ 100}');
+    }
+    final total = sale.total.minorUnits ~/ 100;
     buffer.writeln('*TOTAL: Rp $total*');
     buffer.writeln('==============================');
     buffer.writeln('Terima kasih atas kunjungan Anda!');
@@ -84,10 +78,17 @@ class ReceiptService {
       bytes.addAll('  $qty x $price = $subtotal\n'.codeUnits);
     }
 
+    // Total konsisten dengan Sale.total (subtotal - diskon + pajak).
+    if (!sale.discount.isZero) {
+      bytes.addAll('Diskon  : -Rp ${sale.discount.minorUnits ~/ 100}\n'.codeUnits);
+    }
+    if (!sale.tax.isZero) {
+      bytes.addAll('Pajak   : +Rp ${sale.tax.minorUnits ~/ 100}\n'.codeUnits);
+    }
     bytes.addAll('--------------------------------\n'.codeUnits);
     // Right Align Total
     bytes.addAll([0x1B, 0x61, 0x02]);
-    final total = _calculateTotal(sale).minorUnits ~/ 100;
+    final total = sale.total.minorUnits ~/ 100;
     bytes.addAll('TOTAL: Rp $total\n'.codeUnits);
 
     // Feed lines & Cut Paper

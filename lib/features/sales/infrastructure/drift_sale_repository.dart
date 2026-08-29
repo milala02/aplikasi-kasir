@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart' as d;
+
 import '../../../core/database/app_database.dart';
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
@@ -23,12 +25,26 @@ class DriftSaleRepository implements SaleRepository {
           .where((i) => i.saleId == row.id)
           .map((i) => SaleItem(
                 productId: i.productId,
-                productName:
-                    i.productId, // nama produk tidak tersimpan di tabel
-                unit: Unit.pcs,
-                quantity: Quantity(value: i.quantityValue, scale: 0),
+                productName: (i.productName == null || i.productName!.isEmpty)
+                    ? i.productId // Fallback data lama tanpa nama produk.
+                    : i.productName!,
+                unit: Unit.values.firstWhere(
+                  (u) => u.name == i.unit,
+                  orElse: () => Unit.pcs, // Fallback data lama tanpa unit.
+                ),
+                quantity: Quantity(
+                  value: i.quantityValue,
+                  scale: i.quantityScale,
+                ),
                 unitPrice:
                     Money(minorUnits: i.unitPriceMinorUnits, currency: 'IDR'),
+                unitCost: (i.unitCostMinorUnits == null ||
+                        i.unitCostCurrency == null)
+                    ? null // Data lama tanpa HPP: fallback eksplisit.
+                    : Money(
+                        minorUnits: i.unitCostMinorUnits!,
+                        currency: i.unitCostCurrency!,
+                      ),
               ))
           .toList();
 
@@ -64,16 +80,15 @@ class DriftSaleRepository implements SaleRepository {
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
 
   @override
-  void save(Sale sale) {
+  Future<void> save(Sale sale) async {
     if (_cache.containsKey(sale.id)) {
       throw ArgumentError('Sale ID already exists.');
     }
     if (_cache.values.any((s) => s.invoiceNumber == sale.invoiceNumber)) {
       throw ArgumentError('Invoice number already exists.');
     }
-    _cache[sale.id] = sale;
 
-    db.transaction(() async {
+    await db.transaction(() async {
       await db.into(db.salesTable).insert(
             SalesTableCompanion.insert(
               id: sale.id,
@@ -87,33 +102,69 @@ class DriftSaleRepository implements SaleRepository {
 
       for (var item in sale.items) {
         await db.into(db.saleItemsTable).insert(
-              SaleItemsTableCompanion.insert(
-                id: '${sale.id}_${item.productId}',
-                saleId: sale.id,
-                productId: item.productId,
-                quantityValue: item.quantity.value.toInt(),
-                unitPriceMinorUnits: item.unitPrice.minorUnits,
-              ),
+              _itemCompanion(sale.id, item),
             );
       }
     });
-  }
 
-  @override
-  void update(Sale sale) {
-    if (!_cache.containsKey(sale.id)) {
-      throw ArgumentError('Sale not found.');
-    }
     _cache[sale.id] = sale;
   }
 
   @override
-  void deleteById(String id) {
-    _cache.remove(id);
-    db.transaction(() async {
+  Future<void> update(Sale sale) async {
+    if (!_cache.containsKey(sale.id)) {
+      throw ArgumentError('Sale not found.');
+    }
+
+    await db.transaction(() async {
+      await db.update(db.salesTable).replace(
+            SalesTableData(
+              id: sale.id,
+              invoiceNumber: sale.invoiceNumber,
+              discountMinorUnits: sale.discount.minorUnits,
+              taxMinorUnits: sale.tax.minorUnits,
+              createdAt: sale.createdAt,
+              soldAt: sale.soldAt,
+            ),
+          );
+
+      await (db.delete(db.saleItemsTable)
+            ..where((t) => t.saleId.equals(sale.id)))
+          .go();
+
+      for (var item in sale.items) {
+        await db.into(db.saleItemsTable).insert(
+              _itemCompanion(sale.id, item),
+            );
+      }
+    });
+
+    _cache[sale.id] = sale;
+  }
+
+  @override
+  Future<void> deleteById(String id) async {
+    await db.transaction(() async {
       await (db.delete(db.saleItemsTable)..where((t) => t.saleId.equals(id)))
           .go();
       await (db.delete(db.salesTable)..where((t) => t.id.equals(id))).go();
     });
+
+    _cache.remove(id);
+  }
+
+  SaleItemsTableCompanion _itemCompanion(String saleId, SaleItem item) {
+    return SaleItemsTableCompanion.insert(
+      id: '${saleId}_${item.productId}',
+      saleId: saleId,
+      productId: item.productId,
+      quantityValue: item.quantity.value.toInt(),
+      quantityScale: d.Value(item.quantity.scale),
+      productName: d.Value(item.productName),
+      unit: d.Value(item.unit.name),
+      unitPriceMinorUnits: item.unitPrice.minorUnits,
+      unitCostMinorUnits: d.Value(item.unitCost?.minorUnits),
+      unitCostCurrency: d.Value(item.unitCost?.currency),
+    );
   }
 }

@@ -8,11 +8,11 @@ import 'package:aplikasi_kasir/features/sales/infrastructure/in_memory_sale_repo
 
 void main() {
   group('InMemorySaleRepository', () {
-    test('saves and retrieves a sale', () {
+    test('saves and retrieves a sale', () async {
       final repository = InMemorySaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
+      await repository.save(sale);
 
       expect(repository.getById(sale.id), equals(sale));
       expect(
@@ -21,11 +21,11 @@ void main() {
       );
     });
 
-    test('returns all sales', () {
+    test('returns all sales', () async {
       final repository = InMemorySaleRepository();
 
-      repository.save(createSale());
-      repository.save(
+      await repository.save(createSale());
+      await repository.save(
         createSale(
           id: 'sale-002',
           invoiceNumber: 'INV-002',
@@ -35,38 +35,38 @@ void main() {
       expect(repository.getAll(), hasLength(2));
     });
 
-    test('rejects duplicate sale id', () {
+    test('rejects duplicate sale id', () async {
       final repository = InMemorySaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
+      await repository.save(sale);
 
-      expect(
-        () => repository.save(sale),
+      await expectLater(
+        repository.save(sale),
         throwsArgumentError,
       );
     });
 
-    test('rejects duplicate invoice number', () {
+    test('rejects duplicate invoice number', () async {
       final repository = InMemorySaleRepository();
       final sale = createSale();
       final duplicateInvoice = createSale(
         id: 'sale-002',
       );
 
-      repository.save(sale);
+      await repository.save(sale);
 
-      expect(
-        () => repository.save(duplicateInvoice),
+      await expectLater(
+        repository.save(duplicateInvoice),
         throwsArgumentError,
       );
     });
 
-    test('updates an existing sale', () {
+    test('updates an existing sale', () async {
       final repository = InMemorySaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
+      await repository.save(sale);
 
       final updated = Sale(
         id: sale.id,
@@ -80,17 +80,17 @@ void main() {
         createdAt: sale.createdAt,
       );
 
-      repository.update(updated);
+      await repository.update(updated);
 
       expect(repository.getById(sale.id), equals(updated));
     });
 
-    test('deletes a sale', () {
+    test('deletes a sale', () async {
       final repository = InMemorySaleRepository();
       final sale = createSale();
 
-      repository.save(sale);
-      repository.deleteById(sale.id);
+      await repository.save(sale);
+      await repository.deleteById(sale.id);
 
       expect(repository.getById(sale.id), isNull);
     });

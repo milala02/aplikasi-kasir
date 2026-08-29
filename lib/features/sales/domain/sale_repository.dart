@@ -4,7 +4,7 @@ abstract interface class SaleRepository {
   Sale? getById(String id);
   Sale? getByInvoiceNumber(String invoiceNumber);
   List<Sale> getAll();
-  void save(Sale sale);
-  void update(Sale sale);
-  void deleteById(String id);
+  Future<void> save(Sale sale);
+  Future<void> update(Sale sale);
+  Future<void> deleteById(String id);
 }

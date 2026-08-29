@@ -6,17 +6,24 @@ import '../../cart/domain/cart.dart';
 import '../../cart/domain/cart_item.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/domain/customer_repository.dart';
+import '../../orders/application/fulfill_order_use_case.dart';
+import '../../orders/application/order_payment_use_case.dart';
+import '../../orders/application/submit_order_use_case.dart';
+import '../../orders/domain/order.dart';
 import '../../products/domain/product.dart';
 import '../../products/domain/product_repository.dart';
-import '../application/process_sale_use_case.dart';
 import '../application/receipt_service.dart';
 import '../domain/sale.dart';
 import '../domain/sale_item.dart';
+import '../domain/sale_repository.dart';
 
 class POSController extends ChangeNotifier {
   final ProductRepository productRepository;
   final CustomerRepository customerRepository;
-  final ProcessSaleUseCase processSaleUseCase;
+  final SubmitOrderUseCase submitOrderUseCase;
+  final OrderPaymentUseCase orderPaymentUseCase;
+  final FulfillOrderUseCase fulfillOrderUseCase;
+  final SaleRepository saleRepository;
   final ReceiptService receiptService;
 
   List<Product> _allProducts = [];
@@ -25,11 +32,15 @@ class POSController extends ChangeNotifier {
   Customer? _selectedCustomer;
   String _searchQuery = '';
   Sale? _lastCompletedSale;
+  Order? _lastOrder;
 
   POSController({
     required this.productRepository,
     required this.customerRepository,
-    required this.processSaleUseCase,
+    required this.submitOrderUseCase,
+    required this.orderPaymentUseCase,
+    required this.fulfillOrderUseCase,
+    required this.saleRepository,
     ReceiptService? receiptService,
   }) : receiptService = receiptService ?? ReceiptService();
 
@@ -38,8 +49,11 @@ class POSController extends ChangeNotifier {
   Customer? get selectedCustomer => _selectedCustomer;
   String get searchQuery => _searchQuery;
 
-  /// Transaksi terakhir yang berhasil diproses (untuk cetak/share struk).
+  /// Sale (financial record) dari order terakhir, untuk preview struk.
   Sale? get lastCompletedSale => _lastCompletedSale;
+
+  /// Order terakhir dari checkout (lifecycle payment/fulfillment).
+  Order? get lastOrder => _lastOrder;
 
   void init() {
     _allProducts = productRepository.getActive();
@@ -93,9 +107,13 @@ class POSController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Proses checkout. Kembalikan `true` jika berhasil, `false` jika gagal.
-  /// Transaksi yang berhasil tersimpan di [lastCompletedSale].
-  Future<bool> checkout({required String invoiceNumber}) async {
+  /// Checkout onsite: submit order (PENDING_PAYMENT) + catat sale.
+  /// TIDAK menyentuh stok — stock-out terjadi saat handover.
+  /// Tunai: langsung PAID (kasir menerima pembayaran).
+  Future<bool> checkout({
+    required String invoiceNumber,
+    required OrderPaymentMethod paymentMethod,
+  }) async {
     if (_cart.items.isEmpty) return false;
 
     final saleItems = _cart.items.map((cartItem) {
@@ -108,22 +126,56 @@ class POSController extends ChangeNotifier {
       );
     }).toList();
 
-    final sale = Sale(
-      id: 'sale_${DateTime.now().millisecondsSinceEpoch}',
+    final now = DateTime.now();
+    final result = await submitOrderUseCase.submit(
+      orderId: 'ord_${now.millisecondsSinceEpoch}',
+      saleId: 'sale_${now.millisecondsSinceEpoch}',
       invoiceNumber: invoiceNumber,
+      source: OrderSource.onsite,
+      paymentMethod: paymentMethod,
       items: saleItems,
-      createdAt: DateTime.now(),
+      submittedAt: now,
     );
+    if (result is! Success<Order>) return false;
 
-    final result = await processSaleUseCase.execute(sale);
-    if (result is Success) {
-      _lastCompletedSale = sale;
-      _cart = Cart(items: []);
-      _selectedCustomer = null;
-      notifyListeners();
-      return true;
+    var order = result.value;
+
+    if (paymentMethod == OrderPaymentMethod.cash) {
+      final payResult = await orderPaymentUseCase.confirm(order);
+      if (payResult is Success<Order>) {
+        order = payResult.value;
+      }
     }
-    return false;
+
+    _lastOrder = order;
+    _lastCompletedSale = saleRepository.getById(order.saleId);
+    _cart = Cart(items: []);
+    _selectedCustomer = null;
+    notifyListeners();
+    return true;
+  }
+
+  /// Konfirmasi pembayaran QRIS untuk order terakhir (retry diizinkan).
+  Future<bool> confirmPaymentForLastOrder() async {
+    final order = _lastOrder;
+    if (order == null) return false;
+    final result = await orderPaymentUseCase.confirm(order);
+    if (result is! Success<Order>) return false;
+    _lastOrder = result.value;
+    notifyListeners();
+    return true;
+  }
+
+  /// Handover onsite: stock-out FIFO + movement + kunci HPP.
+  Future<bool> completeHandover() async {
+    final order = _lastOrder;
+    if (order == null) return false;
+    final result = await fulfillOrderUseCase.handover(order);
+    if (result is! Success<Order>) return false;
+    _lastOrder = result.value;
+    _lastCompletedSale = saleRepository.getById(order.saleId);
+    notifyListeners();
+    return true;
   }
 
   /// Hasilkan teks struk untuk WhatsApp dari transaksi terakhir.

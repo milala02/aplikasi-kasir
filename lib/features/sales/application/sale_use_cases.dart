@@ -23,49 +23,49 @@ class SaleUseCases {
     return List.unmodifiable(repository.getAll());
   }
 
-  void create(Sale sale) {
-    repository.save(sale);
+  Future<void> create(Sale sale) {
+    return repository.save(sale);
   }
 
-  void addItem({
+  Future<void> addItem({
     required String saleId,
     required SaleItem item,
-  }) {
+  }) async {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).addItem(item);
-    repository.update(updated.sale);
+    await repository.update(updated.sale);
   }
 
-  void removeItemAt({
+  Future<void> removeItemAt({
     required String saleId,
     required int index,
-  }) {
+  }) async {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).removeItemAt(index);
-    repository.update(updated.sale);
+    await repository.update(updated.sale);
   }
 
-  void applyDiscount({
+  Future<void> applyDiscount({
     required String saleId,
     required Money discount,
-  }) {
+  }) async {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).withDiscount(discount);
-    repository.update(updated.sale);
+    await repository.update(updated.sale);
   }
 
-  void applyTax({
+  Future<void> applyTax({
     required String saleId,
     required Money tax,
-  }) {
+  }) async {
     final sale = _getRequiredSale(saleId);
     final updated = SaleService(sale: sale).withTax(tax);
-    repository.update(updated.sale);
+    await repository.update(updated.sale);
   }
 
-  void delete(String saleId) {
+  Future<void> delete(String saleId) async {
     _getRequiredSale(saleId);
-    repository.deleteById(saleId);
+    await repository.deleteById(saleId);
   }
 
   Sale _getRequiredSale(String saleId) {
