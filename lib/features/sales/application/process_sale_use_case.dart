@@ -14,7 +14,7 @@ class ProcessSaleUseCase {
     required this.inventoryRepository,
   });
 
-  Result<void> execute(Sale sale) {
+  Future<Result<void>> execute(Sale sale) async {
     try {
       // 1. Simpan transaksi penjualan
       saleRepository.save(sale);
@@ -30,12 +30,13 @@ class ProcessSaleUseCase {
           occurredAt: sale.soldAt,
         );
 
-        inventoryRepository.recordMovement(movement);
+        await inventoryRepository.recordMovement(movement);
 
-        final currentLedger = inventoryRepository.getLedger(item.productId);
+        final currentLedger =
+            await inventoryRepository.getLedger(item.productId);
         if (currentLedger != null) {
           final updatedLedger = currentLedger.addMovement(movement);
-          inventoryRepository.saveLedger(updatedLedger);
+          await inventoryRepository.saveLedger(updatedLedger);
         }
       }
 

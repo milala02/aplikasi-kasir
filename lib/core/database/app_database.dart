@@ -82,6 +82,7 @@ class StockMovementsTable extends Table {
   TextColumn get id => text()();
   TextColumn get productId => text()();
   IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
   TextColumn get type => text()(); // 'in', 'out', 'adjustment'
   TextColumn get referenceId => text().nullable()();
   DateTimeColumn get occurredAt => dateTime()();
@@ -96,7 +97,19 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (Migrator m) async {
+      await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.addColumn(stockMovementsTable, stockMovementsTable.quantityScale);
+      }
+    },
+  );
 }
 
 LazyDatabase _openConnection() {

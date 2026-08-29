@@ -6,40 +6,40 @@ import 'package:aplikasi_kasir/features/inventory/infrastructure/in_memory_inven
 
 void main() {
   group('InMemoryInventoryRepository', () {
-    test('saves and retrieves a ledger', () {
+    test('saves and retrieves a ledger', () async {
       final repository = InMemoryInventoryRepository();
       final ledger = StockLedger(
         productId: 'product-001',
       );
 
-      repository.saveLedger(ledger);
+      await repository.saveLedger(ledger);
 
       expect(
-        repository.getLedger('product-001'),
+        await repository.getLedger('product-001'),
         equals(ledger),
       );
     });
 
-    test('records and retrieves movements by product', () {
+    test('records and retrieves movements by product', () async {
       final repository = InMemoryInventoryRepository();
       final movement = createMovement();
 
-      repository.recordMovement(movement);
+      await repository.recordMovement(movement);
 
       expect(
-        repository.getMovements('product-001'),
+        await repository.getMovements('product-001'),
         [movement],
       );
       expect(
-        repository.getMovements('product-002'),
+        await repository.getMovements('product-002'),
         isEmpty,
       );
     });
 
-    test('updates an existing ledger', () {
+    test('updates an existing ledger', () async {
       final repository = InMemoryInventoryRepository();
 
-      repository.saveLedger(
+      await repository.saveLedger(
         StockLedger(
           productId: 'product-001',
         ),
@@ -47,7 +47,7 @@ void main() {
 
       final movement = createMovement();
 
-      repository.saveLedger(
+      await repository.saveLedger(
         StockLedger(
           productId: 'product-001',
           movements: [movement],
@@ -55,16 +55,16 @@ void main() {
       );
 
       expect(
-        repository.getLedger('product-001')?.movements,
+        (await repository.getLedger('product-001'))?.movements,
         [movement],
       );
     });
 
-    test('rejects duplicate movement id', () {
+    test('rejects duplicate movement id', () async {
       final repository = InMemoryInventoryRepository();
       final movement = createMovement();
 
-      repository.recordMovement(movement);
+      await repository.recordMovement(movement);
 
       expect(
         () => repository.recordMovement(movement),

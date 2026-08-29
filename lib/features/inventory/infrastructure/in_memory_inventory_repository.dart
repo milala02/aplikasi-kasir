@@ -7,12 +7,12 @@ class InMemoryInventoryRepository implements InventoryRepository {
   final List<StockMovement> _movements = [];
 
   @override
-  StockLedger? getLedger(String productId) {
+  Future<StockLedger?> getLedger(String productId) async {
     return _ledgers[productId];
   }
 
   @override
-  List<StockMovement> getMovements(String productId) {
+  Future<List<StockMovement>> getMovements(String productId) async {
     return List.unmodifiable(
       _movements.where(
         (movement) => movement.productId == productId,
@@ -21,12 +21,12 @@ class InMemoryInventoryRepository implements InventoryRepository {
   }
 
   @override
-  void saveLedger(StockLedger ledger) {
+  Future<void> saveLedger(StockLedger ledger) async {
     _ledgers[ledger.productId] = ledger;
   }
 
   @override
-  void recordMovement(StockMovement movement) {
+  Future<void> recordMovement(StockMovement movement) async {
     final alreadyRecorded = _movements.any(
       (existing) => existing.id == movement.id,
     );

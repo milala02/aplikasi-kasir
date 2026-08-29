@@ -58,11 +58,12 @@ void main() {
       expect(controller.cart.subtotal?.minorUnits, equals(7500000));
     });
 
-    test('Harus memproses checkout transaksi dan mengosongkan keranjang', () {
+    test('Harus memproses checkout transaksi dan mengosongkan keranjang',
+        () async {
       controller.init();
       controller.addToCart(controller.products.first);
 
-      final success = controller.checkout(invoiceNumber: 'INV-TEST-001');
+      final success = await controller.checkout(invoiceNumber: 'INV-TEST-001');
       expect(success, isTrue);
       expect(controller.cart.items.isEmpty, isTrue);
       expect(saleRepo.getAll().length, equals(1));

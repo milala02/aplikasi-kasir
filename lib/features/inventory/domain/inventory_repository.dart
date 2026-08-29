@@ -2,11 +2,11 @@ import 'stock_ledger.dart';
 import 'stock_movement.dart';
 
 abstract interface class InventoryRepository {
-  StockLedger? getLedger(String productId);
+  Future<StockLedger?> getLedger(String productId);
 
-  List<StockMovement> getMovements(String productId);
+  Future<List<StockMovement>> getMovements(String productId);
 
-  void saveLedger(StockLedger ledger);
+  Future<void> saveLedger(StockLedger ledger);
 
-  void recordMovement(StockMovement movement);
+  Future<void> recordMovement(StockMovement movement);
 }

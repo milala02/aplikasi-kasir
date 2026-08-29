@@ -95,7 +95,7 @@ class POSController extends ChangeNotifier {
 
   /// Proses checkout. Kembalikan `true` jika berhasil, `false` jika gagal.
   /// Transaksi yang berhasil tersimpan di [lastCompletedSale].
-  bool checkout({required String invoiceNumber}) {
+  Future<bool> checkout({required String invoiceNumber}) async {
     if (_cart.items.isEmpty) return false;
 
     final saleItems = _cart.items.map((cartItem) {
@@ -115,7 +115,7 @@ class POSController extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
 
-    final result = processSaleUseCase.execute(sale);
+    final result = await processSaleUseCase.execute(sale);
     if (result is Success) {
       _lastCompletedSale = sale;
       _cart = Cart(items: []);

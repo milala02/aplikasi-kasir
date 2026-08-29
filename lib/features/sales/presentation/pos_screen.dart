@@ -146,7 +146,8 @@ class _POSScreenState extends State<POSScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Keranjang Belanja', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const Text('Keranjang Belanja',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               Text('${cart.items.length} Item'),
             ],
           ),
@@ -160,18 +161,23 @@ class _POSScreenState extends State<POSScreen> {
                     final item = cart.items[index];
                     return ListTile(
                       title: Text(item.product.name),
-                      subtitle: Text('Rp ${item.product.sellingPrice.minorUnits ~/ 100} x ${item.quantity.value}'),
+                      subtitle: Text(
+                          'Rp ${item.product.sellingPrice.minorUnits ~/ 100} x ${item.quantity.value}'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => widget.controller.updateCartQuantity(item.product.id, item.quantity.value - 1),
+                            onPressed: () => widget.controller
+                                .updateCartQuantity(
+                                    item.product.id, item.quantity.value - 1),
                           ),
                           Text('${item.quantity.value}'),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () => widget.controller.updateCartQuantity(item.product.id, item.quantity.value + 1),
+                            onPressed: () => widget.controller
+                                .updateCartQuantity(
+                                    item.product.id, item.quantity.value + 1),
                           ),
                         ],
                       ),
@@ -181,16 +187,23 @@ class _POSScreenState extends State<POSScreen> {
         ),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: const BoxDecoration(color: Colors.white, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)]),
+          decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)]),
           child: Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Total:', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Total:',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Text(
                     'Rp ${subtotalMinor ~/ 100}',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green),
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green),
                   ),
                 ],
               ),
@@ -198,17 +211,26 @@ class _POSScreenState extends State<POSScreen> {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12), backgroundColor: Colors.green),
+                  style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      backgroundColor: Colors.green),
                   onPressed: cart.items.isEmpty
                       ? null
-                      : () {
-                          final inv = 'INV-${DateTime.now().millisecondsSinceEpoch}';
-                          final success = widget.controller.checkout(invoiceNumber: inv);
+                      : () async {
+                          final inv =
+                              'INV-${DateTime.now().millisecondsSinceEpoch}';
+                          final success = await widget.controller.checkout(
+                            invoiceNumber: inv,
+                          );
+
+                          if (!mounted) return;
+
                           if (success) {
                             _showReceiptDialog(context, widget.controller);
                           }
                         },
-                  child: const Text('BAYAR / CHECKOUT', style: TextStyle(color: Colors.white, fontSize: 16)),
+                  child: const Text('BAYAR / CHECKOUT',
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
                 ),
               ),
             ],
@@ -239,7 +261,8 @@ class _POSScreenState extends State<POSScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Preview Struk:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Preview Struk:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -264,7 +287,8 @@ class _POSScreenState extends State<POSScreen> {
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
               icon: const Icon(Icons.send, color: Colors.white),
-              label: const Text('Kirim via WhatsApp', style: TextStyle(color: Colors.white)),
+              label: const Text('Kirim via WhatsApp',
+                  style: TextStyle(color: Colors.white)),
               onPressed: () async {
                 final encoded = Uri.encodeComponent(receiptText);
                 final url = Uri.parse('https://wa.me/?text=$encoded');

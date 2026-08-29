@@ -20,6 +20,9 @@ class InMemoryReceivingRepository implements ReceivingRepository {
   }
 
   @override
+  List<Receiving> getAll() => _receivings.values.toList();
+
+  @override
   void save(Receiving receiving) {
     _receivings[receiving.id] = receiving;
   }
@@ -43,7 +46,9 @@ void main() {
       );
     });
 
-    test('harus berhasil mencatat penerimaan barang, stok ledger, dan cost layer HPP', () {
+    test(
+        'harus berhasil mencatat penerimaan barang, stok ledger, dan cost layer HPP',
+        () async {
       final receiving = Receiving(
         id: 'rec_001',
         purchaseId: 'po_001',
@@ -58,7 +63,7 @@ void main() {
         ],
       );
 
-      final result = useCase.execute(receiving);
+      final result = await useCase.execute(receiving);
 
       expect(result, isA<Success<void>>());
 
@@ -67,7 +72,7 @@ void main() {
       expect(savedReceiving, isNotNull);
 
       // Verifikasi Ledger Stok bertambah
-      final ledger = inventoryRepo.getLedger('prod_100');
+      final ledger = await inventoryRepo.getLedger('prod_100');
       expect(ledger, isNotNull);
       expect(ledger!.calculateBalance().value, equals(10));
 

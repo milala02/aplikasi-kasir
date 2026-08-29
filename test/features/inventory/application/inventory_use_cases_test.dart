@@ -7,42 +7,42 @@ import 'package:aplikasi_kasir/features/inventory/domain/stock_movement.dart';
 
 void main() {
   group('InventoryUseCases', () {
-    test('returns null for unknown ledger', () {
+    test('returns null for unknown ledger', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      expect(useCases.getLedger('product-001'), isNull);
+      expect(await useCases.getLedger('product-001'), isNull);
     });
 
-    test('returns empty movements for unknown product', () {
+    test('returns empty movements for unknown product', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      expect(useCases.getMovements('product-001'), isEmpty);
+      expect(await useCases.getMovements('product-001'), isEmpty);
     });
 
-    test('returns zero balance when ledger does not exist', () {
+    test('returns zero balance when ledger does not exist', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      expect(useCases.getBalance('product-001'), Quantity.zero());
+      expect(await useCases.getBalance('product-001'), Quantity.zero());
     });
 
-    test('receiveStock creates a ledger and records movement', () {
+    test('receiveStock creates a ledger and records movement', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
       final occurredAt = DateTime(2026, 1, 1);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 10),
         occurredAt: occurredAt,
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 10));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 10));
       expect(
-        useCases.getMovements('product-001'),
+        await useCases.getMovements('product-001'),
         hasLength(1),
       );
       expect(repository.recordedMovements, hasLength(1));
@@ -52,135 +52,135 @@ void main() {
       );
     });
 
-    test('sellStock decreases existing stock', () {
+    test('sellStock decreases existing stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
       final occurredAt = DateTime(2026, 1, 1);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 10),
         occurredAt: occurredAt,
       );
 
-      useCases.sellStock(
+      await useCases.sellStock(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 3),
         occurredAt: occurredAt,
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 7));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 7));
       expect(repository.recordedMovements, hasLength(2));
     });
 
-    test('adjustStockIncrease increases stock', () {
+    test('adjustStockIncrease increases stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 5),
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      useCases.adjustStockIncrease(
+      await useCases.adjustStockIncrease(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 2),
         occurredAt: DateTime(2026, 1, 2),
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 7));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 7));
     });
 
-    test('adjustStockDecrease decreases stock', () {
+    test('adjustStockDecrease decreases stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 8),
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      useCases.adjustStockDecrease(
+      await useCases.adjustStockDecrease(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 2),
         occurredAt: DateTime(2026, 1, 2),
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 6));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 6));
     });
 
-    test('recordDamage decreases stock', () {
+    test('recordDamage decreases stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 8),
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      useCases.recordDamage(
+      await useCases.recordDamage(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 1),
         occurredAt: DateTime(2026, 1, 2),
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 7));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 7));
     });
 
-    test('returnStockIn increases stock', () {
+    test('returnStockIn increases stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 5),
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      useCases.returnStockIn(
+      await useCases.returnStockIn(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 2),
         occurredAt: DateTime(2026, 1, 2),
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 7));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 7));
     });
 
-    test('returnStockOut decreases stock', () {
+    test('returnStockOut decreases stock', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 5),
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      useCases.returnStockOut(
+      await useCases.returnStockOut(
         productId: 'product-001',
         movementId: 'movement-002',
         quantity: Quantity(value: 2),
         occurredAt: DateTime(2026, 1, 2),
       );
 
-      expect(useCases.getBalance('product-001'), Quantity(value: 3));
+      expect(await useCases.getBalance('product-001'), Quantity(value: 3));
     });
 
-    test('throws when selling without an existing ledger', () {
+    test('throws when selling without an existing ledger', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
@@ -195,11 +195,11 @@ void main() {
       );
     });
 
-    test('preserves reference id on recorded movement', () {
+    test('preserves reference id on recorded movement', () async {
       final repository = _FakeInventoryRepository();
       final useCases = InventoryUseCases(repository: repository);
 
-      useCases.receiveStock(
+      await useCases.receiveStock(
         productId: 'product-001',
         movementId: 'movement-001',
         quantity: Quantity(value: 5),
@@ -220,12 +220,12 @@ class _FakeInventoryRepository implements InventoryRepository {
   final List<StockMovement> recordedMovements = [];
 
   @override
-  StockLedger? getLedger(String productId) {
+  Future<StockLedger?> getLedger(String productId) async {
     return _ledgers[productId];
   }
 
   @override
-  List<StockMovement> getMovements(String productId) {
+  Future<List<StockMovement>> getMovements(String productId) async {
     return List.unmodifiable(
       recordedMovements.where(
         (movement) => movement.productId == productId,
@@ -234,12 +234,12 @@ class _FakeInventoryRepository implements InventoryRepository {
   }
 
   @override
-  void saveLedger(StockLedger ledger) {
+  Future<void> saveLedger(StockLedger ledger) async {
     _ledgers[ledger.productId] = ledger;
   }
 
   @override
-  void recordMovement(StockMovement movement) {
+  Future<void> recordMovement(StockMovement movement) async {
     recordedMovements.add(movement);
   }
 }

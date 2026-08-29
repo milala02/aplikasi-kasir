@@ -76,12 +76,12 @@ class _ReceivingScreenState extends State<ReceivingScreen> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.green.shade50,
-                      child: const Icon(Icons.move_to_inbox,
-                          color: Colors.green),
+                      child:
+                          const Icon(Icons.move_to_inbox, color: Colors.green),
                     ),
-                    title: Text('Penerimaan #${r.id.substring(r.id.length > 8 ? r.id.length - 8 : 0)}',
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold)),
+                    title: Text(
+                        'Penerimaan #${r.id.substring(r.id.length > 8 ? r.id.length - 8 : 0)}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
                         '${r.items.length} item · ${DateFormat('d MMM yyyy').format(r.receivedAt)}\nDari PO: ${r.purchaseId}'),
                     isThreeLine: true,
@@ -105,8 +105,10 @@ class _ReceivingScreenState extends State<ReceivingScreen> {
       builder: (ctx) => _ReceiveGoodsDialog(
         purchases: purchases,
         products: products,
-        onSave: (receiving) {
-          final result = widget.receiveGoodsUseCase.execute(receiving);
+        onSave: (receiving) async {
+          final result = await widget.receiveGoodsUseCase.execute(receiving);
+
+          if (!mounted) return;
           if (result is Failure) {
             final error = result.error;
             final message =
@@ -137,9 +139,7 @@ class _ReceiveGoodsDialog extends StatefulWidget {
   final void Function(Receiving) onSave;
 
   const _ReceiveGoodsDialog(
-      {required this.purchases,
-      required this.products,
-      required this.onSave});
+      {required this.purchases, required this.products, required this.onSave});
 
   @override
   State<_ReceiveGoodsDialog> createState() => _ReceiveGoodsDialogState();
@@ -209,7 +209,7 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
               )
             else
               DropdownButtonFormField<Purchase>(
-                value: _selectedPurchase,
+                initialValue: _selectedPurchase,
                 hint: const Text('Pilih Pesanan Pembelian (PO)'),
                 items: widget.purchases.map((p) {
                   return DropdownMenuItem(
@@ -218,19 +218,17 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
                   );
                 }).toList(),
                 onChanged: (p) => setState(() => _selectedPurchase = p),
-                decoration:
-                    const InputDecoration(border: OutlineInputBorder()),
+                decoration: const InputDecoration(border: OutlineInputBorder()),
               ),
             const SizedBox(height: 16),
             const Text('Tambah Item Diterima:',
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             DropdownButtonFormField<Product>(
-              value: _selectedProduct,
+              initialValue: _selectedProduct,
               hint: const Text('Pilih Produk'),
               items: widget.products.map((p) {
-                return DropdownMenuItem(
-                    value: p, child: Text(p.name));
+                return DropdownMenuItem(value: p, child: Text(p.name));
               }).toList(),
               onChanged: (p) => setState(() => _selectedProduct = p),
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -275,8 +273,7 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
                         '${item.quantityReceived.value} × Rp ${item.unitCost.minorUnits ~/ 100}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () =>
-                          setState(() => _items.remove(item)),
+                      onPressed: () => setState(() => _items.remove(item)),
                     ),
                   ))),
             ],
@@ -289,9 +286,8 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
           child: const Text('Batal'),
         ),
         ElevatedButton(
-          onPressed: (_items.isEmpty || _selectedPurchase == null)
-              ? null
-              : _save,
+          onPressed:
+              (_items.isEmpty || _selectedPurchase == null) ? null : _save,
           child: const Text('Simpan Penerimaan'),
         ),
       ],

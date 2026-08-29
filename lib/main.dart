@@ -13,7 +13,7 @@ import 'features/dashboard/application/financial_analytics_use_case.dart';
 import 'features/dashboard/presentation/dashboard_controller.dart';
 import 'features/inventory/domain/cost_layer_repository.dart';
 import 'features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
-import 'features/inventory/infrastructure/in_memory_inventory_repository.dart';
+import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/purchasing/domain/purchase_repository.dart';
@@ -44,7 +44,7 @@ void main() async {
   await saleRepo.init();
 
   // 3. Repositories yang masih in-memory (belum ada Drift version)
-  final inventoryRepo = InMemoryInventoryRepository();
+  final inventoryRepo = DriftInventoryRepository(db);
   final costLayerRepo = InMemoryCostLayerRepository();
   final purchaseRepo = InMemoryPurchaseRepository();
   final receivingRepo = InMemoryReceivingRepository();
@@ -62,8 +62,7 @@ void main() async {
 
   // 5. Controllers
   final themeController = ThemeController();
-  final analyticsUseCase =
-      FinancialAnalyticsUseCase(saleRepository: saleRepo);
+  final analyticsUseCase = FinancialAnalyticsUseCase(saleRepository: saleRepo);
   final dashboardController = DashboardController(
     analyticsUseCase: analyticsUseCase,
     saleRepository: saleRepo,

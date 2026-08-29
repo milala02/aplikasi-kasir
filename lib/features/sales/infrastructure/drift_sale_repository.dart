@@ -1,5 +1,3 @@
-import 'package:drift/drift.dart';
-
 import '../../../core/database/app_database.dart';
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
@@ -25,7 +23,8 @@ class DriftSaleRepository implements SaleRepository {
           .where((i) => i.saleId == row.id)
           .map((i) => SaleItem(
                 productId: i.productId,
-                productName: i.productId, // nama produk tidak tersimpan di tabel
+                productName:
+                    i.productId, // nama produk tidak tersimpan di tabel
                 unit: Unit.pcs,
                 quantity: Quantity(value: i.quantityValue, scale: 0),
                 unitPrice:
@@ -54,8 +53,7 @@ class DriftSaleRepository implements SaleRepository {
   @override
   Sale? getByInvoiceNumber(String invoiceNumber) {
     try {
-      return _cache.values
-          .firstWhere((s) => s.invoiceNumber == invoiceNumber);
+      return _cache.values.firstWhere((s) => s.invoiceNumber == invoiceNumber);
     } catch (_) {
       return null;
     }
@@ -113,8 +111,7 @@ class DriftSaleRepository implements SaleRepository {
   void deleteById(String id) {
     _cache.remove(id);
     db.transaction(() async {
-      await (db.delete(db.saleItemsTable)
-            ..where((t) => t.saleId.equals(id)))
+      await (db.delete(db.saleItemsTable)..where((t) => t.saleId.equals(id)))
           .go();
       await (db.delete(db.salesTable)..where((t) => t.id.equals(id))).go();
     });

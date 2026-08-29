@@ -19,7 +19,7 @@ class ReceiveGoodsUseCase {
     required this.costLayerRepository,
   });
 
-  Result<void> execute(Receiving receiving) {
+  Future<Result<void>> execute(Receiving receiving) async {
     try {
       // 1. Simpan penerimaan barang
       receivingRepository.save(receiving);
@@ -34,18 +34,19 @@ class ReceiveGoodsUseCase {
           referenceId: receiving.id,
           occurredAt: receiving.receivedAt,
         );
-        inventoryRepository.recordMovement(movement);
+        await inventoryRepository.recordMovement(movement);
 
         // Update atau buat StockLedger dengan pergerakan baru (addMovement)
-        final currentLedger = inventoryRepository.getLedger(item.productId);
+        final currentLedger =
+            await inventoryRepository.getLedger(item.productId);
         final updatedLedger = (currentLedger == null)
             ? StockLedger(
                 productId: item.productId,
                 movements: [movement],
               )
             : currentLedger.addMovement(movement);
-            
-        inventoryRepository.saveLedger(updatedLedger);
+
+        await inventoryRepository.saveLedger(updatedLedger);
 
         // 3. Catat Cost Layer baru (FIFO HPP)
         final costLayer = CostLayer(

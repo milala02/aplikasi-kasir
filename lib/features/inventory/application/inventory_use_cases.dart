@@ -11,16 +11,18 @@ class InventoryUseCases {
     required this.repository,
   });
 
-  StockLedger? getLedger(String productId) {
+  Future<StockLedger?> getLedger(String productId) {
     return repository.getLedger(productId);
   }
 
-  List<StockMovement> getMovements(String productId) {
-    return List.unmodifiable(repository.getMovements(productId));
+  Future<List<StockMovement>> getMovements(String productId) async {
+    return List.unmodifiable(
+      await repository.getMovements(productId),
+    );
   }
 
-  Quantity getBalance(String productId) {
-    final ledger = repository.getLedger(productId);
+  Future<Quantity> getBalance(String productId) async {
+    final ledger = await repository.getLedger(productId);
 
     if (ledger == null) {
       return Quantity.zero();
@@ -29,14 +31,14 @@ class InventoryUseCases {
     return ledger.calculateBalance();
   }
 
-  void receiveStock({
+  Future<void> receiveStock({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getOrCreateLedger(productId);
+  }) async {
+    final ledger = await _getOrCreateLedger(productId);
 
     final service = InventoryService(ledger: ledger).receiveStock(
       movementId: movementId,
@@ -45,18 +47,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void sellStock({
+  Future<void> sellStock({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).sellStock(
       movementId: movementId,
@@ -65,18 +67,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void adjustStockIncrease({
+  Future<void> adjustStockIncrease({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).adjustStockIncrease(
       movementId: movementId,
@@ -85,18 +87,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void adjustStockDecrease({
+  Future<void> adjustStockDecrease({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).adjustStockDecrease(
       movementId: movementId,
@@ -105,18 +107,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void recordDamage({
+  Future<void> recordDamage({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).recordDamage(
       movementId: movementId,
@@ -125,18 +127,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void returnStockIn({
+  Future<void> returnStockIn({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).returnStockIn(
       movementId: movementId,
@@ -145,18 +147,18 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  void returnStockOut({
+  Future<void> returnStockOut({
     required String productId,
     required String movementId,
     required Quantity quantity,
     required DateTime occurredAt,
     String? referenceId,
-  }) {
-    final ledger = _getRequiredLedger(productId);
+  }) async {
+    final ledger = await _getRequiredLedger(productId);
 
     final service = InventoryService(ledger: ledger).returnStockOut(
       movementId: movementId,
@@ -165,12 +167,12 @@ class InventoryUseCases {
       referenceId: referenceId,
     );
 
-    repository.saveLedger(service.ledger);
-    repository.recordMovement(service.ledger.movements.last);
+    await repository.saveLedger(service.ledger);
+    await repository.recordMovement(service.ledger.movements.last);
   }
 
-  StockLedger _getRequiredLedger(String productId) {
-    final ledger = repository.getLedger(productId);
+  Future<StockLedger> _getRequiredLedger(String productId) async {
+    final ledger = await repository.getLedger(productId);
 
     if (ledger == null) {
       throw ArgumentError(
@@ -181,8 +183,9 @@ class InventoryUseCases {
     return ledger;
   }
 
-  StockLedger _getOrCreateLedger(String productId) {
-    return repository.getLedger(productId) ??
-        StockLedger(productId: productId);
+  Future<StockLedger> _getOrCreateLedger(String productId) async {
+    final ledger = await repository.getLedger(productId);
+
+    return ledger ?? StockLedger(productId: productId);
   }
 }

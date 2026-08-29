@@ -12,7 +12,7 @@ void main() {
       expect(repository, isA<InventoryRepository>());
     });
 
-    test('repository exposes ledger and movement operations', () {
+    test('repository exposes ledger and movement operations', () async {
       final repository = _FakeInventoryRepository();
 
       final movement = StockMovement(
@@ -23,10 +23,10 @@ void main() {
         occurredAt: DateTime(2026, 1, 1),
       );
 
-      repository.recordMovement(movement);
+      await repository.recordMovement(movement);
 
       expect(
-        repository.getMovements('product-001'),
+        await repository.getMovements('product-001'),
         contains(movement),
       );
 
@@ -35,19 +35,19 @@ void main() {
         movements: [movement],
       );
 
-      repository.saveLedger(ledger);
+      await repository.saveLedger(ledger);
 
       expect(
-        repository.getLedger('product-001'),
+        await repository.getLedger('product-001'),
         equals(ledger),
       );
     });
 
-    test('returns no ledger for an unknown product', () {
+    test('returns no ledger for an unknown product', () async {
       final repository = _FakeInventoryRepository();
 
-      expect(repository.getLedger('unknown'), isNull);
-      expect(repository.getMovements('unknown'), isEmpty);
+      expect(await repository.getLedger('unknown'), isNull);
+      expect(await repository.getMovements('unknown'), isEmpty);
     });
   });
 }
@@ -57,10 +57,10 @@ class _FakeInventoryRepository implements InventoryRepository {
   final List<StockMovement> _movements = [];
 
   @override
-  StockLedger? getLedger(String productId) => _ledgers[productId];
+  Future<StockLedger?> getLedger(String productId) async => _ledgers[productId];
 
   @override
-  List<StockMovement> getMovements(String productId) {
+  Future<List<StockMovement>> getMovements(String productId) async {
     return List.unmodifiable(
       _movements.where(
         (movement) => movement.productId == productId,
@@ -69,12 +69,12 @@ class _FakeInventoryRepository implements InventoryRepository {
   }
 
   @override
-  void saveLedger(StockLedger ledger) {
+  Future<void> saveLedger(StockLedger ledger) async {
     _ledgers[ledger.productId] = ledger;
   }
 
   @override
-  void recordMovement(StockMovement movement) {
+  Future<void> recordMovement(StockMovement movement) async {
     _movements.add(movement);
   }
 }

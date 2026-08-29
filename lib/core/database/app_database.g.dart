@@ -2095,6 +2095,14 @@ class $StockMovementsTableTable extends StockMovementsTable
   late final GeneratedColumn<int> quantityValue = GeneratedColumn<int>(
       'quantity_value', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _quantityScaleMeta =
+      const VerificationMeta('quantityScale');
+  @override
+  late final GeneratedColumn<int> quantityScale = GeneratedColumn<int>(
+      'quantity_scale', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
@@ -2113,8 +2121,15 @@ class $StockMovementsTableTable extends StockMovementsTable
       'occurred_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, productId, quantityValue, type, referenceId, occurredAt];
+  List<GeneratedColumn> get $columns => [
+        id,
+        productId,
+        quantityValue,
+        quantityScale,
+        type,
+        referenceId,
+        occurredAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2144,6 +2159,12 @@ class $StockMovementsTableTable extends StockMovementsTable
               data['quantity_value']!, _quantityValueMeta));
     } else if (isInserting) {
       context.missing(_quantityValueMeta);
+    }
+    if (data.containsKey('quantity_scale')) {
+      context.handle(
+          _quantityScaleMeta,
+          quantityScale.isAcceptableOrUnknown(
+              data['quantity_scale']!, _quantityScaleMeta));
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -2181,6 +2202,8 @@ class $StockMovementsTableTable extends StockMovementsTable
           .read(DriftSqlType.string, data['${effectivePrefix}product_id'])!,
       quantityValue: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}quantity_value'])!,
+      quantityScale: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}quantity_scale'])!,
       type: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
       referenceId: attachedDatabase.typeMapping
@@ -2201,6 +2224,7 @@ class StockMovementsTableData extends DataClass
   final String id;
   final String productId;
   final int quantityValue;
+  final int quantityScale;
   final String type;
   final String? referenceId;
   final DateTime occurredAt;
@@ -2208,6 +2232,7 @@ class StockMovementsTableData extends DataClass
       {required this.id,
       required this.productId,
       required this.quantityValue,
+      required this.quantityScale,
       required this.type,
       this.referenceId,
       required this.occurredAt});
@@ -2217,6 +2242,7 @@ class StockMovementsTableData extends DataClass
     map['id'] = Variable<String>(id);
     map['product_id'] = Variable<String>(productId);
     map['quantity_value'] = Variable<int>(quantityValue);
+    map['quantity_scale'] = Variable<int>(quantityScale);
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || referenceId != null) {
       map['reference_id'] = Variable<String>(referenceId);
@@ -2230,6 +2256,7 @@ class StockMovementsTableData extends DataClass
       id: Value(id),
       productId: Value(productId),
       quantityValue: Value(quantityValue),
+      quantityScale: Value(quantityScale),
       type: Value(type),
       referenceId: referenceId == null && nullToAbsent
           ? const Value.absent()
@@ -2245,6 +2272,7 @@ class StockMovementsTableData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       productId: serializer.fromJson<String>(json['productId']),
       quantityValue: serializer.fromJson<int>(json['quantityValue']),
+      quantityScale: serializer.fromJson<int>(json['quantityScale']),
       type: serializer.fromJson<String>(json['type']),
       referenceId: serializer.fromJson<String?>(json['referenceId']),
       occurredAt: serializer.fromJson<DateTime>(json['occurredAt']),
@@ -2257,6 +2285,7 @@ class StockMovementsTableData extends DataClass
       'id': serializer.toJson<String>(id),
       'productId': serializer.toJson<String>(productId),
       'quantityValue': serializer.toJson<int>(quantityValue),
+      'quantityScale': serializer.toJson<int>(quantityScale),
       'type': serializer.toJson<String>(type),
       'referenceId': serializer.toJson<String?>(referenceId),
       'occurredAt': serializer.toJson<DateTime>(occurredAt),
@@ -2267,6 +2296,7 @@ class StockMovementsTableData extends DataClass
           {String? id,
           String? productId,
           int? quantityValue,
+          int? quantityScale,
           String? type,
           Value<String?> referenceId = const Value.absent(),
           DateTime? occurredAt}) =>
@@ -2274,6 +2304,7 @@ class StockMovementsTableData extends DataClass
         id: id ?? this.id,
         productId: productId ?? this.productId,
         quantityValue: quantityValue ?? this.quantityValue,
+        quantityScale: quantityScale ?? this.quantityScale,
         type: type ?? this.type,
         referenceId: referenceId.present ? referenceId.value : this.referenceId,
         occurredAt: occurredAt ?? this.occurredAt,
@@ -2285,6 +2316,9 @@ class StockMovementsTableData extends DataClass
       quantityValue: data.quantityValue.present
           ? data.quantityValue.value
           : this.quantityValue,
+      quantityScale: data.quantityScale.present
+          ? data.quantityScale.value
+          : this.quantityScale,
       type: data.type.present ? data.type.value : this.type,
       referenceId:
           data.referenceId.present ? data.referenceId.value : this.referenceId,
@@ -2299,6 +2333,7 @@ class StockMovementsTableData extends DataClass
           ..write('id: $id, ')
           ..write('productId: $productId, ')
           ..write('quantityValue: $quantityValue, ')
+          ..write('quantityScale: $quantityScale, ')
           ..write('type: $type, ')
           ..write('referenceId: $referenceId, ')
           ..write('occurredAt: $occurredAt')
@@ -2307,8 +2342,8 @@ class StockMovementsTableData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, productId, quantityValue, type, referenceId, occurredAt);
+  int get hashCode => Object.hash(id, productId, quantityValue, quantityScale,
+      type, referenceId, occurredAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2316,6 +2351,7 @@ class StockMovementsTableData extends DataClass
           other.id == this.id &&
           other.productId == this.productId &&
           other.quantityValue == this.quantityValue &&
+          other.quantityScale == this.quantityScale &&
           other.type == this.type &&
           other.referenceId == this.referenceId &&
           other.occurredAt == this.occurredAt);
@@ -2326,6 +2362,7 @@ class StockMovementsTableCompanion
   final Value<String> id;
   final Value<String> productId;
   final Value<int> quantityValue;
+  final Value<int> quantityScale;
   final Value<String> type;
   final Value<String?> referenceId;
   final Value<DateTime> occurredAt;
@@ -2334,6 +2371,7 @@ class StockMovementsTableCompanion
     this.id = const Value.absent(),
     this.productId = const Value.absent(),
     this.quantityValue = const Value.absent(),
+    this.quantityScale = const Value.absent(),
     this.type = const Value.absent(),
     this.referenceId = const Value.absent(),
     this.occurredAt = const Value.absent(),
@@ -2343,6 +2381,7 @@ class StockMovementsTableCompanion
     required String id,
     required String productId,
     required int quantityValue,
+    this.quantityScale = const Value.absent(),
     required String type,
     this.referenceId = const Value.absent(),
     required DateTime occurredAt,
@@ -2356,6 +2395,7 @@ class StockMovementsTableCompanion
     Expression<String>? id,
     Expression<String>? productId,
     Expression<int>? quantityValue,
+    Expression<int>? quantityScale,
     Expression<String>? type,
     Expression<String>? referenceId,
     Expression<DateTime>? occurredAt,
@@ -2365,6 +2405,7 @@ class StockMovementsTableCompanion
       if (id != null) 'id': id,
       if (productId != null) 'product_id': productId,
       if (quantityValue != null) 'quantity_value': quantityValue,
+      if (quantityScale != null) 'quantity_scale': quantityScale,
       if (type != null) 'type': type,
       if (referenceId != null) 'reference_id': referenceId,
       if (occurredAt != null) 'occurred_at': occurredAt,
@@ -2376,6 +2417,7 @@ class StockMovementsTableCompanion
       {Value<String>? id,
       Value<String>? productId,
       Value<int>? quantityValue,
+      Value<int>? quantityScale,
       Value<String>? type,
       Value<String?>? referenceId,
       Value<DateTime>? occurredAt,
@@ -2384,6 +2426,7 @@ class StockMovementsTableCompanion
       id: id ?? this.id,
       productId: productId ?? this.productId,
       quantityValue: quantityValue ?? this.quantityValue,
+      quantityScale: quantityScale ?? this.quantityScale,
       type: type ?? this.type,
       referenceId: referenceId ?? this.referenceId,
       occurredAt: occurredAt ?? this.occurredAt,
@@ -2402,6 +2445,9 @@ class StockMovementsTableCompanion
     }
     if (quantityValue.present) {
       map['quantity_value'] = Variable<int>(quantityValue.value);
+    }
+    if (quantityScale.present) {
+      map['quantity_scale'] = Variable<int>(quantityScale.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -2424,6 +2470,7 @@ class StockMovementsTableCompanion
           ..write('id: $id, ')
           ..write('productId: $productId, ')
           ..write('quantityValue: $quantityValue, ')
+          ..write('quantityScale: $quantityScale, ')
           ..write('type: $type, ')
           ..write('referenceId: $referenceId, ')
           ..write('occurredAt: $occurredAt, ')
@@ -3506,6 +3553,7 @@ typedef $$StockMovementsTableTableCreateCompanionBuilder
   required String id,
   required String productId,
   required int quantityValue,
+  Value<int> quantityScale,
   required String type,
   Value<String?> referenceId,
   required DateTime occurredAt,
@@ -3516,6 +3564,7 @@ typedef $$StockMovementsTableTableUpdateCompanionBuilder
   Value<String> id,
   Value<String> productId,
   Value<int> quantityValue,
+  Value<int> quantityScale,
   Value<String> type,
   Value<String?> referenceId,
   Value<DateTime> occurredAt,
@@ -3539,6 +3588,9 @@ class $$StockMovementsTableTableFilterComposer
 
   ColumnFilters<int> get quantityValue => $composableBuilder(
       column: $table.quantityValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnFilters(column));
@@ -3569,6 +3621,10 @@ class $$StockMovementsTableTableOrderingComposer
       column: $table.quantityValue,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get type => $composableBuilder(
       column: $table.type, builder: (column) => ColumnOrderings(column));
 
@@ -3596,6 +3652,9 @@ class $$StockMovementsTableTableAnnotationComposer
 
   GeneratedColumn<int> get quantityValue => $composableBuilder(
       column: $table.quantityValue, builder: (column) => column);
+
+  GeneratedColumn<int> get quantityScale => $composableBuilder(
+      column: $table.quantityScale, builder: (column) => column);
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
@@ -3640,6 +3699,7 @@ class $$StockMovementsTableTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> productId = const Value.absent(),
             Value<int> quantityValue = const Value.absent(),
+            Value<int> quantityScale = const Value.absent(),
             Value<String> type = const Value.absent(),
             Value<String?> referenceId = const Value.absent(),
             Value<DateTime> occurredAt = const Value.absent(),
@@ -3649,6 +3709,7 @@ class $$StockMovementsTableTableTableManager extends RootTableManager<
             id: id,
             productId: productId,
             quantityValue: quantityValue,
+            quantityScale: quantityScale,
             type: type,
             referenceId: referenceId,
             occurredAt: occurredAt,
@@ -3658,6 +3719,7 @@ class $$StockMovementsTableTableTableManager extends RootTableManager<
             required String id,
             required String productId,
             required int quantityValue,
+            Value<int> quantityScale = const Value.absent(),
             required String type,
             Value<String?> referenceId = const Value.absent(),
             required DateTime occurredAt,
@@ -3667,6 +3729,7 @@ class $$StockMovementsTableTableTableManager extends RootTableManager<
             id: id,
             productId: productId,
             quantityValue: quantityValue,
+            quantityScale: quantityScale,
             type: type,
             referenceId: referenceId,
             occurredAt: occurredAt,
