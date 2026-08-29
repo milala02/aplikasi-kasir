@@ -31,17 +31,24 @@ class FinancialAnalyticsUseCase {
     }).toList();
 
     var omsetMinor = 0;
+    var hppMinor = 0;
     var currency = 'IDR';
 
     for (final sale in filteredSales) {
       for (final item in sale.items) {
         omsetMinor += item.subtotal.minorUnits;
         currency = item.unitPrice.currency;
+
+        // HPP FIFO aktual dari SaleItem.unitCost (hasil konsumsi cost layer).
+        // Item legacy tanpa unitCost (null) tidak menyumbang HPP —
+        // fallback eksplisit, bukan estimasi.
+        final unitCost = item.unitCost;
+        if (unitCost != null) {
+          hppMinor += unitCost.multiply(item.quantity.value).minorUnits;
+        }
       }
     }
 
-    // Estimasi HPP FIFO terkonsumsi dari transaksi
-    final hppMinor = (omsetMinor * 0.65).round();
     final profitMinor = omsetMinor - hppMinor;
     final marginPct = omsetMinor > 0 ? (profitMinor / omsetMinor) * 100 : 0.0;
 
