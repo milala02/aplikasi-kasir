@@ -6,36 +6,36 @@ import 'package:aplikasi_kasir/features/inventory/infrastructure/in_memory_cost_
 
 void main() {
   group('InMemoryCostLayerRepository', () {
-    test('saves and retrieves a cost layer by id', () {
+    test('saves and retrieves a cost layer by id', () async {
       final repository = InMemoryCostLayerRepository();
       final layer = createLayer();
 
-      repository.save(layer);
+      await repository.save(layer);
 
-      expect(repository.getById(layer.id), layer);
+      expect(await repository.getById(layer.id), layer);
     });
 
-    test('returns null when cost layer does not exist', () {
+    test('returns null when cost layer does not exist', () async {
       final repository = InMemoryCostLayerRepository();
 
-      expect(repository.getById('missing'), isNull);
+      expect(await repository.getById('missing'), isNull);
     });
 
-    test('gets all cost layers for a product', () {
+    test('gets all cost layers for a product', () async {
       final repository = InMemoryCostLayerRepository();
 
       final pepperOne = createLayer(id: 'layer-001', productId: 'pepper');
       final pepperTwo = createLayer(id: 'layer-002', productId: 'pepper');
       final onion = createLayer(id: 'layer-003', productId: 'onion');
 
-      repository.save(pepperOne);
-      repository.save(pepperTwo);
-      repository.save(onion);
+      await repository.save(pepperOne);
+      await repository.save(pepperTwo);
+      await repository.save(onion);
 
-      expect(repository.getByProductId('pepper'), [pepperOne, pepperTwo]);
+      expect(await repository.getByProductId('pepper'), [pepperOne, pepperTwo]);
     });
 
-    test('gets only available cost layers for a product', () {
+    test('gets only available cost layers for a product', () async {
       final repository = InMemoryCostLayerRepository();
 
       final available = createLayer(
@@ -50,37 +50,37 @@ void main() {
         remainingQuantity: Quantity.zero(),
       );
 
-      repository.save(available);
-      repository.save(depleted);
+      await repository.save(available);
+      await repository.save(depleted);
 
-      expect(repository.getAvailableByProductId('pepper'), [available]);
+      expect(await repository.getAvailableByProductId('pepper'), [available]);
     });
 
-    test('does not return layers from another product', () {
+    test('does not return layers from another product', () async {
       final repository = InMemoryCostLayerRepository();
 
       final pepper = createLayer(id: 'layer-001', productId: 'pepper');
 
       final onion = createLayer(id: 'layer-002', productId: 'onion');
 
-      repository.save(pepper);
-      repository.save(onion);
+      await repository.save(pepper);
+      await repository.save(onion);
 
-      expect(repository.getAvailableByProductId('pepper'), [pepper]);
+      expect(await repository.getAvailableByProductId('pepper'), [pepper]);
     });
 
-    test('rejects duplicate cost layer id on save', () {
+    test('rejects duplicate cost layer id on save', () async {
       final repository = InMemoryCostLayerRepository();
 
-      repository.save(createLayer(id: 'layer-001'));
+      await repository.save(createLayer(id: 'layer-001'));
 
       expect(
-        () => repository.save(createLayer(id: 'layer-001')),
+        () async => repository.save(createLayer(id: 'layer-001')),
         throwsStateError,
       );
     });
 
-    test('updates an existing cost layer', () {
+    test('updates an existing cost layer', () async {
       final repository = InMemoryCostLayerRepository();
 
       final original = createLayer(
@@ -88,24 +88,24 @@ void main() {
         remainingQuantity: Quantity(value: 1),
       );
 
-      repository.save(original);
+      await repository.save(original);
 
       final updated = original.consume(Quantity(value: 250, scale: 3));
 
-      repository.update(updated);
+      await repository.update(updated);
 
-      expect(repository.getById('layer-001'), updated);
+      expect(await repository.getById('layer-001'), updated);
       expect(
-        repository.getById('layer-001')!.remainingQuantity,
+        (await repository.getById('layer-001'))!.remainingQuantity,
         Quantity(value: 750, scale: 3),
       );
     });
 
-    test('rejects updating a missing cost layer', () {
+    test('rejects updating a missing cost layer', () async {
       final repository = InMemoryCostLayerRepository();
 
       expect(
-        () => repository.update(createLayer(id: 'missing')),
+        () async => repository.update(createLayer(id: 'missing')),
         throwsStateError,
       );
     });

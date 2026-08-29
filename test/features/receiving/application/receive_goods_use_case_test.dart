@@ -77,7 +77,7 @@ void main() {
       expect(ledger!.calculateBalance().value, equals(10));
 
       // Verifikasi Cost Layer HPP terbentuk
-      final costLayers = costLayerRepo.getByProductId('prod_100');
+      final costLayers = await costLayerRepo.getByProductId('prod_100');
       expect(costLayers.length, equals(1));
       expect(costLayers.first.unitCost.minorUnits, equals(1500000));
     });

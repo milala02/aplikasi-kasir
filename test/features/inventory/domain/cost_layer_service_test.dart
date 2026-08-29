@@ -7,7 +7,7 @@ import 'package:aplikasi_kasir/features/inventory/domain/cost_layer_service.dart
 
 void main() {
   group('CostLayerService', () {
-    test('consumes cost layers using FIFO order', () {
+    test('consumes cost layers using FIFO order', () async {
       final repository = _FakeCostLayerRepository();
 
       final first = createLayer(
@@ -24,10 +24,10 @@ void main() {
         unitCost: const Money(minorUnits: 12000, currency: 'IDR'),
       );
 
-      repository.save(first);
-      repository.save(second);
+      await repository.save(first);
+      await repository.save(second);
 
-      final result = CostLayerService(repository: repository)
+      final result = await CostLayerService(repository: repository)
           .consume(productId: 'pepper', quantity: Quantity(value: 12));
 
       expect(
@@ -45,20 +45,20 @@ void main() {
       expect(result.consumptions.last.quantity, Quantity(value: 2));
 
       expect(
-        repository.getById('layer-001')!.remainingQuantity,
+        (await repository.getById('layer-001'))!.remainingQuantity,
         Quantity.zero(),
       );
 
       expect(
-        repository.getById('layer-002')!.remainingQuantity,
+        (await repository.getById('layer-002'))!.remainingQuantity,
         Quantity(value: 3),
       );
     });
 
-    test('consumes fractional quantities across layers', () {
+    test('consumes fractional quantities across layers', () async {
       final repository = _FakeCostLayerRepository();
 
-      repository.save(
+      await repository.save(
         createLayer(
           id: 'layer-001',
           acquiredAt: DateTime(2026, 8, 1),
@@ -67,7 +67,7 @@ void main() {
         ),
       );
 
-      repository.save(
+      await repository.save(
         createLayer(
           id: 'layer-002',
           acquiredAt: DateTime(2026, 8, 2),
@@ -76,7 +76,7 @@ void main() {
         ),
       );
 
-      final result = CostLayerService(
+      final result = await CostLayerService(
         repository: repository,
       ).consume(productId: 'pepper', quantity: Quantity(value: 750, scale: 3));
 
@@ -90,17 +90,17 @@ void main() {
       expect(result.consumptions.last.quantity, Quantity(value: 250, scale: 3));
 
       expect(
-        repository.getById('layer-001')!.remainingQuantity,
+        (await repository.getById('layer-001'))!.remainingQuantity,
         Quantity.zero(scale: 3),
       );
 
       expect(
-        repository.getById('layer-002')!.remainingQuantity,
+        (await repository.getById('layer-002'))!.remainingQuantity,
         Quantity(value: 250, scale: 3),
       );
     });
 
-    test('does not mutate any layer when stock is insufficient', () {
+    test('does not mutate any layer when stock is insufficient', () async {
       final repository = _FakeCostLayerRepository();
 
       final first = createLayer(
@@ -117,28 +117,28 @@ void main() {
         unitCost: const Money(minorUnits: 12000, currency: 'IDR'),
       );
 
-      repository.save(first);
-      repository.save(second);
+      await repository.save(first);
+      await repository.save(second);
 
       expect(
-        () =>
-            CostLayerService(repository: repository)
-                .consume(productId: 'pepper', quantity: Quantity(value: 10)),
+        () async => CostLayerService(repository: repository)
+            .consume(productId: 'pepper', quantity: Quantity(value: 10)),
         throwsArgumentError,
       );
 
       expect(
-        repository.getById('layer-001')!.remainingQuantity,
+        (await repository.getById('layer-001'))!.remainingQuantity,
         Quantity(value: 5),
       );
 
       expect(
-        repository.getById('layer-002')!.remainingQuantity,
+        (await repository.getById('layer-002'))!.remainingQuantity,
         Quantity(value: 3),
       );
     });
 
-    test('does not mutate any layer when currencies are incompatible', () {
+    test('does not mutate any layer when currencies are incompatible',
+        () async {
       final repository = _FakeCostLayerRepository();
 
       final first = createLayer(
@@ -155,28 +155,27 @@ void main() {
         unitCost: const Money(minorUnits: 2, currency: 'USD'),
       );
 
-      repository.save(first);
-      repository.save(second);
+      await repository.save(first);
+      await repository.save(second);
 
       expect(
-        () =>
-            CostLayerService(repository: repository)
-                .consume(productId: 'pepper', quantity: Quantity(value: 6)),
+        () async => CostLayerService(repository: repository)
+            .consume(productId: 'pepper', quantity: Quantity(value: 6)),
         throwsArgumentError,
       );
 
       expect(
-        repository.getById('layer-001')!.remainingQuantity,
+        (await repository.getById('layer-001'))!.remainingQuantity,
         Quantity(value: 5),
       );
 
       expect(
-        repository.getById('layer-002')!.remainingQuantity,
+        (await repository.getById('layer-002'))!.remainingQuantity,
         Quantity(value: 5),
       );
     });
 
-    test('uses layer id as deterministic FIFO tie breaker', () {
+    test('uses layer id as deterministic FIFO tie breaker', () async {
       final repository = _FakeCostLayerRepository();
 
       final laterId = createLayer(
@@ -193,10 +192,10 @@ void main() {
         unitCost: const Money(minorUnits: 10000, currency: 'IDR'),
       );
 
-      repository.save(laterId);
-      repository.save(earlierId);
+      await repository.save(laterId);
+      await repository.save(earlierId);
 
-      final result = CostLayerService(repository: repository)
+      final result = await CostLayerService(repository: repository)
           .consume(productId: 'pepper', quantity: Quantity(value: 3));
 
       expect(result.consumptions.first.layerId, 'layer-001');
@@ -204,29 +203,26 @@ void main() {
       expect(result.totalCost, const Money(minorUnits: 30000, currency: 'IDR'));
     });
 
-    test('rejects empty product id', () {
+    test('rejects empty product id', () async {
       expect(
-        () =>
-            CostLayerService(repository: _FakeCostLayerRepository())
-                .consume(productId: '', quantity: Quantity(value: 1)),
+        () async => CostLayerService(repository: _FakeCostLayerRepository())
+            .consume(productId: '', quantity: Quantity(value: 1)),
         throwsArgumentError,
       );
     });
 
-    test('rejects zero quantity', () {
+    test('rejects zero quantity', () async {
       expect(
-        () =>
-            CostLayerService(repository: _FakeCostLayerRepository())
-                .consume(productId: 'pepper', quantity: Quantity.zero()),
+        () async => CostLayerService(repository: _FakeCostLayerRepository())
+            .consume(productId: 'pepper', quantity: Quantity.zero()),
         throwsArgumentError,
       );
     });
 
-    test('rejects consumption when no layer is available', () {
+    test('rejects consumption when no layer is available', () async {
       expect(
-        () =>
-            CostLayerService(repository: _FakeCostLayerRepository())
-                .consume(productId: 'pepper', quantity: Quantity(value: 1)),
+        () async => CostLayerService(repository: _FakeCostLayerRepository())
+            .consume(productId: 'pepper', quantity: Quantity(value: 1)),
         throwsStateError,
       );
     });
@@ -253,29 +249,29 @@ class _FakeCostLayerRepository implements CostLayerRepository {
   final Map<String, CostLayer> _layers = {};
 
   @override
-  CostLayer? getById(String id) => _layers[id];
+  Future<CostLayer?> getById(String id) async => _layers[id];
 
   @override
-  List<CostLayer> getByProductId(String productId) {
+  Future<List<CostLayer>> getByProductId(String productId) async {
     return _layers.values
         .where((layer) => layer.productId == productId)
         .toList();
   }
 
   @override
-  List<CostLayer> getAvailableByProductId(String productId) {
+  Future<List<CostLayer>> getAvailableByProductId(String productId) async {
     return _layers.values
         .where((layer) => layer.productId == productId && layer.isAvailable)
         .toList();
   }
 
   @override
-  void save(CostLayer layer) {
+  Future<void> save(CostLayer layer) async {
     _layers[layer.id] = layer;
   }
 
   @override
-  void update(CostLayer layer) {
+  Future<void> update(CostLayer layer) async {
     _layers[layer.id] = layer;
   }
 }

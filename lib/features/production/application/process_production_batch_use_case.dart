@@ -17,33 +17,36 @@ class ProcessProductionBatchUseCase {
     required this.inventoryRepository,
   });
 
-  Result<ProductionBatch> execute({
+  Future<Result<ProductionBatch>> execute({
     required String batchId,
     required String batchNumber,
     required Recipe recipe,
     required DateTime producedAt,
     Money? additionalProductionCost,
     Quantity? actualOutputQuantity,
-  }) {
+  }) async {
     try {
       final allocations = <MaterialCostAllocation>[];
 
       // 1. Cek Ketersediaan Stok & Alokasi FIFO
       for (final item in recipe.items) {
-        final availableLayers = costLayerRepository.getAvailableByProductId(item.productId);
-        
+        final availableLayers =
+            await costLayerRepository.getAvailableByProductId(item.productId);
+
         // Hitung total sisa stok di semua layer
         var totalAvailable = 0;
         final targetScale = item.quantityRequired.scale;
         for (final layer in availableLayers) {
-          totalAvailable += _scaleQuantity(layer.remainingQuantity, targetScale);
+          totalAvailable +=
+              _scaleQuantity(layer.remainingQuantity, targetScale);
         }
 
         if (totalAvailable < item.quantityRequired.value) {
           return Failure(
             DomainError(
               code: 'INSUFFICIENT_STOCK',
-              message: 'Stok tidak mencukupi untuk produk ${item.productId}. Required: ${item.quantityRequired.value}, Available: $totalAvailable',
+              message:
+                  'Stok tidak mencukupi untuk produk ${item.productId}. Required: ${item.quantityRequired.value}, Available: $totalAvailable',
             ),
           );
         }
@@ -58,7 +61,7 @@ class ProcessProductionBatchUseCase {
 
           // Update layer
           final updatedLayer = layer.consume(consumeQty);
-          costLayerRepository.update(updatedLayer);
+          await costLayerRepository.update(updatedLayer);
 
           // Simpan audit trail alokasi
           allocations.add(
@@ -95,7 +98,8 @@ class ProcessProductionBatchUseCase {
         producedAt: producedAt,
         allocations: allocations,
         additionalProductionCost: additionalProductionCost,
-        actualOutputQuantity: actualOutputQuantity ?? recipe.expectedOutputQuantity,
+        actualOutputQuantity:
+            actualOutputQuantity ?? recipe.expectedOutputQuantity,
       );
 
       return Success(batch);

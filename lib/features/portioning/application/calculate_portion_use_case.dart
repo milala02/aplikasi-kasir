@@ -12,38 +12,46 @@ class CalculatePortionUseCase {
   });
 
   /// Menghitung rekomendasi takaran gram ketengan berdasarkan harga jual & target margin
-  PortionCalculationResult execute({
+  Future<PortionCalculationResult> execute({
     required String productId,
     required Money targetSellingPrice,
     required double targetMarginPercentage, // Misal 0.30 untuk 30%
     Money? packagingCostPerUnit,
-  }) {
+  }) async {
     if (targetMarginPercentage <= 0 || targetMarginPercentage >= 1.0) {
-      throw ArgumentError('Margin percentage must be between 0.0 and 1.0 (e.g., 0.30 for 30%).');
+      throw ArgumentError(
+          'Margin percentage must be between 0.0 and 1.0 (e.g., 0.30 for 30%).');
     }
 
-    final pkgCost = packagingCostPerUnit ?? const Money(minorUnits: 0, currency: 'IDR');
+    final pkgCost =
+        packagingCostPerUnit ?? const Money(minorUnits: 0, currency: 'IDR');
 
     // 1. Ambil modal bahan rata-rata / FIFO layer dari Inventory
-    final availableLayers = costLayerRepository.getAvailableByProductId(productId);
+    final availableLayers =
+        await costLayerRepository.getAvailableByProductId(productId);
     if (availableLayers.isEmpty) {
-      throw StateError('Tidak ada stok/cost layer aktif untuk produk $productId.');
+      throw StateError(
+          'Tidak ada stok/cost layer aktif untuk produk $productId.');
     }
 
     // Mengambil HPP/Cost per gram dari layer FIFO tertua
     final activeLayer = availableLayers.first;
-    
+
     // Konversi unitCost per kg ke unitCost per Gram (dibagi 1.000)
     final costPerGramMinor = activeLayer.unitCost.minorUnits ~/ 1000;
-    final materialCostPerGram = Money(minorUnits: costPerGramMinor, currency: activeLayer.unitCost.currency);
+    final materialCostPerGram = Money(
+        minorUnits: costPerGramMinor, currency: activeLayer.unitCost.currency);
 
     // 2. Hitung Batas Maksimal Modal per Bungkus (COGS = Price * (1 - Margin))
-    final maxCogsMinor = (targetSellingPrice.minorUnits * (1.0 - targetMarginPercentage)).round();
+    final maxCogsMinor =
+        (targetSellingPrice.minorUnits * (1.0 - targetMarginPercentage))
+            .round();
 
     // 3. Hitung Anggaran Bahan per Bungkus = COGS - Biaya Kemasan
     final materialBudgetMinor = maxCogsMinor - pkgCost.minorUnits;
     if (materialBudgetMinor <= 0) {
-      throw ArgumentError('Biaya kemasan terlalu tinggi melebihi batas modal target margin.');
+      throw ArgumentError(
+          'Biaya kemasan terlalu tinggi melebihi batas modal target margin.');
     }
 
     // 4. Hitung Berat Gram per Bungkus = Anggaran Bahan / Cost per Gram
@@ -58,7 +66,8 @@ class CalculatePortionUseCase {
       targetMarginPercentage: targetMarginPercentage,
       packagingCostPerUnit: pkgCost,
       materialUnitCostPerGram: materialCostPerGram,
-      recommendedWeightPerPortionInGrams: Quantity(value: weightInGrams, scale: 0),
+      recommendedWeightPerPortionInGrams:
+          Quantity(value: weightInGrams, scale: 0),
       totalPortionsPerKg: portionsPerKg,
     );
   }

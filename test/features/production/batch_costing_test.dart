@@ -23,9 +23,10 @@ void main() {
       );
     });
 
-    test('Test 1: Konsumsi dari 1 layer tertua (7 kg dari 10 kg @ 30.000)', () {
+    test('Test 1: Konsumsi dari 1 layer tertua (7 kg dari 10 kg @ 30.000)',
+        () async {
       // Layer #001: 10 kg @ 30.000
-      costLayerRepo.save(
+      await costLayerRepo.save(
         CostLayer(
           id: 'layer_001',
           productId: 'bawang_merah',
@@ -48,7 +49,7 @@ void main() {
         expectedOutputQuantity: Quantity(value: 5, scale: 0),
       );
 
-      final result = useCase.execute(
+      final result = await useCase.execute(
         batchId: 'batch_023',
         batchNumber: 'BATCH-023',
         recipe: recipe,
@@ -57,14 +58,17 @@ void main() {
 
       expect(result, isA<Success>());
       final batch = (result as Success).value;
-      expect(batch.totalMaterialCost.minorUnits, equals(21000000)); // Rp 210.000
+      expect(
+          batch.totalMaterialCost.minorUnits, equals(21000000)); // Rp 210.000
 
-      final remaining = costLayerRepo.getById('layer_001');
+      final remaining = await costLayerRepo.getById('layer_001');
       expect(remaining!.remainingQuantity.value, equals(3));
     });
 
-    test('Test 2: Konsumsi lintas 2 layer (12 kg = 10 kg @ 30.000 + 2 kg @ 35.000)', () {
-      costLayerRepo.save(
+    test(
+        'Test 2: Konsumsi lintas 2 layer (12 kg = 10 kg @ 30.000 + 2 kg @ 35.000)',
+        () async {
+      await costLayerRepo.save(
         CostLayer(
           id: 'layer_001',
           productId: 'bawang_merah',
@@ -74,7 +78,7 @@ void main() {
           acquiredAt: DateTime.now().subtract(const Duration(days: 2)),
         ),
       );
-      costLayerRepo.save(
+      await costLayerRepo.save(
         CostLayer(
           id: 'layer_002',
           productId: 'bawang_merah',
@@ -97,7 +101,7 @@ void main() {
         expectedOutputQuantity: Quantity(value: 10, scale: 0),
       );
 
-      final result = useCase.execute(
+      final result = await useCase.execute(
         batchId: 'batch_024',
         batchNumber: 'BATCH-024',
         recipe: recipe,
@@ -109,12 +113,14 @@ void main() {
       // 10 * 30.000 (300.000) + 2 * 35.000 (70.000) = Rp 370.000
       expect(batch.totalMaterialCost.minorUnits, equals(37000000));
 
-      final remainingLayer2 = costLayerRepo.getById('layer_002');
+      final remainingLayer2 = await costLayerRepo.getById('layer_002');
       expect(remainingLayer2!.remainingQuantity.value, equals(3));
     });
 
-    test('Test 4: Jika stok tidak mencukupi, produksi HARUS gagal (tanpa stok negatif)', () {
-      costLayerRepo.save(
+    test(
+        'Test 4: Jika stok tidak mencukupi, produksi HARUS gagal (tanpa stok negatif)',
+        () async {
+      await costLayerRepo.save(
         CostLayer(
           id: 'layer_001',
           productId: 'jahe',
@@ -137,7 +143,7 @@ void main() {
         expectedOutputQuantity: Quantity(value: 2, scale: 0),
       );
 
-      final result = useCase.execute(
+      final result = await useCase.execute(
         batchId: 'batch_025',
         batchNumber: 'BATCH-025',
         recipe: recipe,
@@ -149,14 +155,16 @@ void main() {
       expect(failure.error.toString(), contains('INSUFFICIENT_STOCK'));
     });
 
-    test('Test 6 & 7: Total HPP Batch dan HPP per kg/satuan hasil produksi', () {
-      costLayerRepo.save(
+    test('Test 6 & 7: Total HPP Batch dan HPP per kg/satuan hasil produksi',
+        () async {
+      await costLayerRepo.save(
         CostLayer(
           id: 'layer_001',
           productId: 'bawang_putih',
           originalQuantity: Quantity(value: 10, scale: 0),
           remainingQuantity: Quantity(value: 10, scale: 0),
-          unitCost: const Money(minorUnits: 4000000, currency: 'IDR'), // Rp 40.000/kg
+          unitCost:
+              const Money(minorUnits: 4000000, currency: 'IDR'), // Rp 40.000/kg
           acquiredAt: DateTime.now(),
         ),
       );
@@ -167,18 +175,21 @@ void main() {
         items: [
           RecipeItem(
             productId: 'bawang_putih',
-            quantityRequired: Quantity(value: 10, scale: 0), // Material: Rp 400.000
+            quantityRequired:
+                Quantity(value: 10, scale: 0), // Material: Rp 400.000
           ),
         ],
         expectedOutputQuantity: Quantity(value: 10, scale: 0), // Output 10 kg
       );
 
-      final result = useCase.execute(
+      final result = await useCase.execute(
         batchId: 'batch_026',
         batchNumber: 'BATCH-026',
         recipe: recipe,
         producedAt: DateTime.now(),
-        additionalProductionCost: const Money(minorUnits: 10000000, currency: 'IDR'), // Biaya Gas/Kemasan: Rp 100.000
+        additionalProductionCost: const Money(
+            minorUnits: 10000000,
+            currency: 'IDR'), // Biaya Gas/Kemasan: Rp 100.000
       );
 
       expect(result, isA<Success>());

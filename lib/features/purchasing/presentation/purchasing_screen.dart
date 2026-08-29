@@ -72,8 +72,7 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
                       child: const Icon(Icons.receipt, color: Colors.blue),
                     ),
                     title: Text(p.referenceNumber ?? p.id,
-                        style:
-                            const TextStyle(fontWeight: FontWeight.bold)),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
                         '${p.items.length} item · ${DateFormat('d MMM yyyy').format(p.purchasedAt)}'),
                     trailing: Text(
@@ -196,11 +195,11 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
             const SizedBox(height: 8),
             // Pilih produk
             DropdownButtonFormField<Product>(
-              value: _selectedProduct,
+              key: ValueKey(_selectedProduct),
+              initialValue: _selectedProduct,
               hint: const Text('Pilih Produk'),
               items: widget.products.map((p) {
-                return DropdownMenuItem(
-                    value: p, child: Text(p.name));
+                return DropdownMenuItem(value: p, child: Text(p.name));
               }).toList(),
               onChanged: (p) => setState(() => _selectedProduct = p),
               decoration: const InputDecoration(border: OutlineInputBorder()),
@@ -245,8 +244,7 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
                         '${item.quantity.value} × Rp ${item.unitCost.minorUnits ~/ 100}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      onPressed: () =>
-                          setState(() => _items.remove(item)),
+                      onPressed: () => setState(() => _items.remove(item)),
                     ),
                   ))),
             ],

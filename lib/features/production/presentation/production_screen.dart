@@ -13,17 +13,20 @@ class ProductionAndPortioningScreen extends StatefulWidget {
   });
 
   @override
-  State<ProductionAndPortioningScreen> createState() => _ProductionAndPortioningScreenState();
+  State<ProductionAndPortioningScreen> createState() =>
+      _ProductionAndPortioningScreenState();
 }
 
-class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningScreen> with SingleTickerProviderStateMixin {
+class _ProductionAndPortioningScreenState
+    extends State<ProductionAndPortioningScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   // Portioning Calculator State
   final _priceController = TextEditingController(text: '5000');
   final _marginController = TextEditingController(text: '30');
   final _pkgCostController = TextEditingController(text: '300');
-  
+
   String _calcResultText = '';
 
   @override
@@ -41,15 +44,16 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
     super.dispose();
   }
 
-  void _calculateKetengan() {
+  Future<void> _calculateKetengan() async {
     try {
       final priceInt = (int.tryParse(_priceController.text) ?? 0) * 100;
       final marginDouble = (double.tryParse(_marginController.text) ?? 0) / 100;
       final pkgCostInt = (int.tryParse(_pkgCostController.text) ?? 0) * 100;
 
-      final useCase = CalculatePortionUseCase(costLayerRepository: widget.costLayerRepository);
-      
-      final result = useCase.execute(
+      final useCase = CalculatePortionUseCase(
+          costLayerRepository: widget.costLayerRepository);
+
+      final result = await useCase.execute(
         productId: 'lada_biji',
         targetSellingPrice: Money(minorUnits: priceInt, currency: 'IDR'),
         targetMarginPercentage: marginDouble,
@@ -98,7 +102,8 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Form Racik Bumbu Utama (FIFO Cost Layer)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Form Racik Bumbu Utama (FIFO Cost Layer)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           const TextField(
             decoration: InputDecoration(
@@ -129,12 +134,18 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), backgroundColor: Colors.orange),
-              icon: const Icon(Icons.precision_manufacturing, color: Colors.white),
-              label: const Text('PROSES PRODUKSI & POTONG STOK FIFO', style: TextStyle(color: Colors.white, fontSize: 16)),
+              style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.orange),
+              icon: const Icon(Icons.precision_manufacturing,
+                  color: Colors.white),
+              label: const Text('PROSES PRODUKSI & POTONG STOK FIFO',
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Simulasi Produksi Bumbu Berhasil! HPP FIFO Dihitung.')),
+                  const SnackBar(
+                      content: Text(
+                          'Simulasi Produksi Bumbu Berhasil! HPP FIFO Dihitung.')),
                 );
               },
             ),
@@ -150,7 +161,8 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Kalkulator Repacking Ketengan (Bumbu / Lada)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text('Kalkulator Repacking Ketengan (Bumbu / Lada)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           TextField(
             controller: _priceController,
@@ -185,9 +197,12 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), backgroundColor: Colors.blueAccent),
+              style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.blueAccent),
               icon: const Icon(Icons.calculate, color: Colors.white),
-              label: const Text('HITUNG TAKARAN GRAM OTOMATIS', style: TextStyle(color: Colors.white, fontSize: 16)),
+              label: const Text('HITUNG TAKARAN GRAM OTOMATIS',
+                  style: TextStyle(color: Colors.white, fontSize: 16)),
               onPressed: _calculateKetengan,
             ),
           ),
@@ -197,7 +212,9 @@ class _ProductionAndPortioningScreenState extends State<ProductionAndPortioningS
               color: Colors.blue.shade50,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(_calcResultText, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+                child: Text(_calcResultText,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500)),
               ),
             ),
         ],

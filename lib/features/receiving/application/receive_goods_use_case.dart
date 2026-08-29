@@ -58,7 +58,7 @@ class ReceiveGoodsUseCase {
           acquiredAt: receiving.receivedAt,
           purchaseId: receiving.purchaseId,
         );
-        costLayerRepository.save(costLayer);
+        await costLayerRepository.save(costLayer);
       }
 
       return const Success(null);

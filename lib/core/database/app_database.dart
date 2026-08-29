@@ -14,9 +14,11 @@ class ProductsTable extends Table {
   TextColumn get name => text()();
   TextColumn get baseUnit => text()();
   IntColumn get purchasePriceMinorUnits => integer()();
-  TextColumn get purchasePriceCurrency => text().withDefault(const Constant('IDR'))();
+  TextColumn get purchasePriceCurrency =>
+      text().withDefault(const Constant('IDR'))();
   IntColumn get sellingPriceMinorUnits => integer()();
-  TextColumn get sellingPriceCurrency => text().withDefault(const Constant('IDR'))();
+  TextColumn get sellingPriceCurrency =>
+      text().withDefault(const Constant('IDR'))();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
 
   @override
@@ -45,13 +47,14 @@ class CostLayersTable extends Table {
   IntColumn get remainingQuantityValue => integer()();
   IntColumn get remainingQuantityScale => integer()();
   IntColumn get unitCostMinorUnits => integer()();
-  TextColumn get unitCostCurrency => text().withDefault(const Constant('IDR'))();
+  TextColumn get unitCostCurrency =>
+      text().withDefault(const Constant('IDR'))();
+  TextColumn get purchaseId => text().nullable()();
   DateTimeColumn get acquiredAt => dateTime()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
-
 
 // --- TABEL PENJUALAN ---
 class SalesTable extends Table {
@@ -91,25 +94,35 @@ class StockMovementsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-
-@DriftDatabase(tables: [ProductsTable, CustomersTable, CostLayersTable, SalesTable, SaleItemsTable, StockMovementsTable])
+@DriftDatabase(tables: [
+  ProductsTable,
+  CustomersTable,
+  CostLayersTable,
+  SalesTable,
+  SaleItemsTable,
+  StockMovementsTable
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (Migrator m) async {
-      await m.createAll();
-    },
-    onUpgrade: (Migrator m, int from, int to) async {
-      if (from < 2) {
-        await m.addColumn(stockMovementsTable, stockMovementsTable.quantityScale);
-      }
-    },
-  );
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.addColumn(
+                stockMovementsTable, stockMovementsTable.quantityScale);
+          }
+          if (from < 3) {
+            await m.addColumn(costLayersTable, costLayersTable.purchaseId);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {

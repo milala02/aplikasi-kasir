@@ -12,7 +12,7 @@ import 'features/customers/infrastructure/drift_customer_repository.dart';
 import 'features/dashboard/application/financial_analytics_use_case.dart';
 import 'features/dashboard/presentation/dashboard_controller.dart';
 import 'features/inventory/domain/cost_layer_repository.dart';
-import 'features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
+import 'features/inventory/infrastructure/drift_cost_layer_repository.dart';
 import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
@@ -45,7 +45,7 @@ void main() async {
 
   // 3. Repositories yang masih in-memory (belum ada Drift version)
   final inventoryRepo = DriftInventoryRepository(db);
-  final costLayerRepo = InMemoryCostLayerRepository();
+  final costLayerRepo = DriftCostLayerRepository(db);
   final purchaseRepo = InMemoryPurchaseRepository();
   final receivingRepo = InMemoryReceivingRepository();
 

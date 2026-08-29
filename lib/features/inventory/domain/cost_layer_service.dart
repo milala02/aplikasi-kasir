@@ -8,10 +8,10 @@ class CostLayerService {
 
   const CostLayerService({required this.repository});
 
-  CostConsumption consume({
+  Future<CostConsumption> consume({
     required String productId,
     required Quantity quantity,
-  }) {
+  }) async {
     if (productId.isEmpty) {
       throw ArgumentError('Product ID cannot be empty.');
     }
@@ -20,17 +20,17 @@ class CostLayerService {
       throw ArgumentError('Consumed quantity must be positive.');
     }
 
-    final layers =
-        List<CostLayer>.from(repository.getAvailableByProductId(productId))
-          ..sort((a, b) {
-            final acquired = a.acquiredAt.compareTo(b.acquiredAt);
+    final layers = List<CostLayer>.from(
+        await repository.getAvailableByProductId(productId))
+      ..sort((a, b) {
+        final acquired = a.acquiredAt.compareTo(b.acquiredAt);
 
-            if (acquired != 0) {
-              return acquired;
-            }
+        if (acquired != 0) {
+          return acquired;
+        }
 
-            return a.id.compareTo(b.id);
-          });
+        return a.id.compareTo(b.id);
+      });
 
     if (layers.isEmpty) {
       throw StateError('No available cost layer for product "$productId".');
@@ -55,9 +55,8 @@ class CostLayerService {
 
       final availableValue = _scaleTo(layer.remainingQuantity, commonScale);
 
-      final consumedValue = requestedValue < availableValue
-          ? requestedValue
-          : availableValue;
+      final consumedValue =
+          requestedValue < availableValue ? requestedValue : availableValue;
 
       if (consumedValue <= 0) {
         continue;
@@ -71,8 +70,7 @@ class CostLayerService {
       final updatedLayer = layer.consume(consumedQuantity);
 
       final layerCost = Money(
-        minorUnits:
-            layer.unitCost.minorUnits *
+        minorUnits: layer.unitCost.minorUnits *
             consumedQuantity.value ~/
             _scaleFactor(consumedQuantity.scale),
         currency: layer.unitCost.currency,
@@ -105,7 +103,7 @@ class CostLayerService {
     // All validation and costing has completed successfully.
     // Only now mutate the repository.
     for (final updatedLayer in updates) {
-      repository.update(updatedLayer);
+      await repository.update(updatedLayer);
     }
 
     return CostConsumption(

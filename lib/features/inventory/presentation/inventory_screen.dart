@@ -18,9 +18,45 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
+  List<CostLayer> _activeLayers = [];
   final _productIdController = TextEditingController(text: 'lada_biji');
   final _qtyController = TextEditingController(text: '10');
   final _costController = TextEditingController(text: '160000');
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveLayers();
+  }
+
+  Future<void> _loadActiveLayers() async {
+    if (!mounted) return;
+
+    try {
+      final productId = _productIdController.text.trim().isEmpty
+          ? 'lada_biji'
+          : _productIdController.text.trim();
+
+      final layers =
+          await widget.costLayerRepository.getAvailableByProductId(productId);
+
+      if (!mounted) return;
+
+      setState(() {
+        _activeLayers = layers;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _activeLayers = [];
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat cost layer: $e')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -30,7 +66,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  void _addCostLayer() {
+  Future<void> _addCostLayer() async {
     try {
       final productId = _productIdController.text.trim();
       final qtyVal = int.tryParse(_qtyController.text) ?? 0;
@@ -52,35 +88,48 @@ class _InventoryScreenState extends State<InventoryScreen> {
         acquiredAt: DateTime.now(),
       );
 
-      widget.costLayerRepository.save(newLayer);
+      await widget.costLayerRepository.save(newLayer);
+      await _loadActiveLayers();
 
-      setState(() {});
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Stok FIFO Layer baru ($qtyVal unit @ Rp ${_costController.text}) berhasil ditambahkan!')),
+        SnackBar(
+            content: Text(
+                'Stok FIFO Layer baru ($qtyVal unit @ Rp ${_costController.text}) berhasil ditambahkan!')),
       );
     } catch (e) {
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gagal menambah stok: $e')),
       );
     }
   }
+
   void _showAddStockDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF1E1E1E),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 20, right: 20, top: 20,
+          left: 20,
+          right: 20,
+          top: 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Tambah Stok Barang', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+            const Text('Tambah Stok Barang',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
             const SizedBox(height: 16),
             TextField(
               style: const TextStyle(color: Colors.white),
@@ -89,7 +138,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 labelStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 16),
@@ -101,19 +151,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 labelStyle: const TextStyle(color: Colors.grey),
                 filled: true,
                 fillColor: Colors.black26,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, padding: const EdgeInsets.symmetric(vertical: 14)),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 14)),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Simulasi: Barang ditambahkan ke Database!')));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content:
+                          Text('Simulasi: Barang ditambahkan ke Database!')));
                 },
-                child: const Text('Simpan Data', style: TextStyle(color: Colors.white, fontSize: 16)),
+                child: const Text('Simpan Data',
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ),
             const SizedBox(height: 20),
@@ -125,9 +181,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-    final currentProductId = _productIdController.text.trim().isEmpty ? 'lada_biji' : _productIdController.text.trim();
-    final activeLayers = widget.costLayerRepository.getAvailableByProductId(currentProductId);
+    final currentProductId = _productIdController.text.trim().isEmpty
+        ? 'lada_biji'
+        : _productIdController.text.trim();
+    final activeLayers = _activeLayers;
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -141,7 +198,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => setState(() {}),
+            onPressed: _loadActiveLayers,
           ),
         ],
       ),
@@ -159,7 +216,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   children: [
                     const Text(
                       '📥 Penerimaan Barang Masuk (New FIFO Cost Layer)',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -226,7 +284,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ? const Card(
                     child: Padding(
                       padding: EdgeInsets.all(24.0),
-                      child: Center(child: Text('Belum ada stok layer aktif untuk produk ini.')),
+                      child: Center(
+                          child: Text(
+                              'Belum ada stok layer aktif untuk produk ini.')),
                     ),
                   )
                 : ListView.builder(
@@ -238,12 +298,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       final isExhausted = layer.remainingQuantity.value == 0;
 
                       return Card(
-                        color: isExhausted ? Colors.grey.shade100 : Colors.white,
+                        color:
+                            isExhausted ? Colors.grey.shade100 : Colors.white,
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: isExhausted ? Colors.grey : Colors.teal,
+                            backgroundColor:
+                                isExhausted ? Colors.grey : Colors.teal,
                             child: Icon(
-                              isExhausted ? Icons.inventory_2_outlined : Icons.inventory_2,
+                              isExhausted
+                                  ? Icons.inventory_2_outlined
+                                  : Icons.inventory_2,
                               color: Colors.white,
                             ),
                           ),
@@ -251,7 +315,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             '${layer.productId} - Batch ID: ${layer.id}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              decoration: isExhausted ? TextDecoration.lineThrough : null,
+                              decoration: isExhausted
+                                  ? TextDecoration.lineThrough
+                                  : null,
                             ),
                           ),
                           subtitle: Text(
@@ -260,7 +326,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           ),
                           trailing: Text(
                             'Rp ${layer.unitCost.minorUnits ~/ 100} / unit',
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.teal),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.teal),
                           ),
                         ),
                       );

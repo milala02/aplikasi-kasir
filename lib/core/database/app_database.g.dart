@@ -920,6 +920,12 @@ class $CostLayersTableTable extends CostLayersTable
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('IDR'));
+  static const VerificationMeta _purchaseIdMeta =
+      const VerificationMeta('purchaseId');
+  @override
+  late final GeneratedColumn<String> purchaseId = GeneratedColumn<String>(
+      'purchase_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _acquiredAtMeta =
       const VerificationMeta('acquiredAt');
   @override
@@ -936,6 +942,7 @@ class $CostLayersTableTable extends CostLayersTable
         remainingQuantityScale,
         unitCostMinorUnits,
         unitCostCurrency,
+        purchaseId,
         acquiredAt
       ];
   @override
@@ -1006,6 +1013,12 @@ class $CostLayersTableTable extends CostLayersTable
           unitCostCurrency.isAcceptableOrUnknown(
               data['unit_cost_currency']!, _unitCostCurrencyMeta));
     }
+    if (data.containsKey('purchase_id')) {
+      context.handle(
+          _purchaseIdMeta,
+          purchaseId.isAcceptableOrUnknown(
+              data['purchase_id']!, _purchaseIdMeta));
+    }
     if (data.containsKey('acquired_at')) {
       context.handle(
           _acquiredAtMeta,
@@ -1041,6 +1054,8 @@ class $CostLayersTableTable extends CostLayersTable
           DriftSqlType.int, data['${effectivePrefix}unit_cost_minor_units'])!,
       unitCostCurrency: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}unit_cost_currency'])!,
+      purchaseId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}purchase_id']),
       acquiredAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}acquired_at'])!,
     );
@@ -1062,6 +1077,7 @@ class CostLayersTableData extends DataClass
   final int remainingQuantityScale;
   final int unitCostMinorUnits;
   final String unitCostCurrency;
+  final String? purchaseId;
   final DateTime acquiredAt;
   const CostLayersTableData(
       {required this.id,
@@ -1072,6 +1088,7 @@ class CostLayersTableData extends DataClass
       required this.remainingQuantityScale,
       required this.unitCostMinorUnits,
       required this.unitCostCurrency,
+      this.purchaseId,
       required this.acquiredAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1084,6 +1101,9 @@ class CostLayersTableData extends DataClass
     map['remaining_quantity_scale'] = Variable<int>(remainingQuantityScale);
     map['unit_cost_minor_units'] = Variable<int>(unitCostMinorUnits);
     map['unit_cost_currency'] = Variable<String>(unitCostCurrency);
+    if (!nullToAbsent || purchaseId != null) {
+      map['purchase_id'] = Variable<String>(purchaseId);
+    }
     map['acquired_at'] = Variable<DateTime>(acquiredAt);
     return map;
   }
@@ -1098,6 +1118,9 @@ class CostLayersTableData extends DataClass
       remainingQuantityScale: Value(remainingQuantityScale),
       unitCostMinorUnits: Value(unitCostMinorUnits),
       unitCostCurrency: Value(unitCostCurrency),
+      purchaseId: purchaseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(purchaseId),
       acquiredAt: Value(acquiredAt),
     );
   }
@@ -1118,6 +1141,7 @@ class CostLayersTableData extends DataClass
           serializer.fromJson<int>(json['remainingQuantityScale']),
       unitCostMinorUnits: serializer.fromJson<int>(json['unitCostMinorUnits']),
       unitCostCurrency: serializer.fromJson<String>(json['unitCostCurrency']),
+      purchaseId: serializer.fromJson<String?>(json['purchaseId']),
       acquiredAt: serializer.fromJson<DateTime>(json['acquiredAt']),
     );
   }
@@ -1133,6 +1157,7 @@ class CostLayersTableData extends DataClass
       'remainingQuantityScale': serializer.toJson<int>(remainingQuantityScale),
       'unitCostMinorUnits': serializer.toJson<int>(unitCostMinorUnits),
       'unitCostCurrency': serializer.toJson<String>(unitCostCurrency),
+      'purchaseId': serializer.toJson<String?>(purchaseId),
       'acquiredAt': serializer.toJson<DateTime>(acquiredAt),
     };
   }
@@ -1146,6 +1171,7 @@ class CostLayersTableData extends DataClass
           int? remainingQuantityScale,
           int? unitCostMinorUnits,
           String? unitCostCurrency,
+          Value<String?> purchaseId = const Value.absent(),
           DateTime? acquiredAt}) =>
       CostLayersTableData(
         id: id ?? this.id,
@@ -1160,6 +1186,7 @@ class CostLayersTableData extends DataClass
             remainingQuantityScale ?? this.remainingQuantityScale,
         unitCostMinorUnits: unitCostMinorUnits ?? this.unitCostMinorUnits,
         unitCostCurrency: unitCostCurrency ?? this.unitCostCurrency,
+        purchaseId: purchaseId.present ? purchaseId.value : this.purchaseId,
         acquiredAt: acquiredAt ?? this.acquiredAt,
       );
   CostLayersTableData copyWithCompanion(CostLayersTableCompanion data) {
@@ -1184,6 +1211,8 @@ class CostLayersTableData extends DataClass
       unitCostCurrency: data.unitCostCurrency.present
           ? data.unitCostCurrency.value
           : this.unitCostCurrency,
+      purchaseId:
+          data.purchaseId.present ? data.purchaseId.value : this.purchaseId,
       acquiredAt:
           data.acquiredAt.present ? data.acquiredAt.value : this.acquiredAt,
     );
@@ -1200,6 +1229,7 @@ class CostLayersTableData extends DataClass
           ..write('remainingQuantityScale: $remainingQuantityScale, ')
           ..write('unitCostMinorUnits: $unitCostMinorUnits, ')
           ..write('unitCostCurrency: $unitCostCurrency, ')
+          ..write('purchaseId: $purchaseId, ')
           ..write('acquiredAt: $acquiredAt')
           ..write(')'))
         .toString();
@@ -1215,6 +1245,7 @@ class CostLayersTableData extends DataClass
       remainingQuantityScale,
       unitCostMinorUnits,
       unitCostCurrency,
+      purchaseId,
       acquiredAt);
   @override
   bool operator ==(Object other) =>
@@ -1228,6 +1259,7 @@ class CostLayersTableData extends DataClass
           other.remainingQuantityScale == this.remainingQuantityScale &&
           other.unitCostMinorUnits == this.unitCostMinorUnits &&
           other.unitCostCurrency == this.unitCostCurrency &&
+          other.purchaseId == this.purchaseId &&
           other.acquiredAt == this.acquiredAt);
 }
 
@@ -1240,6 +1272,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
   final Value<int> remainingQuantityScale;
   final Value<int> unitCostMinorUnits;
   final Value<String> unitCostCurrency;
+  final Value<String?> purchaseId;
   final Value<DateTime> acquiredAt;
   final Value<int> rowid;
   const CostLayersTableCompanion({
@@ -1251,6 +1284,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
     this.remainingQuantityScale = const Value.absent(),
     this.unitCostMinorUnits = const Value.absent(),
     this.unitCostCurrency = const Value.absent(),
+    this.purchaseId = const Value.absent(),
     this.acquiredAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1263,6 +1297,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
     required int remainingQuantityScale,
     required int unitCostMinorUnits,
     this.unitCostCurrency = const Value.absent(),
+    this.purchaseId = const Value.absent(),
     required DateTime acquiredAt,
     this.rowid = const Value.absent(),
   })  : id = Value(id),
@@ -1282,6 +1317,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
     Expression<int>? remainingQuantityScale,
     Expression<int>? unitCostMinorUnits,
     Expression<String>? unitCostCurrency,
+    Expression<String>? purchaseId,
     Expression<DateTime>? acquiredAt,
     Expression<int>? rowid,
   }) {
@@ -1299,6 +1335,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
       if (unitCostMinorUnits != null)
         'unit_cost_minor_units': unitCostMinorUnits,
       if (unitCostCurrency != null) 'unit_cost_currency': unitCostCurrency,
+      if (purchaseId != null) 'purchase_id': purchaseId,
       if (acquiredAt != null) 'acquired_at': acquiredAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1313,6 +1350,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
       Value<int>? remainingQuantityScale,
       Value<int>? unitCostMinorUnits,
       Value<String>? unitCostCurrency,
+      Value<String?>? purchaseId,
       Value<DateTime>? acquiredAt,
       Value<int>? rowid}) {
     return CostLayersTableCompanion(
@@ -1328,6 +1366,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
           remainingQuantityScale ?? this.remainingQuantityScale,
       unitCostMinorUnits: unitCostMinorUnits ?? this.unitCostMinorUnits,
       unitCostCurrency: unitCostCurrency ?? this.unitCostCurrency,
+      purchaseId: purchaseId ?? this.purchaseId,
       acquiredAt: acquiredAt ?? this.acquiredAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1364,6 +1403,9 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
     if (unitCostCurrency.present) {
       map['unit_cost_currency'] = Variable<String>(unitCostCurrency.value);
     }
+    if (purchaseId.present) {
+      map['purchase_id'] = Variable<String>(purchaseId.value);
+    }
     if (acquiredAt.present) {
       map['acquired_at'] = Variable<DateTime>(acquiredAt.value);
     }
@@ -1384,6 +1426,7 @@ class CostLayersTableCompanion extends UpdateCompanion<CostLayersTableData> {
           ..write('remainingQuantityScale: $remainingQuantityScale, ')
           ..write('unitCostMinorUnits: $unitCostMinorUnits, ')
           ..write('unitCostCurrency: $unitCostCurrency, ')
+          ..write('purchaseId: $purchaseId, ')
           ..write('acquiredAt: $acquiredAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2945,6 +2988,7 @@ typedef $$CostLayersTableTableCreateCompanionBuilder = CostLayersTableCompanion
   required int remainingQuantityScale,
   required int unitCostMinorUnits,
   Value<String> unitCostCurrency,
+  Value<String?> purchaseId,
   required DateTime acquiredAt,
   Value<int> rowid,
 });
@@ -2958,6 +3002,7 @@ typedef $$CostLayersTableTableUpdateCompanionBuilder = CostLayersTableCompanion
   Value<int> remainingQuantityScale,
   Value<int> unitCostMinorUnits,
   Value<String> unitCostCurrency,
+  Value<String?> purchaseId,
   Value<DateTime> acquiredAt,
   Value<int> rowid,
 });
@@ -3000,6 +3045,9 @@ class $$CostLayersTableTableFilterComposer
   ColumnFilters<String> get unitCostCurrency => $composableBuilder(
       column: $table.unitCostCurrency,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get purchaseId => $composableBuilder(
+      column: $table.purchaseId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get acquiredAt => $composableBuilder(
       column: $table.acquiredAt, builder: (column) => ColumnFilters(column));
@@ -3044,6 +3092,9 @@ class $$CostLayersTableTableOrderingComposer
       column: $table.unitCostCurrency,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get purchaseId => $composableBuilder(
+      column: $table.purchaseId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get acquiredAt => $composableBuilder(
       column: $table.acquiredAt, builder: (column) => ColumnOrderings(column));
 }
@@ -3080,6 +3131,9 @@ class $$CostLayersTableTableAnnotationComposer
 
   GeneratedColumn<String> get unitCostCurrency => $composableBuilder(
       column: $table.unitCostCurrency, builder: (column) => column);
+
+  GeneratedColumn<String> get purchaseId => $composableBuilder(
+      column: $table.purchaseId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get acquiredAt => $composableBuilder(
       column: $table.acquiredAt, builder: (column) => column);
@@ -3120,6 +3174,7 @@ class $$CostLayersTableTableTableManager extends RootTableManager<
             Value<int> remainingQuantityScale = const Value.absent(),
             Value<int> unitCostMinorUnits = const Value.absent(),
             Value<String> unitCostCurrency = const Value.absent(),
+            Value<String?> purchaseId = const Value.absent(),
             Value<DateTime> acquiredAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -3132,6 +3187,7 @@ class $$CostLayersTableTableTableManager extends RootTableManager<
             remainingQuantityScale: remainingQuantityScale,
             unitCostMinorUnits: unitCostMinorUnits,
             unitCostCurrency: unitCostCurrency,
+            purchaseId: purchaseId,
             acquiredAt: acquiredAt,
             rowid: rowid,
           ),
@@ -3144,6 +3200,7 @@ class $$CostLayersTableTableTableManager extends RootTableManager<
             required int remainingQuantityScale,
             required int unitCostMinorUnits,
             Value<String> unitCostCurrency = const Value.absent(),
+            Value<String?> purchaseId = const Value.absent(),
             required DateTime acquiredAt,
             Value<int> rowid = const Value.absent(),
           }) =>
@@ -3156,6 +3213,7 @@ class $$CostLayersTableTableTableManager extends RootTableManager<
             remainingQuantityScale: remainingQuantityScale,
             unitCostMinorUnits: unitCostMinorUnits,
             unitCostCurrency: unitCostCurrency,
+            purchaseId: purchaseId,
             acquiredAt: acquiredAt,
             rowid: rowid,
           ),
