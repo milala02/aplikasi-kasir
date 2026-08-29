@@ -105,5 +105,47 @@ void main() {
         Quantity(value: 24, scale: 1),
       );
     });
+
+    test('outputProductId valid tersimpan', () async {
+      final recipe = Recipe(
+        id: 'rec_2',
+        name: 'Bumbu Utama',
+        items: [
+          RecipeItem(
+            productId: 'prod_100',
+            quantityRequired: Quantity(value: 6, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 182, scale: 1),
+        outputProductId: 'prod_200',
+      );
+
+      await useCases.create(recipe);
+
+      expect(recipeRepo.getById('rec_2')!.outputProductId, 'prod_200');
+    });
+
+    test('outputProductId tak dikenal ditolak dan tidak tersimpan',
+        () async {
+      final recipe = Recipe(
+        id: 'rec_3',
+        name: 'Bumbu Utama',
+        items: [
+          RecipeItem(
+            productId: 'prod_100',
+            quantityRequired: Quantity(value: 6, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 182, scale: 1),
+        outputProductId: 'ghost_output',
+      );
+
+      await expectLater(
+        useCases.create(recipe),
+        throwsArgumentError,
+      );
+
+      expect(recipeRepo.getById('rec_3'), isNull);
+    });
   });
 }

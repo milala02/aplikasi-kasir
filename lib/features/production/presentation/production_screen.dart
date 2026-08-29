@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/errors/domain_error.dart';
 import '../../../core/money/money.dart';
+import '../../../core/result/result.dart';
 import '../../inventory/domain/cost_layer_repository.dart';
 import '../../portioning/application/calculate_portion_use_case.dart';
-import '../application/process_production_batch_use_case.dart';
+import '../../products/domain/product.dart';
+import '../../products/domain/product_repository.dart';
+import '../../recipes/domain/recipe.dart';
+import '../../recipes/domain/recipe_repository.dart';
+import '../application/execute_production_use_case.dart';
+import '../domain/production_batch.dart';
 
 class ProductionAndPortioningScreen extends StatefulWidget {
   final CostLayerRepository costLayerRepository;
-  final ProcessProductionBatchUseCase productionUseCase;
+  final ExecuteProductionUseCase executeProductionUseCase;
+  final RecipeRepository recipeRepository;
+  final ProductRepository productRepository;
 
   const ProductionAndPortioningScreen({
     super.key,
     required this.costLayerRepository,
-    required this.productionUseCase,
+    required this.executeProductionUseCase,
+    required this.recipeRepository,
+    required this.productRepository,
   });
 
   @override
@@ -25,6 +36,15 @@ class _ProductionAndPortioningScreenState
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  // Produksi
+  List<Recipe> _recipes = [];
+  Recipe? _selectedRecipe;
+  final _batchNumberController = TextEditingController();
+  final _operationalCostController = TextEditingController(text: '0');
+  bool _busy = false;
+  String? _productionResultText;
+  String? _productionErrorText;
+
   // Portioning Calculator State
   final _priceController = TextEditingController(text: '5000');
   final _marginController = TextEditingController(text: '30');
@@ -36,15 +56,99 @@ class _ProductionAndPortioningScreenState
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _loadRecipes();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _batchNumberController.dispose();
+    _operationalCostController.dispose();
     _priceController.dispose();
     _marginController.dispose();
     _pkgCostController.dispose();
     super.dispose();
+  }
+
+  void _loadRecipes() {
+    setState(() {
+      _recipes = widget.recipeRepository.getAll();
+      _selectedRecipe = null;
+      _productionResultText = null;
+      _productionErrorText = null;
+    });
+  }
+
+  Product? get _outputProduct {
+    final outputProductId = _selectedRecipe?.outputProductId;
+    if (outputProductId == null) return null;
+    return widget.productRepository.getById(outputProductId);
+  }
+
+  bool get _canProduce {
+    return !_busy &&
+        _selectedRecipe != null &&
+        _selectedRecipe!.outputProductId != null &&
+        _outputProduct != null;
+  }
+
+  /// Satu submission = satu batch. _busy mencegah double-tap membuat batch
+  /// kedua; tidak ada retry otomatis.
+  Future<void> _executeProduction() async {
+    final recipe = _selectedRecipe;
+    if (recipe == null || !_canProduce) return;
+
+    final batchNumber = _batchNumberController.text.trim().isEmpty
+        ? 'BATCH-${DateTime.now().millisecondsSinceEpoch}'
+        : _batchNumberController.text.trim();
+    final operationalCost = int.tryParse(_operationalCostController.text) ?? 0;
+
+    setState(() {
+      _busy = true;
+      _productionErrorText = null;
+      _productionResultText = null;
+    });
+
+    try {
+      final result = await widget.executeProductionUseCase.execute(
+        recipe: recipe,
+        batchNumber: batchNumber,
+        additionalProductionCost: operationalCost > 0
+            ? Money(minorUnits: operationalCost * 100, currency: 'IDR')
+            : null,
+      );
+
+      if (!mounted) return;
+
+      if (result is Success<ProductionBatch>) {
+        final batch = result.value;
+        setState(() {
+          _busy = false;
+          _productionResultText = '✅ PRODUKSI BERHASIL\n\n'
+              '• Batch: ${batch.batchNumber}\n'
+              '• HPP Material: Rp ${batch.totalMaterialCost.minorUnits ~/ 100}\n'
+              '• Total HPP Batch: Rp ${batch.totalBatchCost.minorUnits ~/ 100}\n'
+              '• HPP per unit: Rp ${batch.unitCost.minorUnits ~/ 100}\n'
+              '• Output: ${batch.actualOutputQuantity.value} '
+              '(scale ${batch.actualOutputQuantity.scale})\n'
+              '• Produk hasil: ${_outputProduct?.name} — stok FIFO tercatat.';
+        });
+      } else {
+        final error = (result as Failure<ProductionBatch>).error;
+        final message =
+            error is DomainError ? error.message : error.toString();
+        setState(() {
+          _busy = false;
+          _productionErrorText = message;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _productionErrorText = 'Gagal memproses produksi: $e';
+      });
+    }
   }
 
   Future<void> _calculateKetengan() async {
@@ -100,36 +204,80 @@ class _ProductionAndPortioningScreenState
   }
 
   Widget _buildBumbuProductionTab() {
+    final recipe = _selectedRecipe;
+    final outputProduct = _outputProduct;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Form Racik Bumbu Utama (FIFO Cost Layer)',
+          const Text('Produksi dari Resep Tersimpan (FIFO Cost Layer)',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          const TextField(
-            decoration: InputDecoration(
-              labelText: 'Nama Batch Produksi',
-              hintText: 'Misal: Bumbu Utama Batch #024',
+          DropdownButtonFormField<Recipe>(
+            key: const Key('production_recipe_field'),
+            initialValue: recipe,
+            decoration: const InputDecoration(
+              labelText: 'Pilih Resep',
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              for (final r in _recipes)
+                DropdownMenuItem(value: r, child: Text(r.name)),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _selectedRecipe = value;
+                _productionResultText = null;
+                _productionErrorText = null;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          if (recipe != null) ...[
+            Text('Bahan (${recipe.items.length}):',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            for (final item in recipe.items)
+              Padding(
+                padding: const EdgeInsets.only(left: 8, top: 2),
+                child: Text(
+                    '• ${item.productId}: ${item.quantityRequired.value} '
+                    '(scale ${item.quantityRequired.scale})'),
+              ),
+            const SizedBox(height: 8),
+            Text(
+              'Expected output: ${recipe.expectedOutputQuantity.value} '
+              '(scale ${recipe.expectedOutputQuantity.scale})',
+            ),
+            Text(
+              outputProduct != null
+                  ? 'Produk hasil: ${outputProduct.name}'
+                  : '⚠️ Resep tidak punya produk hasil — produksi '
+                      'tidak dapat dijalankan.',
+              style: TextStyle(
+                color: outputProduct != null ? Colors.green : Colors.orange,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextField(
+            key: const Key('production_batch_number_field'),
+            controller: _batchNumberController,
+            decoration: const InputDecoration(
+              labelText: 'Nama Batch Produksi (opsional)',
+              hintText: 'Otomatis BATCH-<timestamp> jika kosong',
               border: OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
-          const TextField(
+          TextField(
+            key: const Key('production_operational_cost_field'),
+            controller: _operationalCostController,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'Total Hasil Jadi (Kg)',
-              hintText: 'Misal: 10',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const TextField(
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Biaya Gas & Operasional (Rp)',
-              hintText: 'Misal: 15000',
               border: OutlineInputBorder(),
             ),
           ),
@@ -137,24 +285,38 @@ class _ProductionAndPortioningScreenState
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
+              key: const Key('production_execute_button'),
               style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   backgroundColor: Colors.orange),
               icon: const Icon(Icons.precision_manufacturing,
                   color: Colors.white),
-              label: const Text('PROSES PRODUKSI & POTONG STOK FIFO',
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
-              // Belum aktif: ProcessProductionBatchUseCase membutuhkan
-              // Recipe, dan data komposisi resep belum tersedia di aplikasi.
-              onPressed: null,
+              label: Text(
+                  _busy
+                      ? 'MEMPROSES...'
+                      : 'PROSES PRODUKSI & POTONG STOK FIFO',
+                  style: const TextStyle(color: Colors.white, fontSize: 16)),
+              onPressed: _canProduce ? _executeProduction : null,
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            '⚠️ Tombol produksi belum aktif: data resep/komposisi bahan '
-            'belum tersedia.',
-            style: TextStyle(fontSize: 13, color: Colors.orange),
-          ),
+          const SizedBox(height: 12),
+          if (_productionResultText != null)
+            Card(
+              color: Colors.green.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(_productionResultText!),
+              ),
+            ),
+          if (_productionErrorText != null)
+            Card(
+              color: Colors.red.shade50,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(_productionErrorText!,
+                    style: const TextStyle(color: Colors.red)),
+              ),
+            ),
         ],
       ),
     );

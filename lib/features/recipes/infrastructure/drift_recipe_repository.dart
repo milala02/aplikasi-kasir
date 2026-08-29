@@ -41,6 +41,7 @@ class DriftRecipeRepository implements RecipeRepository {
           value: row.expectedOutputValue,
           scale: row.expectedOutputScale,
         ),
+        outputProductId: row.outputProductId,
       );
       _cache[recipe.id] = recipe;
     }
@@ -65,6 +66,7 @@ class DriftRecipeRepository implements RecipeRepository {
               name: recipe.name,
               expectedOutputValue: recipe.expectedOutputQuantity.value,
               expectedOutputScale: d.Value(recipe.expectedOutputQuantity.scale),
+              outputProductId: d.Value(recipe.outputProductId),
             ),
           );
 
@@ -91,6 +93,7 @@ class DriftRecipeRepository implements RecipeRepository {
               name: recipe.name,
               expectedOutputValue: recipe.expectedOutputQuantity.value,
               expectedOutputScale: recipe.expectedOutputQuantity.scale,
+              outputProductId: recipe.outputProductId,
             ),
           );
 

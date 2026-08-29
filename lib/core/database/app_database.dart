@@ -171,6 +171,7 @@ class RecipesTable extends Table {
   TextColumn get name => text()();
   IntColumn get expectedOutputValue => integer()();
   IntColumn get expectedOutputScale => integer().withDefault(const Constant(0))();
+  TextColumn get outputProductId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -221,7 +222,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -266,6 +267,13 @@ class AppDatabase extends _$AppDatabase {
             // Tabel resep produksi (komposisi + output, tanpa harga).
             await m.createTable(recipesTable);
             await m.createTable(recipeItemsTable);
+          }
+          if (from >= 9 && from < 10) {
+            // Produk hasil produksi (nullable: resep lama tetap terbaca,
+            // tetapi tidak dapat dieksekusi produksi).
+            // Hanya untuk DB v9: DB < 9 dibuat tabel resepnya di from < 9
+            // dengan skema terbaru (sudah termasuk kolom ini).
+            await m.addColumn(recipesTable, recipesTable.outputProductId);
           }
         },
       );

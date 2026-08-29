@@ -43,5 +43,12 @@ class RecipeUseCases {
             'Product tidak ditemukan: ${item.productId}.');
       }
     }
+
+    final outputProductId = recipe.outputProductId;
+    if (outputProductId != null &&
+        productRepository.getById(outputProductId) == null) {
+      throw ArgumentError(
+          'Produk hasil tidak ditemukan: $outputProductId.');
+    }
   }
 }

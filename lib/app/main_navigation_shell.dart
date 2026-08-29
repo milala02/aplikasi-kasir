@@ -9,12 +9,13 @@ import '../features/dashboard/presentation/dashboard_controller.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/inventory/domain/cost_layer_repository.dart';
 import '../features/inventory/presentation/inventory_screen.dart';
-import '../features/production/application/process_production_batch_use_case.dart';
+import '../features/production/application/execute_production_use_case.dart';
 import '../features/production/presentation/production_screen.dart';
 import '../features/products/application/product_use_cases.dart';
 import '../features/products/domain/product_repository.dart';
 import '../features/products/presentation/product_screen.dart';
 import '../features/recipes/application/recipe_use_cases.dart';
+import '../features/recipes/domain/recipe_repository.dart';
 import '../features/recipes/presentation/recipe_screen.dart';
 import '../features/purchasing/domain/purchase_repository.dart';
 import '../features/purchasing/presentation/purchasing_screen.dart';
@@ -52,7 +53,8 @@ class MainNavigationShell extends StatefulWidget {
   final RecipeUseCases recipeUseCases;
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
-  final ProcessProductionBatchUseCase processProductionBatchUseCase;
+  final ExecuteProductionUseCase executeProductionUseCase;
+  final RecipeRepository recipeRepository;
 
   const MainNavigationShell({
     super.key,
@@ -68,7 +70,8 @@ class MainNavigationShell extends StatefulWidget {
     required this.recipeUseCases,
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
-    required this.processProductionBatchUseCase,
+    required this.executeProductionUseCase,
+    required this.recipeRepository,
   });
 
   @override
@@ -95,14 +98,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         label: 'Penjualan',
         page: POSScreen(controller: widget.posController),
       ),
-      _NavItem(
-        icon: Icons.blender,
-        title: 'Produksi Bumbu',
-        label: 'Produksi',
-        page: ProductionAndPortioningScreen(
+      if (isOwner)
+        _NavItem(
+          icon: Icons.blender,
+          title: 'Produksi Bumbu',
+          label: 'Produksi',
+          page: ProductionAndPortioningScreen(
             costLayerRepository: widget.costLayerRepository,
-            productionUseCase: widget.processProductionBatchUseCase),
-      ),
+            executeProductionUseCase: widget.executeProductionUseCase,
+            recipeRepository: widget.recipeRepository,
+            productRepository: widget.productRepository,
+          ),
+        ),
       _NavItem(
         icon: Icons.inventory_2,
         title: 'Manajemen Stok (FIFO)',

@@ -118,6 +118,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
   late final TextEditingController _nameController;
   late final TextEditingController _outputValueController;
   int _outputScale = 1;
+  String? _outputProductId;
 
   /// Baris bahan: (productId, qtyController, scale).
   final List<({String? productId, TextEditingController qty, int scale})>
@@ -137,6 +138,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
             ? ''
             : '${existing.expectedOutputQuantity.value}');
     _outputScale = existing?.expectedOutputQuantity.scale ?? 1;
+    _outputProductId = existing?.outputProductId;
 
     for (final item in existing?.items ?? const <RecipeItem>[]) {
       _items.add((
@@ -220,6 +222,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
         items: items,
         expectedOutputQuantity:
             Quantity(value: outputValue, scale: _outputScale),
+        outputProductId: _outputProductId,
       );
 
       await widget.onSave(recipe);
@@ -281,6 +284,29 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String?>(
+                key: const Key('recipe_output_product_field'),
+                initialValue: _outputProductId,
+                decoration: const InputDecoration(
+                  labelText: 'Produk hasil (opsional)',
+                ),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('— Tanpa produk hasil —'),
+                  ),
+                  for (final product in widget.products)
+                    DropdownMenuItem<String?>(
+                      value: product.id,
+                      child: Text(product.name,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+                onChanged: (value) {
+                  setState(() => _outputProductId = value);
+                },
               ),
               const SizedBox(height: 12),
               const Align(

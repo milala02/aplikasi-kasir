@@ -23,13 +23,16 @@ import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/application/product_use_cases.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
+import 'features/production/application/execute_production_use_case.dart';
 import 'features/production/application/process_production_batch_use_case.dart';
+import 'features/production/application/record_production_output_use_case.dart';
 import 'features/purchasing/domain/purchase_repository.dart';
 import 'features/purchasing/infrastructure/drift_purchase_repository.dart';
 import 'features/receiving/application/receive_goods_use_case.dart';
 import 'features/receiving/domain/receiving_repository.dart';
 import 'features/receiving/infrastructure/drift_receiving_repository.dart';
 import 'features/recipes/application/recipe_use_cases.dart';
+import 'features/recipes/domain/recipe_repository.dart';
 import 'features/recipes/infrastructure/drift_recipe_repository.dart';
 import 'features/sales/application/process_sale_use_case.dart';
 import 'features/sales/infrastructure/drift_sale_repository.dart';
@@ -105,6 +108,15 @@ void main() async {
     costLayerRepository: costLayerRepo,
     inventoryRepository: inventoryRepo,
   );
+  final recordProductionOutputUseCase = RecordProductionOutputUseCase(
+    costLayerRepository: costLayerRepo,
+    inventoryRepository: inventoryRepo,
+  );
+  final executeProductionUseCase = ExecuteProductionUseCase(
+    processBatchUseCase: processProductionBatchUseCase,
+    recordOutputUseCase: recordProductionOutputUseCase,
+    productRepository: productRepo,
+  );
 
   // 5. Controllers
   final themeController = ThemeController();
@@ -133,9 +145,10 @@ void main() async {
     purchaseRepository: purchaseRepo,
     receivingRepository: receivingRepo,
     receiveGoodsUseCase: receiveGoodsUseCase,
-    processProductionBatchUseCase: processProductionBatchUseCase,
+    executeProductionUseCase: executeProductionUseCase,
     productUseCases: productUseCases,
     recipeUseCases: recipeUseCases,
+    recipeRepository: recipeRepo,
   ));
 }
 
@@ -150,9 +163,10 @@ class MyApp extends StatelessWidget {
   final PurchaseRepository purchaseRepository;
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
-  final ProcessProductionBatchUseCase processProductionBatchUseCase;
+  final ExecuteProductionUseCase executeProductionUseCase;
   final ProductUseCases productUseCases;
   final RecipeUseCases recipeUseCases;
+  final RecipeRepository recipeRepository;
 
   const MyApp({
     super.key,
@@ -166,9 +180,10 @@ class MyApp extends StatelessWidget {
     required this.purchaseRepository,
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
-    required this.processProductionBatchUseCase,
+    required this.executeProductionUseCase,
     required this.productUseCases,
     required this.recipeUseCases,
+    required this.recipeRepository,
   });
 
   @override
@@ -195,9 +210,10 @@ class MyApp extends StatelessWidget {
               purchaseRepository: purchaseRepository,
               receivingRepository: receivingRepository,
               receiveGoodsUseCase: receiveGoodsUseCase,
-              processProductionBatchUseCase: processProductionBatchUseCase,
+              executeProductionUseCase: executeProductionUseCase,
               productUseCases: productUseCases,
               recipeUseCases: recipeUseCases,
+              recipeRepository: recipeRepository,
             ),
           ),
         );

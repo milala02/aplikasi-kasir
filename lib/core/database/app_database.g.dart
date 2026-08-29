@@ -4962,9 +4962,15 @@ class $RecipesTableTable extends RecipesTable
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _outputProductIdMeta =
+      const VerificationMeta('outputProductId');
+  @override
+  late final GeneratedColumn<String> outputProductId = GeneratedColumn<String>(
+      'output_product_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, expectedOutputValue, expectedOutputScale];
+      [id, name, expectedOutputValue, expectedOutputScale, outputProductId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -5000,6 +5006,12 @@ class $RecipesTableTable extends RecipesTable
           expectedOutputScale.isAcceptableOrUnknown(
               data['expected_output_scale']!, _expectedOutputScaleMeta));
     }
+    if (data.containsKey('output_product_id')) {
+      context.handle(
+          _outputProductIdMeta,
+          outputProductId.isAcceptableOrUnknown(
+              data['output_product_id']!, _outputProductIdMeta));
+    }
     return context;
   }
 
@@ -5017,6 +5029,8 @@ class $RecipesTableTable extends RecipesTable
           DriftSqlType.int, data['${effectivePrefix}expected_output_value'])!,
       expectedOutputScale: attachedDatabase.typeMapping.read(
           DriftSqlType.int, data['${effectivePrefix}expected_output_scale'])!,
+      outputProductId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}output_product_id']),
     );
   }
 
@@ -5032,11 +5046,13 @@ class RecipesTableData extends DataClass
   final String name;
   final int expectedOutputValue;
   final int expectedOutputScale;
+  final String? outputProductId;
   const RecipesTableData(
       {required this.id,
       required this.name,
       required this.expectedOutputValue,
-      required this.expectedOutputScale});
+      required this.expectedOutputScale,
+      this.outputProductId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5044,6 +5060,9 @@ class RecipesTableData extends DataClass
     map['name'] = Variable<String>(name);
     map['expected_output_value'] = Variable<int>(expectedOutputValue);
     map['expected_output_scale'] = Variable<int>(expectedOutputScale);
+    if (!nullToAbsent || outputProductId != null) {
+      map['output_product_id'] = Variable<String>(outputProductId);
+    }
     return map;
   }
 
@@ -5053,6 +5072,9 @@ class RecipesTableData extends DataClass
       name: Value(name),
       expectedOutputValue: Value(expectedOutputValue),
       expectedOutputScale: Value(expectedOutputScale),
+      outputProductId: outputProductId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outputProductId),
     );
   }
 
@@ -5066,6 +5088,7 @@ class RecipesTableData extends DataClass
           serializer.fromJson<int>(json['expectedOutputValue']),
       expectedOutputScale:
           serializer.fromJson<int>(json['expectedOutputScale']),
+      outputProductId: serializer.fromJson<String?>(json['outputProductId']),
     );
   }
   @override
@@ -5076,6 +5099,7 @@ class RecipesTableData extends DataClass
       'name': serializer.toJson<String>(name),
       'expectedOutputValue': serializer.toJson<int>(expectedOutputValue),
       'expectedOutputScale': serializer.toJson<int>(expectedOutputScale),
+      'outputProductId': serializer.toJson<String?>(outputProductId),
     };
   }
 
@@ -5083,12 +5107,16 @@ class RecipesTableData extends DataClass
           {String? id,
           String? name,
           int? expectedOutputValue,
-          int? expectedOutputScale}) =>
+          int? expectedOutputScale,
+          Value<String?> outputProductId = const Value.absent()}) =>
       RecipesTableData(
         id: id ?? this.id,
         name: name ?? this.name,
         expectedOutputValue: expectedOutputValue ?? this.expectedOutputValue,
         expectedOutputScale: expectedOutputScale ?? this.expectedOutputScale,
+        outputProductId: outputProductId.present
+            ? outputProductId.value
+            : this.outputProductId,
       );
   RecipesTableData copyWithCompanion(RecipesTableCompanion data) {
     return RecipesTableData(
@@ -5100,6 +5128,9 @@ class RecipesTableData extends DataClass
       expectedOutputScale: data.expectedOutputScale.present
           ? data.expectedOutputScale.value
           : this.expectedOutputScale,
+      outputProductId: data.outputProductId.present
+          ? data.outputProductId.value
+          : this.outputProductId,
     );
   }
 
@@ -5109,14 +5140,15 @@ class RecipesTableData extends DataClass
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('expectedOutputValue: $expectedOutputValue, ')
-          ..write('expectedOutputScale: $expectedOutputScale')
+          ..write('expectedOutputScale: $expectedOutputScale, ')
+          ..write('outputProductId: $outputProductId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, expectedOutputValue, expectedOutputScale);
+  int get hashCode => Object.hash(
+      id, name, expectedOutputValue, expectedOutputScale, outputProductId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5124,7 +5156,8 @@ class RecipesTableData extends DataClass
           other.id == this.id &&
           other.name == this.name &&
           other.expectedOutputValue == this.expectedOutputValue &&
-          other.expectedOutputScale == this.expectedOutputScale);
+          other.expectedOutputScale == this.expectedOutputScale &&
+          other.outputProductId == this.outputProductId);
 }
 
 class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
@@ -5132,12 +5165,14 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
   final Value<String> name;
   final Value<int> expectedOutputValue;
   final Value<int> expectedOutputScale;
+  final Value<String?> outputProductId;
   final Value<int> rowid;
   const RecipesTableCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.expectedOutputValue = const Value.absent(),
     this.expectedOutputScale = const Value.absent(),
+    this.outputProductId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   RecipesTableCompanion.insert({
@@ -5145,6 +5180,7 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
     required String name,
     required int expectedOutputValue,
     this.expectedOutputScale = const Value.absent(),
+    this.outputProductId = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -5154,6 +5190,7 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
     Expression<String>? name,
     Expression<int>? expectedOutputValue,
     Expression<int>? expectedOutputScale,
+    Expression<String>? outputProductId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -5163,6 +5200,7 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
         'expected_output_value': expectedOutputValue,
       if (expectedOutputScale != null)
         'expected_output_scale': expectedOutputScale,
+      if (outputProductId != null) 'output_product_id': outputProductId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -5172,12 +5210,14 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
       Value<String>? name,
       Value<int>? expectedOutputValue,
       Value<int>? expectedOutputScale,
+      Value<String?>? outputProductId,
       Value<int>? rowid}) {
     return RecipesTableCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       expectedOutputValue: expectedOutputValue ?? this.expectedOutputValue,
       expectedOutputScale: expectedOutputScale ?? this.expectedOutputScale,
+      outputProductId: outputProductId ?? this.outputProductId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -5197,6 +5237,9 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
     if (expectedOutputScale.present) {
       map['expected_output_scale'] = Variable<int>(expectedOutputScale.value);
     }
+    if (outputProductId.present) {
+      map['output_product_id'] = Variable<String>(outputProductId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -5210,6 +5253,7 @@ class RecipesTableCompanion extends UpdateCompanion<RecipesTableData> {
           ..write('name: $name, ')
           ..write('expectedOutputValue: $expectedOutputValue, ')
           ..write('expectedOutputScale: $expectedOutputScale, ')
+          ..write('outputProductId: $outputProductId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -8096,6 +8140,7 @@ typedef $$RecipesTableTableCreateCompanionBuilder = RecipesTableCompanion
   required String name,
   required int expectedOutputValue,
   Value<int> expectedOutputScale,
+  Value<String?> outputProductId,
   Value<int> rowid,
 });
 typedef $$RecipesTableTableUpdateCompanionBuilder = RecipesTableCompanion
@@ -8104,6 +8149,7 @@ typedef $$RecipesTableTableUpdateCompanionBuilder = RecipesTableCompanion
   Value<String> name,
   Value<int> expectedOutputValue,
   Value<int> expectedOutputScale,
+  Value<String?> outputProductId,
   Value<int> rowid,
 });
 
@@ -8129,6 +8175,10 @@ class $$RecipesTableTableFilterComposer
   ColumnFilters<int> get expectedOutputScale => $composableBuilder(
       column: $table.expectedOutputScale,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get outputProductId => $composableBuilder(
+      column: $table.outputProductId,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$RecipesTableTableOrderingComposer
@@ -8153,6 +8203,10 @@ class $$RecipesTableTableOrderingComposer
   ColumnOrderings<int> get expectedOutputScale => $composableBuilder(
       column: $table.expectedOutputScale,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get outputProductId => $composableBuilder(
+      column: $table.outputProductId,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$RecipesTableTableAnnotationComposer
@@ -8175,6 +8229,9 @@ class $$RecipesTableTableAnnotationComposer
 
   GeneratedColumn<int> get expectedOutputScale => $composableBuilder(
       column: $table.expectedOutputScale, builder: (column) => column);
+
+  GeneratedColumn<String> get outputProductId => $composableBuilder(
+      column: $table.outputProductId, builder: (column) => column);
 }
 
 class $$RecipesTableTableTableManager extends RootTableManager<
@@ -8207,6 +8264,7 @@ class $$RecipesTableTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<int> expectedOutputValue = const Value.absent(),
             Value<int> expectedOutputScale = const Value.absent(),
+            Value<String?> outputProductId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecipesTableCompanion(
@@ -8214,6 +8272,7 @@ class $$RecipesTableTableTableManager extends RootTableManager<
             name: name,
             expectedOutputValue: expectedOutputValue,
             expectedOutputScale: expectedOutputScale,
+            outputProductId: outputProductId,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -8221,6 +8280,7 @@ class $$RecipesTableTableTableManager extends RootTableManager<
             required String name,
             required int expectedOutputValue,
             Value<int> expectedOutputScale = const Value.absent(),
+            Value<String?> outputProductId = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               RecipesTableCompanion.insert(
@@ -8228,6 +8288,7 @@ class $$RecipesTableTableTableManager extends RootTableManager<
             name: name,
             expectedOutputValue: expectedOutputValue,
             expectedOutputScale: expectedOutputScale,
+            outputProductId: outputProductId,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
