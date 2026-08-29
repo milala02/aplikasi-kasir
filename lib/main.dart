@@ -18,7 +18,7 @@ import 'features/orders/application/fulfill_order_use_case.dart';
 import 'features/orders/application/order_payment_use_case.dart';
 import 'features/orders/application/process_stock_out_use_case.dart';
 import 'features/orders/application/submit_order_use_case.dart';
-import 'features/orders/infrastructure/in_memory_order_repository.dart';
+import 'features/orders/infrastructure/drift_order_repository.dart';
 import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
@@ -63,7 +63,8 @@ void main() async {
     saleRepository: saleRepo,
   );
 
-  final orderRepository = InMemoryOrderRepository();
+  final orderRepository = DriftOrderRepository(db);
+  await orderRepository.init();
   final submitOrderUseCase = SubmitOrderUseCase(
     processSaleUseCase: processSaleUseCase,
     saleRepository: saleRepo,

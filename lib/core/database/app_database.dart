@@ -136,6 +136,35 @@ class SaleItemsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// --- TABEL ORDER (LIFECYCLE) ---
+class OrdersTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get saleId => text()();
+  TextColumn get source => text()(); // OrderSource.name
+  TextColumn get status => text()(); // OrderStatus.name
+  TextColumn get paymentMethod => text()(); // OrderPaymentMethod.name
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class OrderItemsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get orderId => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  TextColumn get productName => text()();
+  TextColumn get unit => text()();
+  IntColumn get unitPriceMinorUnits => integer()();
+  TextColumn get unitPriceCurrency =>
+      text().withDefault(const Constant('IDR'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // --- TABEL INVENTARIS / PERGERAKAN STOK ---
 class StockMovementsTable extends Table {
   TextColumn get id => text()();
@@ -160,13 +189,15 @@ class StockMovementsTable extends Table {
   PurchaseItemsTable,
   SalesTable,
   SaleItemsTable,
-  StockMovementsTable
+  StockMovementsTable,
+  OrdersTable,
+  OrderItemsTable
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -201,6 +232,11 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(saleItemsTable, saleItemsTable.quantityScale);
             await m.addColumn(saleItemsTable, saleItemsTable.productName);
             await m.addColumn(saleItemsTable, saleItemsTable.unit);
+          }
+          if (from < 8) {
+            // Tabel order lifecycle (submit/payment/fulfillment).
+            await m.createTable(ordersTable);
+            await m.createTable(orderItemsTable);
           }
         },
       );
