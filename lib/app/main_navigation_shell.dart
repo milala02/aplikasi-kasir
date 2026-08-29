@@ -11,7 +11,11 @@ import '../features/inventory/domain/cost_layer_repository.dart';
 import '../features/inventory/presentation/inventory_screen.dart';
 import '../features/production/application/process_production_batch_use_case.dart';
 import '../features/production/presentation/production_screen.dart';
+import '../features/products/application/product_use_cases.dart';
 import '../features/products/domain/product_repository.dart';
+import '../features/products/presentation/product_screen.dart';
+import '../features/recipes/application/recipe_use_cases.dart';
+import '../features/recipes/presentation/recipe_screen.dart';
 import '../features/purchasing/domain/purchase_repository.dart';
 import '../features/purchasing/presentation/purchasing_screen.dart';
 import '../features/receiving/application/receive_goods_use_case.dart';
@@ -44,6 +48,8 @@ class MainNavigationShell extends StatefulWidget {
   final AuthService authService;
   final PurchaseRepository purchaseRepository;
   final ProductRepository productRepository;
+  final ProductUseCases productUseCases;
+  final RecipeUseCases recipeUseCases;
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
   final ProcessProductionBatchUseCase processProductionBatchUseCase;
@@ -58,6 +64,8 @@ class MainNavigationShell extends StatefulWidget {
     required this.authService,
     required this.purchaseRepository,
     required this.productRepository,
+    required this.productUseCases,
+    required this.recipeUseCases,
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
     required this.processProductionBatchUseCase,
@@ -129,6 +137,23 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
             purchaseRepository: widget.purchaseRepository,
             productRepository: widget.productRepository,
             receiveGoodsUseCase: widget.receiveGoodsUseCase,
+          ),
+        ),
+      if (isOwner)
+        _NavItem(
+          icon: Icons.category,
+          title: 'Kelola Produk',
+          label: 'Produk',
+          page: ProductScreen(productUseCases: widget.productUseCases),
+        ),
+      if (isOwner)
+        _NavItem(
+          icon: Icons.book,
+          title: 'Resep Produksi',
+          label: 'Resep',
+          page: RecipeScreen(
+            recipeUseCases: widget.recipeUseCases,
+            productRepository: widget.productRepository,
           ),
         ),
     ];

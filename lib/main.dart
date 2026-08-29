@@ -20,6 +20,7 @@ import 'features/orders/application/process_stock_out_use_case.dart';
 import 'features/orders/application/submit_order_use_case.dart';
 import 'features/orders/infrastructure/drift_order_repository.dart';
 import 'features/inventory/infrastructure/drift_inventory_repository.dart';
+import 'features/products/application/product_use_cases.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/production/application/process_production_batch_use_case.dart';
@@ -28,6 +29,8 @@ import 'features/purchasing/infrastructure/drift_purchase_repository.dart';
 import 'features/receiving/application/receive_goods_use_case.dart';
 import 'features/receiving/domain/receiving_repository.dart';
 import 'features/receiving/infrastructure/drift_receiving_repository.dart';
+import 'features/recipes/application/recipe_use_cases.dart';
+import 'features/recipes/infrastructure/drift_recipe_repository.dart';
 import 'features/sales/application/process_sale_use_case.dart';
 import 'features/sales/infrastructure/drift_sale_repository.dart';
 import 'features/sales/presentation/pos_controller.dart';
@@ -46,6 +49,15 @@ void main() async {
 
   final customerRepo = DriftCustomerRepository(db);
   await customerRepo.init();
+
+  final productUseCases = ProductUseCases(repository: productRepo);
+
+  final recipeRepo = DriftRecipeRepository(db);
+  await recipeRepo.init();
+  final recipeUseCases = RecipeUseCases(
+    repository: recipeRepo,
+    productRepository: productRepo,
+  );
 
   final saleRepo = DriftSaleRepository(db);
   await saleRepo.init();
@@ -122,6 +134,8 @@ void main() async {
     receivingRepository: receivingRepo,
     receiveGoodsUseCase: receiveGoodsUseCase,
     processProductionBatchUseCase: processProductionBatchUseCase,
+    productUseCases: productUseCases,
+    recipeUseCases: recipeUseCases,
   ));
 }
 
@@ -137,6 +151,8 @@ class MyApp extends StatelessWidget {
   final ReceivingRepository receivingRepository;
   final ReceiveGoodsUseCase receiveGoodsUseCase;
   final ProcessProductionBatchUseCase processProductionBatchUseCase;
+  final ProductUseCases productUseCases;
+  final RecipeUseCases recipeUseCases;
 
   const MyApp({
     super.key,
@@ -151,6 +167,8 @@ class MyApp extends StatelessWidget {
     required this.receivingRepository,
     required this.receiveGoodsUseCase,
     required this.processProductionBatchUseCase,
+    required this.productUseCases,
+    required this.recipeUseCases,
   });
 
   @override
@@ -178,6 +196,8 @@ class MyApp extends StatelessWidget {
               receivingRepository: receivingRepository,
               receiveGoodsUseCase: receiveGoodsUseCase,
               processProductionBatchUseCase: processProductionBatchUseCase,
+              productUseCases: productUseCases,
+              recipeUseCases: recipeUseCases,
             ),
           ),
         );

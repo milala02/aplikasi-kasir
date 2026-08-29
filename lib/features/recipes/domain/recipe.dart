@@ -35,5 +35,15 @@ class Recipe {
     if (expectedOutputQuantity.isZero) {
       throw ArgumentError('Recipe expected output quantity cannot be zero.');
     }
+
+    // Satu resep tidak boleh memuat dua item dengan productId sama
+    // (konsisten dengan validasi Receiving/Order).
+    final seenProductIds = <String>{};
+    for (final item in items) {
+      if (!seenProductIds.add(item.productId)) {
+        throw ArgumentError(
+            'Recipe cannot contain duplicate products (${item.productId}).');
+      }
+    }
   }
 }

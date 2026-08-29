@@ -165,6 +165,28 @@ class OrderItemsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// --- TABEL RESEP (KOMPOSISI PRODUKSI, TANPA HARGA) ---
+class RecipesTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  IntColumn get expectedOutputValue => integer()();
+  IntColumn get expectedOutputScale => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class RecipeItemsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get recipeId => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // --- TABEL INVENTARIS / PERGERAKAN STOK ---
 class StockMovementsTable extends Table {
   TextColumn get id => text()();
@@ -191,13 +213,15 @@ class StockMovementsTable extends Table {
   SaleItemsTable,
   StockMovementsTable,
   OrdersTable,
-  OrderItemsTable
+  OrderItemsTable,
+  RecipesTable,
+  RecipeItemsTable
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -237,6 +261,11 @@ class AppDatabase extends _$AppDatabase {
             // Tabel order lifecycle (submit/payment/fulfillment).
             await m.createTable(ordersTable);
             await m.createTable(orderItemsTable);
+          }
+          if (from < 9) {
+            // Tabel resep produksi (komposisi + output, tanpa harga).
+            await m.createTable(recipesTable);
+            await m.createTable(recipeItemsTable);
           }
         },
       );
