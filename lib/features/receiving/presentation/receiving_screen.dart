@@ -33,6 +33,7 @@ class ReceivingScreen extends StatefulWidget {
 
 class _ReceivingScreenState extends State<ReceivingScreen> {
   List<Receiving> _receivings = [];
+  bool _loading = true;
 
   @override
   void initState() {
@@ -40,55 +41,75 @@ class _ReceivingScreenState extends State<ReceivingScreen> {
     _refresh();
   }
 
-  void _refresh() {
-    setState(() => _receivings = widget.receivingRepository.getAll()
-      ..sort((a, b) => b.receivedAt.compareTo(a.receivedAt)));
+  Future<void> _refresh() async {
+    try {
+      final receivings = await widget.receivingRepository.getAll()
+        ..sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
+
+      if (!mounted) return;
+
+      setState(() {
+        _receivings = receivings;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat penerimaan barang: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _receivings.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.inventory_outlined,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 12),
-                  const Text('Belum ada penerimaan barang.',
-                      style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _openReceiveDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Catat Penerimaan Baru'),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _receivings.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.inventory_outlined,
+                          size: 64, color: Colors.grey),
+                      const SizedBox(height: 12),
+                      const Text('Belum ada penerimaan barang.',
+                          style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _openReceiveDialog,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Catat Penerimaan Baru'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _receivings.length,
-              itemBuilder: (context, index) {
-                final r = _receivings[index];
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.green.shade50,
-                      child:
-                          const Icon(Icons.move_to_inbox, color: Colors.green),
-                    ),
-                    title: Text(
-                        'Penerimaan #${r.id.substring(r.id.length > 8 ? r.id.length - 8 : 0)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                        '${r.items.length} item · ${DateFormat('d MMM yyyy').format(r.receivedAt)}\nDari PO: ${r.purchaseId}'),
-                    isThreeLine: true,
-                  ),
-                );
-              },
-            ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: _receivings.length,
+                  itemBuilder: (context, index) {
+                    final r = _receivings[index];
+                    return Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.green.shade50,
+                          child: const Icon(Icons.move_to_inbox,
+                              color: Colors.green),
+                        ),
+                        title: Text(
+                            'Penerimaan #${r.id.substring(r.id.length > 8 ? r.id.length - 8 : 0)}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(
+                            '${r.items.length} item · ${DateFormat('d MMM yyyy').format(r.receivedAt)}\nDari PO: ${r.purchaseId}'),
+                        isThreeLine: true,
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openReceiveDialog,
         tooltip: 'Catat Penerimaan Barang',
@@ -97,9 +118,23 @@ class _ReceivingScreenState extends State<ReceivingScreen> {
     );
   }
 
-  void _openReceiveDialog() {
-    final purchases = widget.purchaseRepository.getAll();
+  Future<void> _openReceiveDialog() async {
+    final List<Purchase> purchases;
+    try {
+      purchases = await widget.purchaseRepository.getAll();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat daftar PO: $e')),
+      );
+      return;
+    }
+
     final products = widget.productRepository.getAll();
+
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (ctx) => _ReceiveGoodsDialog(
@@ -118,7 +153,10 @@ class _ReceivingScreenState extends State<ReceivingScreen> {
               backgroundColor: Colors.red,
             ));
           } else {
-            _refresh();
+            await _refresh();
+
+            if (!mounted) return;
+
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text('Penerimaan barang berhasil dicatat!'),
               backgroundColor: Colors.green,

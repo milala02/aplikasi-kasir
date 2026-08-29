@@ -5,12 +5,12 @@ class InMemoryPurchaseRepository implements PurchaseRepository {
   final Map<String, Purchase> _purchases = {};
 
   @override
-  Purchase? getById(String id) {
+  Future<Purchase?> getById(String id) async {
     return _purchases[id];
   }
 
   @override
-  Purchase? getByReferenceNumber(String referenceNumber) {
+  Future<Purchase?> getByReferenceNumber(String referenceNumber) async {
     for (final purchase in _purchases.values) {
       if (purchase.referenceNumber == referenceNumber) {
         return purchase;
@@ -21,12 +21,12 @@ class InMemoryPurchaseRepository implements PurchaseRepository {
   }
 
   @override
-  List<Purchase> getAll() {
+  Future<List<Purchase>> getAll() async {
     return _purchases.values.toList();
   }
 
   @override
-  void save(Purchase purchase) {
+  Future<void> save(Purchase purchase) async {
     if (_purchases.containsKey(purchase.id)) {
       throw StateError(
         'Purchase with id "${purchase.id}" already exists.',
@@ -37,7 +37,7 @@ class InMemoryPurchaseRepository implements PurchaseRepository {
   }
 
   @override
-  void update(Purchase purchase) {
+  Future<void> update(Purchase purchase) async {
     if (!_purchases.containsKey(purchase.id)) {
       throw StateError(
         'Purchase with id "${purchase.id}" does not exist.',
@@ -48,7 +48,7 @@ class InMemoryPurchaseRepository implements PurchaseRepository {
   }
 
   @override
-  void deleteById(String id) {
+  Future<void> deleteById(String id) async {
     if (!_purchases.containsKey(id)) {
       throw StateError(
         'Purchase with id "$id" does not exist.',

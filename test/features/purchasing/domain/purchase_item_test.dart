@@ -86,11 +86,9 @@ void main() {
         ),
       );
     });
-
-
   });
 
-group('PurchaseItem validation', () {
+  group('PurchaseItem validation', () {
     test('rejects an empty item id', () {
       expect(
         () => PurchaseItem(

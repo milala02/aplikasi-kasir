@@ -7,62 +7,62 @@ import 'package:aplikasi_kasir/features/purchasing/infrastructure/in_memory_purc
 
 void main() {
   group('InMemoryPurchaseRepository', () {
-    test('saves and retrieves a purchase by id', () {
+    test('saves and retrieves a purchase by id', () async {
       final repository = InMemoryPurchaseRepository();
       final purchase = createPurchase();
 
-      repository.save(purchase);
+      await repository.save(purchase);
 
-      expect(repository.getById(purchase.id), purchase);
+      expect(await repository.getById(purchase.id), purchase);
     });
 
-    test('returns null when purchase does not exist', () {
+    test('returns null when purchase does not exist', () async {
       final repository = InMemoryPurchaseRepository();
 
-      expect(repository.getById('missing'), isNull);
+      expect(await repository.getById('missing'), isNull);
     });
 
-    test('finds purchase by reference number', () {
+    test('finds purchase by reference number', () async {
       final repository = InMemoryPurchaseRepository();
       final purchase = createPurchase(
         referenceNumber: 'INV-001',
       );
 
-      repository.save(purchase);
+      await repository.save(purchase);
 
       expect(
-        repository.getByReferenceNumber('INV-001'),
+        await repository.getByReferenceNumber('INV-001'),
         purchase,
       );
     });
 
-    test('returns null when reference number does not exist', () {
+    test('returns null when reference number does not exist', () async {
       final repository = InMemoryPurchaseRepository();
 
-      repository.save(
+      await repository.save(
         createPurchase(referenceNumber: 'INV-001'),
       );
 
       expect(
-        repository.getByReferenceNumber('INV-999'),
+        await repository.getByReferenceNumber('INV-999'),
         isNull,
       );
     });
 
-    test('returns null when purchase has no reference number', () {
+    test('returns null when purchase has no reference number', () async {
       final repository = InMemoryPurchaseRepository();
 
-      repository.save(
+      await repository.save(
         createPurchase(referenceNumber: null),
       );
 
       expect(
-        repository.getByReferenceNumber('INV-001'),
+        await repository.getByReferenceNumber('INV-001'),
         isNull,
       );
     });
 
-    test('returns all purchases', () {
+    test('returns all purchases', () async {
       final repository = InMemoryPurchaseRepository();
       final first = createPurchase(
         id: 'purchase-001',
@@ -73,91 +73,91 @@ void main() {
         referenceNumber: 'INV-002',
       );
 
-      repository.save(first);
-      repository.save(second);
+      await repository.save(first);
+      await repository.save(second);
 
       expect(
-        repository.getAll(),
+        await repository.getAll(),
         [first, second],
       );
     });
 
-    test('returns empty list when repository is empty', () {
+    test('returns empty list when repository is empty', () async {
       final repository = InMemoryPurchaseRepository();
 
-      expect(repository.getAll(), isEmpty);
+      expect(await repository.getAll(), isEmpty);
     });
 
-    test('rejects duplicate purchase id on save', () {
+    test('rejects duplicate purchase id on save', () async {
       final repository = InMemoryPurchaseRepository();
       final purchase = createPurchase(
         id: 'purchase-001',
       );
 
-      repository.save(purchase);
+      await repository.save(purchase);
 
       expect(
-        () => repository.save(purchase),
+        () async => repository.save(purchase),
         throwsStateError,
       );
     });
 
-    test('updates an existing purchase', () {
+    test('updates an existing purchase', () async {
       final repository = InMemoryPurchaseRepository();
       final original = createPurchase(
         id: 'purchase-001',
         referenceNumber: 'INV-001',
       );
 
-      repository.save(original);
+      await repository.save(original);
 
       final updated = createPurchase(
         id: 'purchase-001',
         referenceNumber: 'INV-002',
       );
 
-      repository.update(updated);
+      await repository.update(updated);
 
-      expect(repository.getById('purchase-001'), updated);
+      expect(await repository.getById('purchase-001'), updated);
       expect(
-        repository.getByReferenceNumber('INV-002'),
+        await repository.getByReferenceNumber('INV-002'),
         updated,
       );
       expect(
-        repository.getByReferenceNumber('INV-001'),
+        await repository.getByReferenceNumber('INV-001'),
         isNull,
       );
     });
 
-    test('rejects updating a missing purchase', () {
+    test('rejects updating a missing purchase', () async {
       final repository = InMemoryPurchaseRepository();
 
       expect(
-        () => repository.update(
+        () async => repository.update(
           createPurchase(id: 'missing'),
         ),
         throwsStateError,
       );
     });
 
-    test('deletes an existing purchase', () {
+    test('deletes an existing purchase', () async {
       final repository = InMemoryPurchaseRepository();
       final purchase = createPurchase(
         id: 'purchase-001',
       );
 
-      repository.save(purchase);
-      repository.deleteById(purchase.id);
+      await repository.save(purchase);
+      await repository.deleteById(purchase.id);
 
-      expect(repository.getById(purchase.id), isNull);
-      expect(repository.getAll(), isEmpty);
+      expect(await repository.getById(purchase.id), isNull);
+      expect(await repository.getAll(), isEmpty);
     });
 
-    test('rejects deleting a missing purchase', () {
+    test('rejects deleting a missing purchase', () async {
       final repository = InMemoryPurchaseRepository();
 
       expect(
-        () => repository.deleteById('missing'),
+        () async => repository.deleteById('missing'),
         throwsStateError,
       );
     });

@@ -56,6 +56,57 @@ class CostLayersTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// 4. Tabel Receivings (Penerimaan Barang)
+class ReceivingsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text()();
+  DateTimeColumn get receivedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// 5. Tabel ReceivingItems (Item Penerimaan Barang)
+class ReceivingItemsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get receivingId => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  IntColumn get unitCostMinorUnits => integer()();
+  TextColumn get unitCostCurrency =>
+      text().withDefault(const Constant('IDR'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// 6. Tabel Purchases (Pesanan Pembelian / PO)
+class PurchasesTable extends Table {
+  TextColumn get id => text()();
+  DateTimeColumn get purchasedAt => dateTime()();
+  TextColumn get supplierId => text().nullable()();
+  TextColumn get referenceNumber => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// 7. Tabel PurchaseItems (Item Pesanan Pembelian)
+class PurchaseItemsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get purchaseId => text()();
+  TextColumn get productId => text()();
+  IntColumn get quantityValue => integer()();
+  IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  IntColumn get unitCostMinorUnits => integer()();
+  TextColumn get unitCostCurrency =>
+      text().withDefault(const Constant('IDR'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // --- TABEL PENJUALAN ---
 class SalesTable extends Table {
   TextColumn get id => text()();
@@ -98,6 +149,10 @@ class StockMovementsTable extends Table {
   ProductsTable,
   CustomersTable,
   CostLayersTable,
+  ReceivingsTable,
+  ReceivingItemsTable,
+  PurchasesTable,
+  PurchaseItemsTable,
   SalesTable,
   SaleItemsTable,
   StockMovementsTable
@@ -106,7 +161,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -120,6 +175,14 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.addColumn(costLayersTable, costLayersTable.purchaseId);
+          }
+          if (from < 4) {
+            await m.createTable(receivingsTable);
+            await m.createTable(receivingItemsTable);
+          }
+          if (from < 5) {
+            await m.createTable(purchasesTable);
+            await m.createTable(purchaseItemsTable);
           }
         },
       );

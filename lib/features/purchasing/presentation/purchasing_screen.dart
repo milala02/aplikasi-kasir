@@ -25,6 +25,7 @@ class PurchasingScreen extends StatefulWidget {
 
 class _PurchasingScreenState extends State<PurchasingScreen> {
   List<Purchase> _purchases = [];
+  bool _loading = true;
 
   @override
   void initState() {
@@ -32,58 +33,78 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
     _refresh();
   }
 
-  void _refresh() {
-    setState(() => _purchases = widget.purchaseRepository.getAll()
-      ..sort((a, b) => b.purchasedAt.compareTo(a.purchasedAt)));
+  Future<void> _refresh() async {
+    try {
+      final purchases = await widget.purchaseRepository.getAll()
+        ..sort((a, b) => b.purchasedAt.compareTo(a.purchasedAt));
+
+      if (!mounted) return;
+
+      setState(() {
+        _purchases = purchases;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _loading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal memuat pesanan pembelian: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _purchases.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.shopping_bag_outlined,
-                      size: 64, color: Colors.grey),
-                  const SizedBox(height: 12),
-                  const Text('Belum ada pesanan pembelian.',
-                      style: TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _openCreateDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Buat Pesanan Baru'),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _purchases.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.shopping_bag_outlined,
+                          size: 64, color: Colors.grey),
+                      const SizedBox(height: 12),
+                      const Text('Belum ada pesanan pembelian.',
+                          style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: _openCreateDialog,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Buat Pesanan Baru'),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _purchases.length,
-              itemBuilder: (context, index) {
-                final p = _purchases[index];
-                final total = p.totalCost;
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue.shade50,
-                      child: const Icon(Icons.receipt, color: Colors.blue),
-                    ),
-                    title: Text(p.referenceNumber ?? p.id,
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                        '${p.items.length} item · ${DateFormat('d MMM yyyy').format(p.purchasedAt)}'),
-                    trailing: Text(
-                      'Rp ${NumberFormat('#,###').format(total.minorUnits ~/ 100)}',
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.blue),
-                    ),
-                  ),
-                );
-              },
-            ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12),
+                  itemCount: _purchases.length,
+                  itemBuilder: (context, index) {
+                    final p = _purchases[index];
+                    final total = p.totalCost;
+                    return Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.blue.shade50,
+                          child: const Icon(Icons.receipt, color: Colors.blue),
+                        ),
+                        title: Text(p.referenceNumber ?? p.id,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(
+                            '${p.items.length} item · ${DateFormat('d MMM yyyy').format(p.purchasedAt)}'),
+                        trailing: Text(
+                          'Rp ${NumberFormat('#,###').format(total.minorUnits ~/ 100)}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.blue),
+                        ),
+                      ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: _openCreateDialog,
         tooltip: 'Buat Pesanan Pembelian',
@@ -98,9 +119,9 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
       context: context,
       builder: (ctx) => _CreatePurchaseDialog(
         products: products,
-        onSave: (purchase) {
-          widget.purchaseRepository.save(purchase);
-          _refresh();
+        onSave: (purchase) async {
+          await widget.purchaseRepository.save(purchase);
+          await _refresh();
         },
       ),
     );
@@ -112,7 +133,7 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
 // ---------------------------------------------------------------------------
 class _CreatePurchaseDialog extends StatefulWidget {
   final List<Product> products;
-  final void Function(Purchase) onSave;
+  final Future<void> Function(Purchase) onSave;
 
   const _CreatePurchaseDialog({required this.products, required this.onSave});
 
@@ -157,7 +178,7 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
     });
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_items.isEmpty) return;
 
     final purchase = Purchase(
@@ -168,7 +189,21 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
           : _refController.text.trim(),
       items: _items,
     );
-    widget.onSave(purchase);
+
+    try {
+      await widget.onSave(purchase);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Gagal menyimpan pesanan pembelian: $e'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    if (!mounted) return;
+
     Navigator.pop(context);
   }
 

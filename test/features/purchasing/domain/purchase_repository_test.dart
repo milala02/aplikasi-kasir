@@ -12,20 +12,20 @@ void main() {
 
 class _FakePurchaseRepository implements PurchaseRepository {
   @override
-  Purchase? getById(String id) => null;
+  Future<Purchase?> getById(String id) async => null;
 
   @override
-  Purchase? getByReferenceNumber(String referenceNumber) => null;
+  Future<Purchase?> getByReferenceNumber(String referenceNumber) async => null;
 
   @override
-  List<Purchase> getAll() => [];
+  Future<List<Purchase>> getAll() async => [];
 
   @override
-  void save(Purchase purchase) {}
+  Future<void> save(Purchase purchase) async {}
 
   @override
-  void update(Purchase purchase) {}
+  Future<void> update(Purchase purchase) async {}
 
   @override
-  void deleteById(String id) {}
+  Future<void> deleteById(String id) async {}
 }

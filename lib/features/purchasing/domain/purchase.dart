@@ -14,8 +14,8 @@ class Purchase {
     this.supplierId,
     this.referenceNumber,
     required this.items,
-  }) : assert(id != ''),
-       assert(items.length > 0);
+  })  : assert(id != ''),
+        assert(items.length > 0);
 
   Money get totalCost {
     if (items.isEmpty) {

@@ -12,7 +12,8 @@ void main() {
       repository = InMemoryReceivingRepository();
     });
 
-    test('harus dapat menyimpan dan mengambil receiving berdasarkan ID', () {
+    test('harus dapat menyimpan dan mengambil receiving berdasarkan ID',
+        () async {
       final receiving = Receiving(
         id: 'rec_001',
         purchaseId: 'po_001',
@@ -27,15 +28,16 @@ void main() {
         ],
       );
 
-      repository.save(receiving);
+      await repository.save(receiving);
 
-      final result = repository.getById('rec_001');
+      final result = await repository.getById('rec_001');
       expect(result, isNotNull);
       expect(result!.id, equals('rec_001'));
       expect(result.purchaseId, equals('po_001'));
     });
 
-    test('harus dapat mengambil daftar receiving berdasarkan purchaseId', () {
+    test('harus dapat mengambil daftar receiving berdasarkan purchaseId',
+        () async {
       final receiving1 = Receiving(
         id: 'rec_001',
         purchaseId: 'po_001',
@@ -64,10 +66,10 @@ void main() {
         ],
       );
 
-      repository.save(receiving1);
-      repository.save(receiving2);
+      await repository.save(receiving1);
+      await repository.save(receiving2);
 
-      final list = repository.getByPurchaseId('po_001');
+      final list = await repository.getByPurchaseId('po_001');
       expect(list.length, equals(2));
     });
   });

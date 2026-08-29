@@ -22,7 +22,7 @@ class ReceiveGoodsUseCase {
   Future<Result<void>> execute(Receiving receiving) async {
     try {
       // 1. Simpan penerimaan barang
-      receivingRepository.save(receiving);
+      await receivingRepository.save(receiving);
 
       for (final item in receiving.items) {
         // 2. Catat Pergerakan Stok

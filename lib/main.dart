@@ -17,10 +17,10 @@ import 'features/inventory/infrastructure/drift_inventory_repository.dart';
 import 'features/products/domain/product_repository.dart';
 import 'features/products/infrastructure/drift_product_repository.dart';
 import 'features/purchasing/domain/purchase_repository.dart';
-import 'features/purchasing/infrastructure/in_memory_purchase_repository.dart';
+import 'features/purchasing/infrastructure/drift_purchase_repository.dart';
 import 'features/receiving/application/receive_goods_use_case.dart';
 import 'features/receiving/domain/receiving_repository.dart';
-import 'features/receiving/infrastructure/in_memory_receiving_repository.dart';
+import 'features/receiving/infrastructure/drift_receiving_repository.dart';
 import 'features/sales/application/process_sale_use_case.dart';
 import 'features/sales/infrastructure/drift_sale_repository.dart';
 import 'features/sales/presentation/pos_controller.dart';
@@ -43,11 +43,11 @@ void main() async {
   final saleRepo = DriftSaleRepository(db);
   await saleRepo.init();
 
-  // 3. Repositories yang masih in-memory (belum ada Drift version)
+  // 3. Repositories (Drift persistence)
   final inventoryRepo = DriftInventoryRepository(db);
   final costLayerRepo = DriftCostLayerRepository(db);
-  final purchaseRepo = InMemoryPurchaseRepository();
-  final receivingRepo = InMemoryReceivingRepository();
+  final purchaseRepo = DriftPurchaseRepository(db);
+  final receivingRepo = DriftReceivingRepository(db);
 
   // 4. Use cases
   final processSaleUseCase = ProcessSaleUseCase(

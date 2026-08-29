@@ -12,18 +12,18 @@ class InMemoryReceivingRepository implements ReceivingRepository {
   final Map<String, Receiving> _receivings = {};
 
   @override
-  Receiving? getById(String id) => _receivings[id];
+  Future<Receiving?> getById(String id) async => _receivings[id];
 
   @override
-  List<Receiving> getByPurchaseId(String purchaseId) {
+  Future<List<Receiving>> getByPurchaseId(String purchaseId) async {
     return _receivings.values.where((r) => r.purchaseId == purchaseId).toList();
   }
 
   @override
-  List<Receiving> getAll() => _receivings.values.toList();
+  Future<List<Receiving>> getAll() async => _receivings.values.toList();
 
   @override
-  void save(Receiving receiving) {
+  Future<void> save(Receiving receiving) async {
     _receivings[receiving.id] = receiving;
   }
 }
@@ -68,7 +68,7 @@ void main() {
       expect(result, isA<Success<void>>());
 
       // Verifikasi Receiving tersimpan
-      final savedReceiving = receivingRepo.getById('rec_001');
+      final savedReceiving = await receivingRepo.getById('rec_001');
       expect(savedReceiving, isNotNull);
 
       // Verifikasi Ledger Stok bertambah

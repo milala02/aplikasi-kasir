@@ -1,8 +1,8 @@
 import 'receiving.dart';
 
 abstract interface class ReceivingRepository {
-  Receiving? getById(String id);
-  List<Receiving> getAll();
-  List<Receiving> getByPurchaseId(String purchaseId);
-  void save(Receiving receiving);
+  Future<Receiving?> getById(String id);
+  Future<List<Receiving>> getAll();
+  Future<List<Receiving>> getByPurchaseId(String purchaseId);
+  Future<void> save(Receiving receiving);
 }

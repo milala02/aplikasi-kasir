@@ -5,22 +5,22 @@ class InMemoryReceivingRepository implements ReceivingRepository {
   final Map<String, Receiving> _receivings = {};
 
   @override
-  Receiving? getById(String id) {
+  Future<Receiving?> getById(String id) async {
     return _receivings[id];
   }
 
   @override
-  List<Receiving> getAll() => _receivings.values.toList();
+  Future<List<Receiving>> getAll() async => _receivings.values.toList();
 
   @override
-  List<Receiving> getByPurchaseId(String purchaseId) {
+  Future<List<Receiving>> getByPurchaseId(String purchaseId) async {
     return _receivings.values
         .where((receiving) => receiving.purchaseId == purchaseId)
         .toList();
   }
 
   @override
-  void save(Receiving receiving) {
+  Future<void> save(Receiving receiving) async {
     _receivings[receiving.id] = receiving;
   }
 
