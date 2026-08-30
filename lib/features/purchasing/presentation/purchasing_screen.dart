@@ -168,6 +168,7 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
         id: 'pi_${DateTime.now().microsecondsSinceEpoch}',
         productId: _selectedProduct!.id,
         quantity: Quantity(value: qty, scale: 0),
+        unit: _selectedProduct!.baseUnit,
         unitCost: Money(
             minorUnits: price * 100, // Rp → minor units (persen)
             currency: 'IDR'),

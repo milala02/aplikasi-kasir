@@ -73,9 +73,23 @@ class ReceivingItemsTable extends Table {
   TextColumn get productId => text()();
   IntColumn get quantityValue => integer()();
   IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  TextColumn get unit => text().nullable()();
   IntColumn get unitCostMinorUnits => integer()();
   TextColumn get unitCostCurrency =>
       text().withDefault(const Constant('IDR'))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// --- KONVERSI PACKAGING PER PRODUK ---
+class ProductPackagingsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get productId => text()();
+  TextColumn get fromUnit => text()();
+  TextColumn get toUnit => text()();
+  IntColumn get multiplierValue => integer()();
+  IntColumn get divisorValue => integer()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -99,6 +113,7 @@ class PurchaseItemsTable extends Table {
   TextColumn get productId => text()();
   IntColumn get quantityValue => integer()();
   IntColumn get quantityScale => integer().withDefault(const Constant(0))();
+  TextColumn get unit => text().nullable()();
   IntColumn get unitCostMinorUnits => integer()();
   TextColumn get unitCostCurrency =>
       text().withDefault(const Constant('IDR'))();
@@ -216,13 +231,14 @@ class StockMovementsTable extends Table {
   OrdersTable,
   OrderItemsTable,
   RecipesTable,
-  RecipeItemsTable
+  RecipeItemsTable,
+  ProductPackagingsTable
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -280,6 +296,17 @@ class AppDatabase extends _$AppDatabase {
             // Hanya untuk DB v9: DB < 9 dibuat tabel resepnya di from < 9
             // dengan skema terbaru (sudah termasuk kolom ini).
             await m.addColumn(recipesTable, recipesTable.outputProductId);
+          }
+          if (from < 11) {
+            // Tabel konversi packaging per produk.
+            await m.createTable(productPackagingsTable);
+          }
+          if (from >= 10 && from < 11) {
+            // Unit input (UoM) pada baris PO & penerimaan untuk audit trail.
+            // Hanya untuk DB v10: DB < 10 membuat tabel purchase/receiving
+            // items di from < 5/from < 4 dengan skema terbaru.
+            await m.addColumn(purchaseItemsTable, purchaseItemsTable.unit);
+            await m.addColumn(receivingItemsTable, receivingItemsTable.unit);
           }
         },
       );

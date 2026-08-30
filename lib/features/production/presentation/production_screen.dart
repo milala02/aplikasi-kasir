@@ -46,6 +46,7 @@ class _ProductionAndPortioningScreenState
   String? _productionErrorText;
 
   // Portioning Calculator State
+  String? _portionProductId;
   final _priceController = TextEditingController(text: '5000');
   final _marginController = TextEditingController(text: '30');
   final _pkgCostController = TextEditingController(text: '300');
@@ -152,6 +153,14 @@ class _ProductionAndPortioningScreenState
   }
 
   Future<void> _calculateKetengan() async {
+    final productId = _portionProductId;
+    if (productId == null || productId.isEmpty) {
+      setState(() {
+        _calcResultText = '⚠️ Pilih produk terlebih dahulu.';
+      });
+      return;
+    }
+
     try {
       final priceInt = (int.tryParse(_priceController.text) ?? 0) * 100;
       final marginDouble = (double.tryParse(_marginController.text) ?? 0) / 100;
@@ -161,7 +170,7 @@ class _ProductionAndPortioningScreenState
           costLayerRepository: widget.costLayerRepository);
 
       final result = await useCase.execute(
-        productId: 'lada_biji',
+        productId: productId,
         targetSellingPrice: Money(minorUnits: priceInt, currency: 'IDR'),
         targetMarginPercentage: marginDouble,
         packagingCostPerUnit: Money(minorUnits: pkgCostInt, currency: 'IDR'),
@@ -172,6 +181,11 @@ class _ProductionAndPortioningScreenState
             '• Berat per Bungkus: ${result.recommendedWeightPerPortionInGrams.value} Gram\n'
             '• Estimasi Hasil per Kg: ${result.totalPortionsPerKg} Bungkus\n'
             '• Untung Bersih per Bungkus: Rp ${result.profitPerPortion.minorUnits ~/ 100}';
+      });
+    } on StateError {
+      setState(() {
+        _calcResultText =
+            '⚠️ Produk belum punya stok/cost layer — catat penerimaan dulu.';
       });
     } catch (e) {
       setState(() {
@@ -330,6 +344,29 @@ class _ProductionAndPortioningScreenState
         children: [
           const Text('Kalkulator Repacking Ketengan (Bumbu / Lada)',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            key: const Key('portion_product_field'),
+            initialValue: _portionProductId,
+            decoration: const InputDecoration(
+              labelText: 'Pilih Produk (Bahan)',
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              for (final product in widget.productRepository.getAll())
+                DropdownMenuItem(
+                  value: product.id,
+                  child: Text(product.name,
+                      overflow: TextOverflow.ellipsis),
+                ),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _portionProductId = value;
+                _calcResultText = '';
+              });
+            },
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _priceController,

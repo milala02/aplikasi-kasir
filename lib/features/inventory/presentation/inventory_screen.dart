@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
+import '../../products/domain/product.dart';
+import '../../products/domain/product_repository.dart';
 import '../domain/cost_layer.dart';
 import '../domain/cost_layer_repository.dart';
 
 class InventoryScreen extends StatefulWidget {
   final CostLayerRepository costLayerRepository;
+  final ProductRepository productRepository;
 
   const InventoryScreen({
     super.key,
     required this.costLayerRepository,
+    required this.productRepository,
   });
 
   @override
@@ -19,24 +23,29 @@ class InventoryScreen extends StatefulWidget {
 
 class _InventoryScreenState extends State<InventoryScreen> {
   List<CostLayer> _activeLayers = [];
-  final _productIdController = TextEditingController(text: 'lada_biji');
+  String? _selectedProductId;
   final _qtyController = TextEditingController(text: '10');
   final _costController = TextEditingController(text: '160000');
+
+  List<Product> get _products => widget.productRepository.getAll();
 
   @override
   void initState() {
     super.initState();
+    _selectedProductId = _products.isNotEmpty ? _products.first.id : null;
     _loadActiveLayers();
   }
 
   Future<void> _loadActiveLayers() async {
     if (!mounted) return;
 
-    try {
-      final productId = _productIdController.text.trim().isEmpty
-          ? 'lada_biji'
-          : _productIdController.text.trim();
+    final productId = _selectedProductId;
+    if (productId == null) {
+      setState(() => _activeLayers = []);
+      return;
+    }
 
+    try {
       final layers =
           await widget.costLayerRepository.getAvailableByProductId(productId);
 
@@ -60,7 +69,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   void dispose() {
-    _productIdController.dispose();
     _qtyController.dispose();
     _costController.dispose();
     super.dispose();
@@ -68,13 +76,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   Future<void> _addCostLayer() async {
     try {
-      final productId = _productIdController.text.trim();
+      final productId = _selectedProductId;
       final qtyVal = int.tryParse(_qtyController.text) ?? 0;
       final costVal = (int.tryParse(_costController.text) ?? 0) * 100;
 
-      if (productId.isEmpty || qtyVal <= 0 || costVal <= 0) {
+      if (productId == null || qtyVal <= 0 || costVal <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Isi semua field input dengan benar.')),
+          const SnackBar(
+              content: Text('Pilih produk dan isi semua field dengan benar.')),
         );
         return;
       }
@@ -181,9 +190,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentProductId = _productIdController.text.trim().isEmpty
-        ? 'lada_biji'
-        : _productIdController.text.trim();
+    final currentProduct = _selectedProductId == null
+        ? null
+        : _products.where((p) => p.id == _selectedProductId).firstOrNull;
     final activeLayers = _activeLayers;
 
     return Scaffold(
@@ -220,13 +229,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
-                    TextField(
-                      controller: _productIdController,
+                    DropdownButtonFormField<String>(
+                      key: const Key('inventory_product_field'),
+                      initialValue: _selectedProductId,
                       decoration: const InputDecoration(
-                        labelText: 'Product ID / Kode Barang',
+                        labelText: 'Pilih Produk',
                         border: OutlineInputBorder(),
                       ),
-                      onChanged: (_) => setState(() {}),
+                      items: [
+                        for (final product in _products)
+                          DropdownMenuItem(
+                            value: product.id,
+                            child: Text(product.name,
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                      ],
+                      onChanged: (value) {
+                        setState(() => _selectedProductId = value);
+                        _loadActiveLayers();
+                      },
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -276,7 +297,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              '📊 Cost Layer FIFO Aktif untuk "$currentProductId"',
+              currentProduct == null
+                  ? '📊 Pilih produk untuk melihat cost layer FIFO.'
+                  : '📊 Cost Layer FIFO Aktif untuk "${currentProduct.name}"',
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),

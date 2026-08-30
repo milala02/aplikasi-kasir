@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' as d;
 import '../../../core/database/app_database.dart';
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
+import '../../../core/unit/unit.dart';
 import '../domain/purchase.dart';
 import '../domain/purchase_item.dart';
 import '../domain/purchase_repository.dart';
@@ -83,6 +84,7 @@ class DriftPurchaseRepository implements PurchaseRepository {
                 productId: item.productId,
                 quantityValue: item.quantity.value,
                 quantityScale: d.Value(item.quantity.scale),
+                unit: d.Value(item.unit.name),
                 unitCostMinorUnits: item.unitCost.minorUnits,
                 unitCostCurrency: d.Value(item.unitCost.currency),
               ),
@@ -125,6 +127,7 @@ class DriftPurchaseRepository implements PurchaseRepository {
                 productId: item.productId,
                 quantityValue: item.quantity.value,
                 quantityScale: d.Value(item.quantity.scale),
+                unit: d.Value(item.unit.name),
                 unitCostMinorUnits: item.unitCost.minorUnits,
                 unitCostCurrency: d.Value(item.unitCost.currency),
               ),
@@ -182,6 +185,14 @@ class DriftPurchaseRepository implements PurchaseRepository {
         value: row.quantityValue,
         scale: row.quantityScale,
       ),
+      // Fallback eksplisit untuk baris legacy tanpa kolom unit.
+      unit: row.unit == null
+          ? Unit.pcs
+          : Unit.values.firstWhere(
+              (u) => u.name == row.unit,
+              orElse: () =>
+                  throw StateError('Unknown unit: ${row.unit}'),
+            ),
       unitCost: Money(
         minorUnits: row.unitCostMinorUnits,
         currency: row.unitCostCurrency,

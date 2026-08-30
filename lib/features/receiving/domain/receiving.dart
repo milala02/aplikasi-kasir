@@ -1,5 +1,6 @@
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
+import '../../../core/unit/unit.dart';
 
 class ReceivingItem {
   final String id;
@@ -7,11 +8,16 @@ class ReceivingItem {
   final Quantity quantityReceived;
   final Money unitCost;
 
+  /// Unit input saat penerimaan (audit trail). Default `pcs` untuk data lama
+  /// yang tidak menyimpan unit.
+  final Unit unit;
+
   ReceivingItem({
     required this.id,
     required this.productId,
     required this.quantityReceived,
     required this.unitCost,
+    this.unit = Unit.pcs,
   }) {
     if (id.isEmpty) {
       throw ArgumentError('ReceivingItem ID cannot be empty.');

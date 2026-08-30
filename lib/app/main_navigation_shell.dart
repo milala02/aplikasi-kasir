@@ -114,8 +114,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         icon: Icons.inventory_2,
         title: 'Manajemen Stok (FIFO)',
         label: 'Inventory',
-        page:
-            InventoryScreen(costLayerRepository: widget.costLayerRepository),
+        page: InventoryScreen(
+            costLayerRepository: widget.costLayerRepository,
+            productRepository: widget.productRepository),
       ),
       _NavItem(
         icon: Icons.people,

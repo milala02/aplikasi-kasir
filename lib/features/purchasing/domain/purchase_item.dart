@@ -1,5 +1,6 @@
 import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
+import '../../../core/unit/unit.dart';
 
 class PurchaseItem {
   final String id;
@@ -7,11 +8,16 @@ class PurchaseItem {
   final Quantity quantity;
   final Money unitCost;
 
+  /// Unit input saat PO dibuat (audit trail). Default `pcs` untuk data lama
+  /// yang tidak menyimpan unit.
+  final Unit unit;
+
   PurchaseItem({
     required this.id,
     required this.productId,
     required this.quantity,
     required this.unitCost,
+    this.unit = Unit.pcs,
   })  : assert(id != ''),
         assert(productId != ''),
         assert(quantity.value > 0),

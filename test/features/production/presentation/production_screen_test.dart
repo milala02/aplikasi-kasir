@@ -40,6 +40,26 @@ void main() {
           sellingPrice: Money(minorUnits: 0, currency: 'IDR'),
         ),
       );
+      productRepo.save(
+        const Product(
+          id: 'prod_bawang_merah',
+          sku: 'BM-001',
+          name: 'Bawang Merah',
+          baseUnit: Unit.kilogram,
+          purchasePrice: Money(minorUnits: 0, currency: 'IDR'),
+          sellingPrice: Money(minorUnits: 0, currency: 'IDR'),
+        ),
+      );
+      productRepo.save(
+        const Product(
+          id: 'prod_tanpa_stok',
+          sku: 'TS-001',
+          name: 'Tanpa Stok',
+          baseUnit: Unit.kilogram,
+          purchasePrice: Money(minorUnits: 0, currency: 'IDR'),
+          sellingPrice: Money(minorUnits: 0, currency: 'IDR'),
+        ),
+      );
 
       await costLayerRepo.save(
         CostLayer(
@@ -178,6 +198,48 @@ void main() {
       expect(find.textContaining('tidak punya produk hasil'), findsOneWidget);
       final button = find.byKey(const Key('production_execute_button'));
       expect(tester.widget<ElevatedButton>(button).onPressed, isNull);
+    });
+
+    Future<void> selectPortionProduct(
+        WidgetTester tester, String name) async {
+      await tester.tap(find.text('Kalkulator Ketengan Lada'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('portion_product_field')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(name).last);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'ketengan: produk tanpa cost layer -> pesan ramah tanpa crash',
+        (tester) async {
+      await tester.pumpWidget(buildApp());
+      await selectPortionProduct(tester, 'Tanpa Stok');
+
+      await tester.tap(find.text('HITUNG TAKARAN GRAM OTOMATIS'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('catat penerimaan dulu'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets(
+        'ketengan: produk dengan layer -> rekomendasi muncul dan FIFO tidak '
+        'berkurang', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await selectPortionProduct(tester, 'Bawang Merah');
+
+      await tester.tap(find.text('HITUNG TAKARAN GRAM OTOMATIS'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('HASIL REKOMENDASI TAKARAN'), findsOneWidget);
+
+      // Kalkulasi rekomendasi TIDAK mengonsumsi layer FIFO.
+      final layer = await costLayerRepo.getById('layer_bm');
+      expect(layer!.remainingQuantity.value, equals(10));
     });
   });
 }

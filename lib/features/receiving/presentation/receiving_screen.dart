@@ -209,6 +209,7 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
         id: 'ri_${DateTime.now().microsecondsSinceEpoch}',
         productId: _selectedProduct!.id,
         quantityReceived: Quantity(value: qty, scale: 0),
+        unit: _selectedProduct!.baseUnit,
         unitCost: Money(minorUnits: price * 100, currency: 'IDR'),
       ));
       _selectedProduct = null;
