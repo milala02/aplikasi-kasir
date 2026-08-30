@@ -34,28 +34,34 @@ class ProcessStockOutUseCase {
   Future<Result<void>> checkAvailability(Sale sale) async {
     try {
       for (final item in sale.items) {
-        final available = await _availableQuantity(item);
-        if (available < item.quantity.value) {
+        // Bandingkan pada skala terbesar bersama agar tidak ada pembulatan
+        // per layer (false-negative) maupun overcount (bug scale terbalik).
+        final (maxScale, available) = await _availableQuantity(item);
+        final required = _scaleUp(item.quantity, maxScale);
+        if (available < required) {
           return Failure(
             DomainError(
               code: 'INSUFFICIENT_STOCK',
               message:
-                  'Stok tidak mencukupi untuk produk ${item.productId}. Required: ${item.quantity.value}, Available: $available',
+                  'Stok tidak mencukupi untuk produk ${item.productId}. Required: $required, Available: $available (scale $maxScale)',
             ),
           );
         }
 
         final ledger = await inventoryRepository.getLedger(item.productId);
-        if (ledger != null &&
-            _scaleQuantity(ledger.calculateBalance(), item.quantity.scale) <
-                item.quantity.value) {
-          return Failure(
-            DomainError(
-              code: 'INSUFFICIENT_STOCK',
-              message:
-                  'Saldo ledger tidak mencukupi untuk produk ${item.productId}.',
-            ),
-          );
+        if (ledger != null) {
+          final balance = ledger.calculateBalance();
+          final ledgerScale = balance.scale > maxScale ? balance.scale : maxScale;
+          if (_scaleUp(balance, ledgerScale) <
+              _scaleUp(item.quantity, ledgerScale)) {
+            return Failure(
+              DomainError(
+                code: 'INSUFFICIENT_STOCK',
+                message:
+                    'Saldo ledger tidak mencukupi untuk produk ${item.productId}.',
+              ),
+            );
+          }
         }
       }
       return const Success(null);
@@ -157,19 +163,33 @@ class ProcessStockOutUseCase {
     return Success(enrichedSale);
   }
 
-  Future<int> _availableQuantity(SaleItem item) async {
+  /// Total sisa stok di seluruh cost layer aktif, dinyatakan pada skala
+  /// terbesar bersama (maxScale, totalAtMaxScale) — presisi eksak tanpa
+  /// pembulatan per layer.
+  Future<(int, int)> _availableQuantity(SaleItem item) async {
     final layers =
         await costLayerRepository.getAvailableByProductId(item.productId);
-    final targetScale = item.quantity.scale;
+    var maxScale = item.quantity.scale;
+    for (final layer in layers) {
+      if (layer.remainingQuantity.scale > maxScale) {
+        maxScale = layer.remainingQuantity.scale;
+      }
+    }
     var totalAvailable = 0;
     for (final layer in layers) {
-      totalAvailable += _scaleQuantity(layer.remainingQuantity, targetScale);
+      totalAvailable += _scaleUp(layer.remainingQuantity, maxScale);
     }
-    return totalAvailable;
+    return (maxScale, totalAvailable);
   }
 
-  static int _scaleQuantity(Quantity quantity, int targetScale) {
+  /// Naikkan skala quantity ke targetScale (wajib targetScale >= scale).
+  static int _scaleUp(Quantity quantity, int targetScale) {
     if (quantity.scale == targetScale) return quantity.value;
+    if (targetScale < quantity.scale) {
+      throw ArgumentError(
+          'targetScale ($targetScale) must be >= quantity scale '
+          '(${quantity.scale}).');
+    }
     var factor = 1;
     for (var i = 0; i < targetScale - quantity.scale; i++) {
       factor *= 10;

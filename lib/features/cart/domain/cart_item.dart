@@ -32,7 +32,19 @@ class CartItem {
     }
   }
 
-  Money get subtotal => unitPrice.multiply(quantity.value);
+  Money get subtotal => Money(
+        minorUnits:
+            unitPrice.minorUnits * quantity.value ~/ _scaleFactor(quantity.scale),
+        currency: unitPrice.currency,
+      );
+
+  static int _scaleFactor(int scale) {
+    var result = 1;
+    for (var i = 0; i < scale; i++) {
+      result *= 10;
+    }
+    return result;
+  }
 
   CartItem copyWith({
     Product? product,

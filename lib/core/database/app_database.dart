@@ -229,6 +229,12 @@ class AppDatabase extends _$AppDatabase {
         onCreate: (Migrator m) async {
           await m.createAll();
         },
+        beforeOpen: (details) async {
+          // Infrastruktur DB: WAL untuk durabilitas konkurensi,
+          // foreign_keys untuk integritas referensi (per koneksi).
+          await customStatement('PRAGMA journal_mode=WAL;');
+          await customStatement('PRAGMA foreign_keys=ON;');
+        },
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
             await m.addColumn(

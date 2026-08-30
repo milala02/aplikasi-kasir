@@ -168,5 +168,68 @@ void main() {
       expect(await inventoryRepo.getMovements('beras'), isEmpty);
       expect(await inventoryRepo.getMovements('gula'), isEmpty);
     });
+
+    test(
+        'skala campuran: dua layer fraksional yang dijumlah tepat memenuhi '
+        'item tanpa false-negative', () async {
+      // 1,5 + 1,5 = 3,0 kg pada skala 1; item butuh 3 scale 0.
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_a',
+          productId: 'beras',
+          originalQuantity: Quantity(value: 15, scale: 1),
+          remainingQuantity: Quantity(value: 15, scale: 1),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          acquiredAt: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      );
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_b',
+          productId: 'beras',
+          originalQuantity: Quantity(value: 15, scale: 1),
+          remainingQuantity: Quantity(value: 15, scale: 1),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          acquiredAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+      );
+      final sale = await seedSale(items: [buildItem(quantity: 3)]);
+
+      final result = await useCase.execute(sale);
+
+      expect(result, isA<Success<Sale>>());
+      final layerA = await costLayerRepo.getById('layer_a');
+      final layerB = await costLayerRepo.getById('layer_b');
+      expect(layerA!.remainingQuantity.isZero, isTrue);
+      expect(layerB!.remainingQuantity.isZero, isTrue);
+    });
+
+    test('skala campuran: layer lebih halus dari item -> tanpa overcount',
+        () async {
+      // Layer 250 scale 2 = 2,5 kg; item butuh 3 scale 0 -> harus gagal.
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_fine',
+          productId: 'beras',
+          originalQuantity: Quantity(value: 250, scale: 2),
+          remainingQuantity: Quantity(value: 250, scale: 2),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+      final sale = await seedSale(items: [buildItem(quantity: 3)]);
+
+      final check = await useCase.checkAvailability(sale);
+      expect(check, isA<Failure>());
+      expect(
+          (check as Failure).error.toString(), contains('INSUFFICIENT_STOCK'));
+
+      final result = await useCase.execute(sale);
+      expect(result, isA<Failure>());
+
+      final layer = await costLayerRepo.getById('layer_fine');
+      expect(layer!.remainingQuantity, Quantity(value: 250, scale: 2));
+      expect(await inventoryRepo.getMovements('beras'), isEmpty);
+    });
   });
 }

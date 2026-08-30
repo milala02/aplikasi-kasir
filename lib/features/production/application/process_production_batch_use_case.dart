@@ -41,20 +41,26 @@ class ProcessProductionBatchUseCase {
           return a.id.compareTo(b.id);
         });
 
-        // Hitung total sisa stok di semua layer
-        var totalAvailable = 0;
-        final targetScale = item.quantityRequired.scale;
+        // Hitung total sisa stok di semua layer pada skala terbesar bersama
+        // (tanpa pembulatan per layer / overcount).
+        var maxScale = item.quantityRequired.scale;
         for (final layer in availableLayers) {
-          totalAvailable +=
-              _scaleQuantity(layer.remainingQuantity, targetScale);
+          if (layer.remainingQuantity.scale > maxScale) {
+            maxScale = layer.remainingQuantity.scale;
+          }
         }
+        var totalAvailable = 0;
+        for (final layer in availableLayers) {
+          totalAvailable += _scaleUp(layer.remainingQuantity, maxScale);
+        }
+        final required = _scaleUp(item.quantityRequired, maxScale);
 
-        if (totalAvailable < item.quantityRequired.value) {
+        if (totalAvailable < required) {
           return Failure(
             DomainError(
               code: 'INSUFFICIENT_STOCK',
               message:
-                  'Stok tidak mencukupi untuk produk ${item.productId}. Required: ${item.quantityRequired.value}, Available: $totalAvailable',
+                  'Stok tidak mencukupi untuk produk ${item.productId}. Required: $required, Available: $totalAvailable (scale $maxScale)',
             ),
           );
         }
@@ -121,8 +127,14 @@ class ProcessProductionBatchUseCase {
     }
   }
 
-  static int _scaleQuantity(Quantity quantity, int targetScale) {
+  /// Naikkan skala quantity ke targetScale (wajib targetScale >= scale).
+  static int _scaleUp(Quantity quantity, int targetScale) {
     if (quantity.scale == targetScale) return quantity.value;
+    if (targetScale < quantity.scale) {
+      throw ArgumentError(
+          'targetScale ($targetScale) must be >= quantity scale '
+          '(${quantity.scale}).');
+    }
     var factor = 1;
     for (var i = 0; i < targetScale - quantity.scale; i++) {
       factor *= 10;
@@ -132,8 +144,8 @@ class ProcessProductionBatchUseCase {
 
   static Quantity _minQuantity(Quantity q1, Quantity q2) {
     final scale = q1.scale > q2.scale ? q1.scale : q2.scale;
-    final v1 = _scaleQuantity(q1, scale);
-    final v2 = _scaleQuantity(q2, scale);
+    final v1 = _scaleUp(q1, scale);
+    final v2 = _scaleUp(q2, scale);
     return v1 <= v2 ? q1 : q2;
   }
 }

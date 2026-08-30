@@ -312,6 +312,88 @@ void main() {
       expect(layerZ!.remainingQuantity.value, equals(5));
     });
 
+    test(
+        'Test 11: skala campuran - layer lebih halus dari resep tanpa overcount',
+        () async {
+      // Layer 250 scale 2 = 2,5 kg; resep butuh 2 scale 0 -> cukup (2,5 >= 2).
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_fine',
+          productId: 'sereh',
+          originalQuantity: Quantity(value: 250, scale: 2),
+          remainingQuantity: Quantity(value: 250, scale: 2),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+
+      final recipe = Recipe(
+        id: 'rec_07',
+        name: 'Bumbu Sereh',
+        items: [
+          RecipeItem(
+            productId: 'sereh',
+            quantityRequired: Quantity(value: 2, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 1, scale: 0),
+      );
+
+      final result = await useCase.execute(
+        batchId: 'batch_030',
+        batchNumber: 'BATCH-030',
+        recipe: recipe,
+        producedAt: DateTime.now(),
+      );
+
+      expect(result, isA<Success>());
+
+      // 250 - 200 = 50 pada scale 2 (0,5 kg tersisa).
+      final layer = await costLayerRepo.getById('layer_fine');
+      expect(layer!.remainingQuantity, Quantity(value: 50, scale: 2));
+    });
+
+    test(
+        'Test 12: skala campuran - resep butuh 3 kg dari layer 2,5 kg -> '
+        'gagal tanpa konsumsi', () async {
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_fine',
+          productId: 'sereh',
+          originalQuantity: Quantity(value: 250, scale: 2),
+          remainingQuantity: Quantity(value: 250, scale: 2),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+
+      final recipe = Recipe(
+        id: 'rec_08',
+        name: 'Bumbu Sereh',
+        items: [
+          RecipeItem(
+            productId: 'sereh',
+            quantityRequired: Quantity(value: 3, scale: 0),
+          ),
+        ],
+        expectedOutputQuantity: Quantity(value: 1, scale: 0),
+      );
+
+      final result = await useCase.execute(
+        batchId: 'batch_031',
+        batchNumber: 'BATCH-031',
+        recipe: recipe,
+        producedAt: DateTime.now(),
+      );
+
+      expect(result, isA<Failure>());
+      expect(
+          (result as Failure).error.toString(), contains('INSUFFICIENT_STOCK'));
+
+      final layer = await costLayerRepo.getById('layer_fine');
+      expect(layer!.remainingQuantity, Quantity(value: 250, scale: 2));
+    });
+
     test('Test 10: Stock movement outbound tercatat di inventory repository',
         () async {
       await costLayerRepo.save(

@@ -60,10 +60,11 @@ void main() {
         ),
       );
 
+      // 500 scale 3 = 0,5 unit; Rp160 x 0,5 = Rp80 -> 8.000 minor units.
       expect(
         item.subtotal,
         const Money(
-          minorUnits: 8000000,
+          minorUnits: 8000,
           currency: 'IDR',
         ),
       );
