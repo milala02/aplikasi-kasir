@@ -62,6 +62,11 @@ class DriftCustomerRepository implements CustomerRepository {
       throw ArgumentError('Customer not found.');
     }
 
+    // Pertahankan flag CDC saat update (sync layer mengelolanya terpisah).
+    final existingRow = await (db.select(db.customersTable)
+          ..where((t) => t.id.equals(customer.id)))
+        .getSingle();
+
     await db.update(db.customersTable).replace(
           CustomersTableData(
             id: customer.id,
@@ -70,6 +75,8 @@ class DriftCustomerRepository implements CustomerRepository {
             address: customer.address,
             notes: customer.notes,
             createdAt: customer.createdAt,
+            isSynced: existingRow.isSynced,
+            syncedAt: existingRow.syncedAt,
           ),
         );
 

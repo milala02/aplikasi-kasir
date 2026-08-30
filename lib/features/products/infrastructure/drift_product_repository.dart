@@ -67,6 +67,11 @@ class DriftProductRepository implements ProductRepository {
       throw ArgumentError('Product not found.');
     }
 
+    // Pertahankan flag CDC saat update (sync layer mengelolanya terpisah).
+    final existingRow = await (db.select(db.productsTable)
+          ..where((t) => t.id.equals(product.id)))
+        .getSingle();
+
     await db.update(db.productsTable).replace(
           ProductsTableData(
             id: product.id,
@@ -78,6 +83,8 @@ class DriftProductRepository implements ProductRepository {
             sellingPriceMinorUnits: product.sellingPrice.minorUnits,
             sellingPriceCurrency: product.sellingPrice.currency,
             active: product.active,
+            isSynced: existingRow.isSynced,
+            syncedAt: existingRow.syncedAt,
           ),
         );
 

@@ -17,6 +17,13 @@ import '../features/products/presentation/product_screen.dart';
 import '../features/recipes/application/recipe_use_cases.dart';
 import '../features/recipes/domain/recipe_repository.dart';
 import '../features/recipes/presentation/recipe_screen.dart';
+import '../features/sync/application/auto_sync_worker.dart';
+import '../features/sync/application/sync_enqueue_service.dart';
+import '../features/sync/domain/auth_repository.dart';
+import '../features/sync/infrastructure/remote_auth_repository.dart';
+import '../features/sync/presentation/sync_login_controller.dart';
+import '../features/sync/presentation/sync_login_screen.dart';
+import '../features/sync/presentation/sync_status_indicator.dart';
 import '../features/purchasing/domain/purchase_repository.dart';
 import '../features/purchasing/presentation/purchasing_screen.dart';
 import '../features/receiving/application/receive_goods_use_case.dart';
@@ -55,6 +62,10 @@ class MainNavigationShell extends StatefulWidget {
   final ReceiveGoodsUseCase receiveGoodsUseCase;
   final ExecuteProductionUseCase executeProductionUseCase;
   final RecipeRepository recipeRepository;
+  final SyncEnqueueService syncEnqueueService;
+  final AuthRepository authRepository;
+  final RemoteAuthRepository remoteAuthRepository;
+  final AutoSyncWorker autoSyncWorker;
 
   const MainNavigationShell({
     super.key,
@@ -72,6 +83,10 @@ class MainNavigationShell extends StatefulWidget {
     required this.receiveGoodsUseCase,
     required this.executeProductionUseCase,
     required this.recipeRepository,
+    required this.syncEnqueueService,
+    required this.authRepository,
+    required this.remoteAuthRepository,
+    required this.autoSyncWorker,
   });
 
   @override
@@ -122,7 +137,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         icon: Icons.people,
         title: 'Pelanggan & CRM',
         label: 'Pelanggan',
-        page: CustomerScreen(customerRepository: widget.customerRepository),
+        page: CustomerScreen(
+            customerRepository: widget.customerRepository,
+            syncEnqueueService: widget.syncEnqueueService),
       ),
       // Tab eksklusif Owner
       if (isOwner)
@@ -133,6 +150,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           page: PurchasingScreen(
             purchaseRepository: widget.purchaseRepository,
             productRepository: widget.productRepository,
+            syncEnqueueService: widget.syncEnqueueService,
           ),
         ),
       if (isOwner)
@@ -165,6 +183,29 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ),
         ),
     ];
+  }
+
+  /// Aksi AppBar: indikator status sinkronisasi + sync manual + login.
+  List<Widget> get _syncAppBarActions => [
+        SyncStatusIndicator(worker: widget.autoSyncWorker),
+        SyncNowButton(worker: widget.autoSyncWorker),
+        IconButton(
+          tooltip: 'Akun Sinkronisasi',
+          icon: const Icon(Icons.login),
+          onPressed: _openSyncLogin,
+        ),
+      ];
+
+  void _openSyncLogin() {
+    final controller = SyncLoginController(
+      remoteAuthRepository: widget.remoteAuthRepository,
+      localAuthRepository: widget.authRepository,
+    );
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SyncLoginScreen(controller: controller),
+      ),
+    );
   }
 
   @override
@@ -206,6 +247,7 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         ],
       ),
       actions: [
+        ..._syncAppBarActions,
         IconButton(
           icon: Icon(widget.themeController.isDarkMode
               ? Icons.light_mode
@@ -289,7 +331,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 appBar: AppBar(
                     title: Text(currentTitle,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold))),
+                            fontWeight: FontWeight.bold)),
+                    actions: _syncAppBarActions),
                 body: currentPage,
               ),
             ),
@@ -344,7 +387,8 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 appBar: AppBar(
                     title: Text(currentTitle,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold))),
+                            fontWeight: FontWeight.bold)),
+                    actions: _syncAppBarActions),
                 body: currentPage,
               ),
             ),

@@ -4,6 +4,7 @@ import '../../sales/application/process_sale_use_case.dart';
 import '../../sales/domain/sale.dart';
 import '../../sales/domain/sale_item.dart';
 import '../../sales/domain/sale_repository.dart';
+import '../../sync/application/sync_enqueue_service.dart';
 import '../domain/order.dart';
 import '../domain/order_repository.dart';
 
@@ -13,11 +14,13 @@ class SubmitOrderUseCase {
   final ProcessSaleUseCase processSaleUseCase;
   final SaleRepository saleRepository;
   final OrderRepository orderRepository;
+  final SyncEnqueueService? syncEnqueueService;
 
   SubmitOrderUseCase({
     required this.processSaleUseCase,
     required this.saleRepository,
     required this.orderRepository,
+    this.syncEnqueueService,
   });
 
   Future<Result<Order>> submit({
@@ -67,6 +70,17 @@ class SubmitOrderUseCase {
         ),
       );
     }
+
+    await syncEnqueueService?.enqueue(
+      referenceId: order.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'order',
+      payload: SyncEnqueueService.orderPayload(
+        order,
+        invoiceNumber: invoiceNumber,
+      ),
+      wrapInOrders: true,
+    );
 
     return Success(order);
   }

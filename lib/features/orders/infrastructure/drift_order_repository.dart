@@ -93,6 +93,11 @@ class DriftOrderRepository implements OrderRepository {
       throw ArgumentError('Order not found.');
     }
 
+    // Pertahankan flag CDC saat update (sync layer mengelolanya terpisah).
+    final existingRow = await (db.select(db.ordersTable)
+          ..where((t) => t.id.equals(order.id)))
+        .getSingle();
+
     await db.transaction(() async {
       await db.update(db.ordersTable).replace(
             OrdersTableData(
@@ -102,6 +107,8 @@ class DriftOrderRepository implements OrderRepository {
               status: order.status.name,
               paymentMethod: order.paymentMethod.name,
               createdAt: order.createdAt,
+              isSynced: existingRow.isSynced,
+              syncedAt: existingRow.syncedAt,
             ),
           );
 

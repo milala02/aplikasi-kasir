@@ -2,14 +2,17 @@ import '../domain/product.dart';
 import '../domain/product_repository.dart';
 import '../domain/product_service.dart';
 import '../../../core/money/money.dart';
+import '../../sync/application/sync_enqueue_service.dart';
 
 class ProductUseCases {
   final ProductRepository repository;
   final ProductService service;
+  final SyncEnqueueService? syncEnqueueService;
 
   const ProductUseCases({
     required this.repository,
     this.service = const ProductService(),
+    this.syncEnqueueService,
   });
 
   Product? getById(String id) {
@@ -38,6 +41,13 @@ class ProductUseCases {
     }
 
     await repository.save(product);
+
+    await syncEnqueueService?.enqueue(
+      referenceId: product.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'product',
+      payload: SyncEnqueueService.productPayload(product),
+    );
   }
 
   Future<void> updatePrices({
@@ -51,12 +61,18 @@ class ProductUseCases {
       throw ArgumentError('Product not found.');
     }
 
-    await repository.update(
-      service.updatePrices(
-        product: product,
-        purchasePrice: purchasePrice,
-        sellingPrice: sellingPrice,
-      ),
+    final updated = service.updatePrices(
+      product: product,
+      purchasePrice: purchasePrice,
+      sellingPrice: sellingPrice,
+    );
+    await repository.update(updated);
+
+    await syncEnqueueService?.enqueue(
+      referenceId: product.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'product',
+      payload: SyncEnqueueService.productPayload(updated),
     );
   }
 
@@ -67,7 +83,15 @@ class ProductUseCases {
       throw ArgumentError('Product not found.');
     }
 
-    await repository.update(service.activate(product));
+    final updated = service.activate(product);
+    await repository.update(updated);
+
+    await syncEnqueueService?.enqueue(
+      referenceId: product.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'product',
+      payload: SyncEnqueueService.productPayload(updated),
+    );
   }
 
   Future<void> deactivate(String productId) async {
@@ -77,7 +101,15 @@ class ProductUseCases {
       throw ArgumentError('Product not found.');
     }
 
-    await repository.update(service.deactivate(product));
+    final updated = service.deactivate(product);
+    await repository.update(updated);
+
+    await syncEnqueueService?.enqueue(
+      referenceId: product.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'product',
+      payload: SyncEnqueueService.productPayload(updated),
+    );
   }
 
   Future<void> delete(String productId) async {

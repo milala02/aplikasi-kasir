@@ -1,5 +1,6 @@
 import '../../../core/errors/domain_error.dart';
 import '../../../core/result/result.dart';
+import '../../sync/application/sync_enqueue_service.dart';
 import '../domain/sale.dart';
 import '../domain/sale_repository.dart';
 
@@ -9,9 +10,11 @@ import '../domain/sale_repository.dart';
 /// (lihat `ProcessStockOutUseCase`), bukan saat checkout.
 class ProcessSaleUseCase {
   final SaleRepository saleRepository;
+  final SyncEnqueueService? syncEnqueueService;
 
   ProcessSaleUseCase({
     required this.saleRepository,
+    this.syncEnqueueService,
   });
 
   Future<Result<Sale>> execute(Sale sale) async {
@@ -35,6 +38,13 @@ class ProcessSaleUseCase {
         ),
       );
     }
+
+    await syncEnqueueService?.enqueue(
+      referenceId: sale.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'sale',
+      payload: SyncEnqueueService.salePayload(sale),
+    );
 
     return Success(sale);
   }

@@ -5,6 +5,7 @@ import '../../../core/money/money.dart';
 import '../../../core/quantity/quantity.dart';
 import '../../products/domain/product.dart';
 import '../../products/domain/product_repository.dart';
+import '../../sync/application/sync_enqueue_service.dart';
 import '../domain/purchase.dart';
 import '../domain/purchase_item.dart';
 import '../domain/purchase_repository.dart';
@@ -12,11 +13,13 @@ import '../domain/purchase_repository.dart';
 class PurchasingScreen extends StatefulWidget {
   final PurchaseRepository purchaseRepository;
   final ProductRepository productRepository;
+  final SyncEnqueueService? syncEnqueueService;
 
   const PurchasingScreen({
     super.key,
     required this.purchaseRepository,
     required this.productRepository,
+    this.syncEnqueueService,
   });
 
   @override
@@ -121,6 +124,12 @@ class _PurchasingScreenState extends State<PurchasingScreen> {
         products: products,
         onSave: (purchase) async {
           await widget.purchaseRepository.save(purchase);
+          await widget.syncEnqueueService?.enqueue(
+            referenceId: purchase.id,
+            endpoint: '/api/v1/sync/push',
+            sourceTable: 'purchase',
+            payload: SyncEnqueueService.purchasePayload(purchase),
+          );
           await _refresh();
         },
       ),

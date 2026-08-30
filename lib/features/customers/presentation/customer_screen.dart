@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../sync/application/sync_enqueue_service.dart';
 import '../domain/customer.dart';
 import '../domain/customer_repository.dart';
 
 class CustomerScreen extends StatefulWidget {
   final CustomerRepository customerRepository;
+  final SyncEnqueueService? syncEnqueueService;
 
   const CustomerScreen({
     super.key,
     required this.customerRepository,
+    this.syncEnqueueService,
   });
 
   @override
@@ -57,6 +60,13 @@ class _CustomerScreenState extends State<CustomerScreen> {
       );
       return;
     }
+
+    await widget.syncEnqueueService?.enqueue(
+      referenceId: newCustomer.id,
+      endpoint: '/api/v1/sync/push',
+      sourceTable: 'customer',
+      payload: SyncEnqueueService.customerPayload(newCustomer),
+    );
 
     _nameController.clear();
     _phoneController.clear();

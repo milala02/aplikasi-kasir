@@ -112,6 +112,9 @@ class DriftPurchaseRepository implements PurchaseRepository {
               purchasedAt: purchase.purchasedAt,
               supplierId: purchase.supplierId,
               referenceNumber: purchase.referenceNumber,
+              // Pertahankan flag CDC saat update.
+              isSynced: existing.isSynced,
+              syncedAt: existing.syncedAt,
             ),
           );
 

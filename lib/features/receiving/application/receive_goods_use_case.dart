@@ -5,6 +5,7 @@ import '../../inventory/domain/cost_layer_repository.dart';
 import '../../inventory/domain/inventory_repository.dart';
 import '../../inventory/domain/stock_ledger.dart';
 import '../../inventory/domain/stock_movement.dart';
+import '../../sync/application/sync_enqueue_service.dart';
 import '../domain/receiving.dart';
 import '../domain/receiving_repository.dart';
 
@@ -12,11 +13,13 @@ class ReceiveGoodsUseCase {
   final ReceivingRepository receivingRepository;
   final InventoryRepository inventoryRepository;
   final CostLayerRepository costLayerRepository;
+  final SyncEnqueueService? syncEnqueueService;
 
   ReceiveGoodsUseCase({
     required this.receivingRepository,
     required this.inventoryRepository,
     required this.costLayerRepository,
+    this.syncEnqueueService,
   });
 
   Future<Result<void>> execute(Receiving receiving) async {
@@ -60,6 +63,13 @@ class ReceiveGoodsUseCase {
         );
         await costLayerRepository.save(costLayer);
       }
+
+      await syncEnqueueService?.enqueue(
+        referenceId: receiving.id,
+        endpoint: '/api/v1/sync/push',
+        sourceTable: 'receiving',
+        payload: SyncEnqueueService.receivingPayload(receiving),
+      );
 
       return const Success(null);
     } catch (e) {

@@ -24,6 +24,10 @@ dependencies:
   # Security & Authentication
   crypto: ^3.0.3
   shared_preferences: ^2.2.3
+
+  # Offline-first sync
+  http: ^1.2.0
+  connectivity_plus: ^6.1.4
   
   # Receipt Sharing (Removed blue_thermal_printer - will add later)
   mobile_scanner: ^5.1.1

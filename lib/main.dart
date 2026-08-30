@@ -1,7 +1,9 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/main_navigation_shell.dart';
+import 'core/config/api_config.dart';
 import 'core/database/app_database.dart';
 import 'core/security/auth_service.dart';
 import 'core/theme/app_theme.dart';
@@ -37,6 +39,17 @@ import 'features/recipes/infrastructure/drift_recipe_repository.dart';
 import 'features/sales/application/process_sale_use_case.dart';
 import 'features/sales/infrastructure/drift_sale_repository.dart';
 import 'features/sales/presentation/pos_controller.dart';
+import 'features/sync/application/auto_sync_worker.dart';
+import 'features/sync/application/sync_enqueue_service.dart';
+import 'features/sync/application/sync_orchestrator.dart';
+import 'features/sync/domain/auth_repository.dart';
+import 'features/sync/infrastructure/drift_master_data_pull_repository.dart';
+import 'features/sync/infrastructure/drift_sync_queue_repository.dart';
+import 'features/sync/infrastructure/drift_sync_state_repository.dart';
+import 'features/sync/infrastructure/http_sync_api_client.dart';
+import 'features/sync/infrastructure/local_pull_state_repository.dart';
+import 'features/sync/infrastructure/local_auth_repository.dart';
+import 'features/sync/infrastructure/remote_auth_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,7 +66,35 @@ void main() async {
   final customerRepo = DriftCustomerRepository(db);
   await customerRepo.init();
 
-  final productUseCases = ProductUseCases(repository: productRepo);
+  final syncQueueRepository = DriftSyncQueueRepository(db);
+  final syncEnqueueService = SyncEnqueueService(
+    repository: syncQueueRepository,
+  );
+
+  // Sinkronisasi offline-first: orchestrator + worker otomatis saat online.
+  final syncOrchestrator = SyncOrchestrator(
+    queueRepository: syncQueueRepository,
+    apiClient: HttpSyncApiClient(baseUri: Uri.parse(ApiConfig.baseUrl)),
+    syncStateRepository: DriftSyncStateRepository(db),
+    masterDataRepository: DriftMasterDataPullRepository(db),
+    pullStateRepository: LocalPullStateRepository(prefs),
+  );
+  final authRepository = LocalAuthRepository(prefs);
+  final remoteAuthRepository = RemoteAuthRepository(
+    baseUri: Uri.parse(ApiConfig.baseUrl),
+  );
+  final autoSyncWorker = AutoSyncWorker(
+    orchestrator: syncOrchestrator,
+    queueRepository: syncQueueRepository,
+    authRepository: authRepository,
+    connectivityStream: Connectivity().onConnectivityChanged,
+  );
+  autoSyncWorker.start();
+
+  final productUseCases = ProductUseCases(
+    repository: productRepo,
+    syncEnqueueService: syncEnqueueService,
+  );
 
   final recipeRepo = DriftRecipeRepository(db);
   await recipeRepo.init();
@@ -76,6 +117,7 @@ void main() async {
   // stock-out (handover/pickup) melalui ProcessStockOutUseCase.
   final processSaleUseCase = ProcessSaleUseCase(
     saleRepository: saleRepo,
+    syncEnqueueService: syncEnqueueService,
   );
 
   final orderRepository = DriftOrderRepository(db);
@@ -84,6 +126,7 @@ void main() async {
     processSaleUseCase: processSaleUseCase,
     saleRepository: saleRepo,
     orderRepository: orderRepository,
+    syncEnqueueService: syncEnqueueService,
   );
   final orderPaymentUseCase = OrderPaymentUseCase(
     orderRepository: orderRepository,
@@ -103,6 +146,7 @@ void main() async {
     receivingRepository: receivingRepo,
     inventoryRepository: inventoryRepo,
     costLayerRepository: costLayerRepo,
+    syncEnqueueService: syncEnqueueService,
   );
   final processProductionBatchUseCase = ProcessProductionBatchUseCase(
     costLayerRepository: costLayerRepo,
@@ -149,6 +193,10 @@ void main() async {
     productUseCases: productUseCases,
     recipeUseCases: recipeUseCases,
     recipeRepository: recipeRepo,
+    syncEnqueueService: syncEnqueueService,
+    authRepository: authRepository,
+    remoteAuthRepository: remoteAuthRepository,
+    autoSyncWorker: autoSyncWorker,
   ));
 }
 
@@ -167,6 +215,10 @@ class MyApp extends StatelessWidget {
   final ProductUseCases productUseCases;
   final RecipeUseCases recipeUseCases;
   final RecipeRepository recipeRepository;
+  final SyncEnqueueService syncEnqueueService;
+  final AuthRepository authRepository;
+  final RemoteAuthRepository remoteAuthRepository;
+  final AutoSyncWorker autoSyncWorker;
 
   const MyApp({
     super.key,
@@ -184,6 +236,10 @@ class MyApp extends StatelessWidget {
     required this.productUseCases,
     required this.recipeUseCases,
     required this.recipeRepository,
+    required this.syncEnqueueService,
+    required this.authRepository,
+    required this.remoteAuthRepository,
+    required this.autoSyncWorker,
   });
 
   @override
@@ -214,6 +270,10 @@ class MyApp extends StatelessWidget {
               productUseCases: productUseCases,
               recipeUseCases: recipeUseCases,
               recipeRepository: recipeRepository,
+              syncEnqueueService: syncEnqueueService,
+              authRepository: authRepository,
+              remoteAuthRepository: remoteAuthRepository,
+              autoSyncWorker: autoSyncWorker,
             ),
           ),
         );

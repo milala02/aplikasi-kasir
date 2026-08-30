@@ -20,6 +20,8 @@ class ProductsTable extends Table {
   TextColumn get sellingPriceCurrency =>
       text().withDefault(const Constant('IDR'))();
   BoolColumn get active => boolean().withDefault(const Constant(true))();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -33,6 +35,8 @@ class CustomersTable extends Table {
   TextColumn get address => text().nullable()();
   TextColumn get notes => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -61,6 +65,8 @@ class ReceivingsTable extends Table {
   TextColumn get id => text()();
   TextColumn get purchaseId => text()();
   DateTimeColumn get receivedAt => dateTime()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -95,12 +101,56 @@ class ProductPackagingsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// --- ANTRIAN SINKRONISASI OFFLINE-FIRST ---
+class SyncQueueTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get endpoint => text()();
+  TextColumn get sourceTable => text().withDefault(const Constant(''))();
+  TextColumn get referenceId => text().nullable()();
+  TextColumn get payloadJson => text()();
+  TextColumn get status => text()(); // PENDING / SYNCED / FAILED
+  IntColumn get retryCount => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// --- MASTER DATA PULL (FASE 9) ---
+// Tabel UoM hasil pull backend (id = UUID backend, nama = kunci Unit).
+class UomsTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().unique()();
+  TextColumn get symbol => text()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// Tabel kategori hasil pull backend (belum ditautkan ke produk lokal).
+class CategoriesTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text().unique()();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // 6. Tabel Purchases (Pesanan Pembelian / PO)
 class PurchasesTable extends Table {
   TextColumn get id => text()();
   DateTimeColumn get purchasedAt => dateTime()();
   TextColumn get supplierId => text().nullable()();
   TextColumn get referenceNumber => text().nullable()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -130,6 +180,8 @@ class SalesTable extends Table {
   IntColumn get taxMinorUnits => integer()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get soldAt => dateTime()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -159,6 +211,8 @@ class OrdersTable extends Table {
   TextColumn get status => text()(); // OrderStatus.name
   TextColumn get paymentMethod => text()(); // OrderPaymentMethod.name
   DateTimeColumn get createdAt => dateTime()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get syncedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -232,13 +286,16 @@ class StockMovementsTable extends Table {
   OrderItemsTable,
   RecipesTable,
   RecipeItemsTable,
-  ProductPackagingsTable
+  ProductPackagingsTable,
+  SyncQueueTable,
+  UomsTable,
+  CategoriesTable
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e]) : super(e ?? _openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -307,6 +364,45 @@ class AppDatabase extends _$AppDatabase {
             // items di from < 5/from < 4 dengan skema terbaru.
             await m.addColumn(purchaseItemsTable, purchaseItemsTable.unit);
             await m.addColumn(receivingItemsTable, receivingItemsTable.unit);
+          }
+          if (from < 12) {
+            // Antrian sinkronisasi offline-first.
+            await m.createTable(syncQueueTable);
+          }
+          if (from >= 11 && from < 12) {
+            // Kolom CDC (Change Data Capture) pada header transaksi dan
+            // master data. Hanya untuk DB v11: DB < 11 membuat tabel-tabel
+            // ini dengan skema terbaru pada titik createTable masing-masing.
+            await m.addColumn(productsTable, productsTable.isSynced);
+            await m.addColumn(productsTable, productsTable.syncedAt);
+            await m.addColumn(customersTable, customersTable.isSynced);
+            await m.addColumn(customersTable, customersTable.syncedAt);
+            await m.addColumn(receivingsTable, receivingsTable.isSynced);
+            await m.addColumn(receivingsTable, receivingsTable.syncedAt);
+            await m.addColumn(purchasesTable, purchasesTable.isSynced);
+            await m.addColumn(purchasesTable, purchasesTable.syncedAt);
+            await m.addColumn(salesTable, salesTable.isSynced);
+            await m.addColumn(salesTable, salesTable.syncedAt);
+            await m.addColumn(ordersTable, ordersTable.isSynced);
+            await m.addColumn(ordersTable, ordersTable.syncedAt);
+          }
+          if (from >= 12 && from < 13) {
+            // Tabel sumber CDC untuk entri antrian (mapping ke markSynced).
+            // Hanya untuk DB v12: DB < 12 membuat sync_queue di from < 12
+            // dengan skema terbaru.
+            await m.addColumn(syncQueueTable, syncQueueTable.sourceTable);
+          }
+          if (from >= 12 && from < 14) {
+            // Id lokal baris sumber untuk penanda CDC (payload baru memuat
+            // UUID hasil mapping, bukan id lokal). Hanya untuk DB v12/v13:
+            // DB < 12 membuat sync_queue di from < 12 dengan skema terbaru
+            // (sudah termasuk kolom ini).
+            await m.addColumn(syncQueueTable, syncQueueTable.referenceId);
+          }
+          if (from < 15) {
+            // Master data pull (Fase 9): UoM & kategori dari backend.
+            await m.createTable(uomsTable);
+            await m.createTable(categoriesTable);
           }
         },
       );

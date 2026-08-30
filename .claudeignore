@@ -1,0 +1,17 @@
+graphify-out/
+GRAPH_REPORT.md
+
+# Pengecualian Khusus Flutter (Hemat Token Ekstrem)
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.idea/
+
+# Folder Platform (Abaikan jika fokus pada Core/Domain Logic Dart)
+android/
+ios/
+web/
+macos/
+windows/
+linux/

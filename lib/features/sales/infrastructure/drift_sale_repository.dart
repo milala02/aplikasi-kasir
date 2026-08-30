@@ -116,6 +116,11 @@ class DriftSaleRepository implements SaleRepository {
       throw ArgumentError('Sale not found.');
     }
 
+    // Pertahankan flag CDC saat update (sync layer mengelolanya terpisah).
+    final existingRow = await (db.select(db.salesTable)
+          ..where((t) => t.id.equals(sale.id)))
+        .getSingle();
+
     await db.transaction(() async {
       await db.update(db.salesTable).replace(
             SalesTableData(
@@ -125,6 +130,8 @@ class DriftSaleRepository implements SaleRepository {
               taxMinorUnits: sale.tax.minorUnits,
               createdAt: sale.createdAt,
               soldAt: sale.soldAt,
+              isSynced: existingRow.isSynced,
+              syncedAt: existingRow.syncedAt,
             ),
           );
 
