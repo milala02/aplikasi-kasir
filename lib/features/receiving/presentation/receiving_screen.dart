@@ -248,7 +248,7 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
               )
             else
               DropdownButtonFormField<Purchase>(
-                value: _selectedPurchase,
+                initialValue: _selectedPurchase,
                 hint: const Text('Pilih Pesanan Pembelian (PO)'),
                 items: widget.purchases.map((p) {
                   return DropdownMenuItem(
@@ -264,7 +264,7 @@ class _ReceiveGoodsDialogState extends State<_ReceiveGoodsDialog> {
                 style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             DropdownButtonFormField<Product>(
-              value: _selectedProduct,
+              initialValue: _selectedProduct,
               hint: const Text('Pilih Produk'),
               items: widget.products.map((p) {
                 return DropdownMenuItem(value: p, child: Text(p.name));
