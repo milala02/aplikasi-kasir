@@ -176,7 +176,7 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
             const SizedBox(height: 12),
             DropdownButtonFormField<Unit>(
               key: const Key('product_unit_field'),
-              initialValue: _unit,
+              value: _unit,
               decoration: const InputDecoration(labelText: 'Satuan'),
               items: [
                 for (final unit in Unit.values)

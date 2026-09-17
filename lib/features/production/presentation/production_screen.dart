@@ -231,7 +231,7 @@ class _ProductionAndPortioningScreenState
           const SizedBox(height: 12),
           DropdownButtonFormField<Recipe>(
             key: const Key('production_recipe_field'),
-            initialValue: recipe,
+            value: recipe,
             decoration: const InputDecoration(
               labelText: 'Pilih Resep',
               border: OutlineInputBorder(),
@@ -347,7 +347,7 @@ class _ProductionAndPortioningScreenState
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             key: const Key('portion_product_field'),
-            initialValue: _portionProductId,
+            value: _portionProductId,
             decoration: const InputDecoration(
               labelText: 'Pilih Produk (Bahan)',
               border: OutlineInputBorder(),

@@ -231,7 +231,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       key: const Key('inventory_product_field'),
-                      initialValue: _selectedProductId,
+                      value: _selectedProductId,
                       decoration: const InputDecoration(
                         labelText: 'Pilih Produk',
                         border: OutlineInputBorder(),

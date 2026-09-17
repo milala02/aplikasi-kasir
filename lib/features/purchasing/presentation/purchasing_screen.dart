@@ -241,7 +241,7 @@ class _CreatePurchaseDialogState extends State<_CreatePurchaseDialog> {
             // Pilih produk
             DropdownButtonFormField<Product>(
               key: ValueKey(_selectedProduct),
-              initialValue: _selectedProduct,
+              value: _selectedProduct,
               hint: const Text('Pilih Produk'),
               items: widget.products.map((p) {
                 return DropdownMenuItem(value: p, child: Text(p.name));

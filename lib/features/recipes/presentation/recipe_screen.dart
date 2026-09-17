@@ -268,7 +268,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                   Expanded(
                     child: DropdownButtonFormField<int>(
                       key: const Key('recipe_output_scale_field'),
-                      initialValue: _outputScale,
+                      value: _outputScale,
                       decoration:
                           const InputDecoration(labelText: 'Satuan output'),
                       items: [
@@ -288,7 +288,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 key: const Key('recipe_output_product_field'),
-                initialValue: _outputProductId,
+                value: _outputProductId,
                 decoration: const InputDecoration(
                   labelText: 'Produk hasil (opsional)',
                 ),
@@ -321,7 +321,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                       flex: 2,
                       child: DropdownButtonFormField<String>(
                         key: Key('recipe_item_product_field_$i'),
-                        initialValue: _items[i].productId,
+                        value: _items[i].productId,
                         decoration:
                             const InputDecoration(labelText: 'Produk'),
                         items: [
@@ -356,7 +356,7 @@ class _RecipeFormDialogState extends State<_RecipeFormDialog> {
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         key: Key('recipe_item_scale_field_$i'),
-                        initialValue: _items[i].scale,
+                        value: _items[i].scale,
                         decoration: const InputDecoration(labelText: 'Satuan'),
                         items: [
                           for (final entry in _scaleOptions.entries)
