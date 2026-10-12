@@ -11,44 +11,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      
+
       - uses: actions/setup-java@v5
         with:
           distribution: 'zulu'
           java-version: '17'
-          
+
       - uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.47.6'
           channel: 'stable'
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build APK Debug with Full Diagnostics
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK Debug
         run: |
-          echo "🔨 Building Flutter APK (debug mode)..."
-          echo "Using development environment defaults for local testing"
-          
           flutter build apk --debug \
             --dart-define=API_KEY="dev_key_placeholder" \
-            --dart-define=BASE_URL="http://localhost:8000" \
-            -v 2>&1 | tee build.log
-          
-          echo "✅ APK build completed successfully!"
-
-      - name: Save Build Logs on Failure
-        if: failure()
-        run: |
-          echo "=== GRADLE BUILD FAILURE DETAILS ==="
-          tail -n 200 build.log
-          ls -la build/app/outputs/flutter-apk/ 2>/dev/null || echo "APK directory not found"
-          find build -name "*.apk" 2>/dev/null || echo "No APK files found anywhere"
+            --dart-define=BASE_URL="http://localhost:8000"
 
       - name: Upload APK Artifact
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
+          name: debug-apk-${{ github.sha }}
           path: build/app/outputs/flutter-apk/*.apk
           retention-days: 7
