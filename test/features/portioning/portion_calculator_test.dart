@@ -4,6 +4,7 @@ import 'package:aplikasi_kasir/core/quantity/quantity.dart';
 import 'package:aplikasi_kasir/features/inventory/domain/cost_layer.dart';
 import 'package:aplikasi_kasir/features/inventory/infrastructure/in_memory_cost_layer_repository.dart';
 import 'package:aplikasi_kasir/features/portioning/application/calculate_portion_use_case.dart';
+import 'package:aplikasi_kasir/features/portioning/domain/portion_calculation_exception.dart';
 
 void main() {
   group('Portioning / Ketengan Calculator Engine', () {
@@ -77,6 +78,74 @@ void main() {
       // Berat = Rp 5.600 / Rp 160 = 35 gram
       expect(result.recommendedWeightPerPortionInGrams.value, equals(35));
       expect(result.totalPortionsPerKg, equals(28)); // 1000g / 35g = 28 bungkus
+    });
+
+    test('Harus melempar PortionCalculationException jika harga per gram = 0',
+        () async {
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_lada_zero',
+          productId: 'lada_biji',
+          originalQuantity: Quantity(value: 1000, scale: 0),
+          remainingQuantity: Quantity(value: 1000, scale: 0),
+          unitCost: const Money(minorUnits: 0, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+
+      expect(
+        () => useCase.execute(
+          productId: 'lada_biji',
+          targetSellingPrice:
+              const Money(minorUnits: 500000, currency: 'IDR'),
+          targetMarginPercentage: 0.30,
+          packagingCostPerUnit:
+              const Money(minorUnits: 30000, currency: 'IDR'),
+        ),
+        throwsA(isA<PortionCalculationException>()),
+      );
+    });
+
+    test(
+        'Harus melempar PortionCalculationException jika harga jual terlalu rendah',
+        () async {
+      await costLayerRepo.save(
+        CostLayer(
+          id: 'layer_lada_hi',
+          productId: 'lada_biji',
+          originalQuantity: Quantity(value: 1000, scale: 0),
+          remainingQuantity: Quantity(value: 1000, scale: 0),
+          unitCost: const Money(minorUnits: 16000, currency: 'IDR'),
+          acquiredAt: DateTime.now(),
+        ),
+      );
+
+      expect(
+        () => useCase.execute(
+          productId: 'lada_biji',
+          targetSellingPrice:
+              const Money(minorUnits: 10000, currency: 'IDR'),
+          targetMarginPercentage: 0.30,
+          packagingCostPerUnit:
+              const Money(minorUnits: 3000, currency: 'IDR'),
+        ),
+        throwsA(isA<PortionCalculationException>()),
+      );
+    });
+
+    test('Harus melempar PortionCalculationException jika tidak ada cost layer',
+        () async {
+      expect(
+        () => useCase.execute(
+          productId: 'produk_tanpa_layer',
+          targetSellingPrice:
+              const Money(minorUnits: 500000, currency: 'IDR'),
+          targetMarginPercentage: 0.30,
+          packagingCostPerUnit:
+              const Money(minorUnits: 30000, currency: 'IDR'),
+        ),
+        throwsA(isA<PortionCalculationException>()),
+      );
     });
   });
 }

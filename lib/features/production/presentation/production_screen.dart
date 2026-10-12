@@ -5,6 +5,7 @@ import '../../../core/money/money.dart';
 import '../../../core/result/result.dart';
 import '../../inventory/domain/cost_layer_repository.dart';
 import '../../portioning/application/calculate_portion_use_case.dart';
+import '../../portioning/domain/portion_calculation_exception.dart';
 import '../../products/domain/product.dart';
 import '../../products/domain/product_repository.dart';
 import '../../recipes/domain/recipe.dart';
@@ -181,6 +182,10 @@ class _ProductionAndPortioningScreenState
             '• Berat per Bungkus: ${result.recommendedWeightPerPortionInGrams.value} Gram\n'
             '• Estimasi Hasil per Kg: ${result.totalPortionsPerKg} Bungkus\n'
             '• Untung Bersih per Bungkus: Rp ${result.profitPerPortion.minorUnits ~/ 100}';
+      });
+    } on PortionCalculationException catch (e) {
+      setState(() {
+        _calcResultText = '⚠️ ${e.userMessage}';
       });
     } on StateError {
       setState(() {

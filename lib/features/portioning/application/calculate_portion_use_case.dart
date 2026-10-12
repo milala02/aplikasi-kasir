@@ -3,6 +3,7 @@ import '../../../core/quantity/quantity.dart';
 
 import '../../inventory/domain/cost_layer_repository.dart';
 import '../domain/portion_calculation_result.dart';
+import '../domain/portion_calculation_exception.dart';
 
 class CalculatePortionUseCase {
   final CostLayerRepository costLayerRepository;
@@ -19,8 +20,9 @@ class CalculatePortionUseCase {
     Money? packagingCostPerUnit,
   }) async {
     if (targetMarginPercentage <= 0 || targetMarginPercentage >= 1.0) {
-      throw ArgumentError(
-          'Margin percentage must be between 0.0 and 1.0 (e.g., 0.30 for 30%).');
+      throw const PortionCalculationException(
+        'Target margin harus lebih dari 0% dan kurang dari 100%.',
+      );
     }
 
     final pkgCost =
@@ -30,8 +32,9 @@ class CalculatePortionUseCase {
     final availableLayers =
         await costLayerRepository.getAvailableByProductId(productId);
     if (availableLayers.isEmpty) {
-      throw StateError(
-          'Tidak ada stok/cost layer aktif untuk produk $productId.');
+      throw const PortionCalculationException(
+        'Produk belum punya stok/cost layer — catat penerimaan dulu.',
+      );
     }
 
     // Mengambil HPP/Cost per gram dari layer FIFO tertua
@@ -42,6 +45,14 @@ class CalculatePortionUseCase {
     final layerScale = activeLayer.remainingQuantity.scale;
     final scaleFactor = Quantity.factor(layerScale); // 10^scale
     final costPerGramMinor = activeLayer.unitCost.minorUnits ~/ scaleFactor;
+    if (costPerGramMinor <= 0) {
+      throw PortionCalculationException(
+        'Harga beli bahan tidak valid (nol atau terlalu kecil). '
+        'Periksa harga beli pada layer stok produk ini.',
+        technicalDetails:
+            'unitCost=${activeLayer.unitCost.minorUnits}, scale=$layerScale',
+      );
+    }
     final materialCostPerGram = Money(
         minorUnits: costPerGramMinor, currency: activeLayer.unitCost.currency);
 
@@ -53,12 +64,26 @@ class CalculatePortionUseCase {
     // 3. Hitung Anggaran Bahan per Bungkus = COGS - Biaya Kemasan
     final materialBudgetMinor = maxCogsMinor - pkgCost.minorUnits;
     if (materialBudgetMinor <= 0) {
-      throw ArgumentError(
-          'Biaya kemasan terlalu tinggi melebihi batas modal target margin.');
+      throw const PortionCalculationException(
+        'Biaya kemasan terlalu tinggi melebihi batas modal target margin.',
+      );
     }
 
     // 4. Hitung Berat Gram per Bungkus = Anggaran Bahan / Cost per Gram
     final weightInGrams = materialBudgetMinor ~/ costPerGramMinor;
+    if (weightInGrams <= 0) {
+      final hargaJualRp = targetSellingPrice.minorUnits ~/ 100;
+      final budgetRp = materialBudgetMinor ~/ 100;
+      final perGramRp = costPerGramMinor / 100;
+      throw PortionCalculationException(
+        'Harga jual Rp $hargaJualRp terlalu rendah. '
+        'Anggaran bahan Rp $budgetRp tidak cukup untuk membeli 1 gram '
+        '(Rp ${perGramRp.toStringAsFixed(2)}/gram). '
+        'Naikkan harga jual atau turunkan biaya kemasan.',
+        technicalDetails:
+            'budget=$materialBudgetMinor, costPerGram=$costPerGramMinor',
+      );
+    }
 
     // 5. Hitung Estimasi Bungkus per Kg (1.000 gram / weightInGrams)
     // weightInGrams sudah dalam gram (scale=0), jadi 1kg = 1000 gram
