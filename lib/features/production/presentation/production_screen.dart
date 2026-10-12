@@ -369,6 +369,7 @@ class _ProductionAndPortioningScreenState
           ),
           const SizedBox(height: 12),
           TextField(
+            key: const Key('portion_price_field'),
             controller: _priceController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
@@ -379,6 +380,7 @@ class _ProductionAndPortioningScreenState
           ),
           const SizedBox(height: 12),
           TextField(
+            key: const Key('portion_margin_field'),
             controller: _marginController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
@@ -389,6 +391,7 @@ class _ProductionAndPortioningScreenState
           ),
           const SizedBox(height: 12),
           TextField(
+            key: const Key('portion_pkg_cost_field'),
             controller: _pkgCostController,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(

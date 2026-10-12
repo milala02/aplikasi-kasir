@@ -37,8 +37,11 @@ class CalculatePortionUseCase {
     // Mengambil HPP/Cost per gram dari layer FIFO tertua
     final activeLayer = availableLayers.first;
 
-    // Konversi unitCost per kg ke unitCost per Gram (dibagi 1.000)
-    final costPerGramMinor = activeLayer.unitCost.minorUnits ~/ 1000;
+    // unitCost adalah per base unit sesuai scale layer (scale=0: per gram, scale=3: per kg, dll)
+    // Konversi ke cost per gram: unitCost / (10^scale)
+    final layerScale = activeLayer.remainingQuantity.scale;
+    final scaleFactor = Quantity.factor(layerScale); // 10^scale
+    final costPerGramMinor = activeLayer.unitCost.minorUnits ~/ scaleFactor;
     final materialCostPerGram = Money(
         minorUnits: costPerGramMinor, currency: activeLayer.unitCost.currency);
 
@@ -58,6 +61,7 @@ class CalculatePortionUseCase {
     final weightInGrams = materialBudgetMinor ~/ costPerGramMinor;
 
     // 5. Hitung Estimasi Bungkus per Kg (1.000 gram / weightInGrams)
+    // weightInGrams sudah dalam gram (scale=0), jadi 1kg = 1000 gram
     final portionsPerKg = 1000 ~/ weightInGrams;
 
     return PortionCalculationResult(

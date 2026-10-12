@@ -65,9 +65,9 @@ void main() {
         CostLayer(
           id: 'layer_bm',
           productId: 'prod_bawang_merah',
-          originalQuantity: Quantity(value: 10, scale: 0),
-          remainingQuantity: Quantity(value: 10, scale: 0),
-          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'),
+          originalQuantity: Quantity(value: 10, scale: 3), // 10 kg
+          remainingQuantity: Quantity(value: 10, scale: 3),
+          unitCost: const Money(minorUnits: 1000000, currency: 'IDR'), // Rp 10.000/kg
           acquiredAt: DateTime.now(),
         ),
       );
@@ -79,7 +79,7 @@ void main() {
           items: [
             RecipeItem(
               productId: 'prod_bawang_merah',
-              quantityRequired: Quantity(value: 6, scale: 0),
+              quantityRequired: Quantity(value: 6, scale: 3),
             ),
           ],
           expectedOutputQuantity: Quantity(value: 182, scale: 1),
@@ -154,9 +154,9 @@ void main() {
       await tester.tap(button);
       await tester.pumpAndSettle();
 
-      // Bahan: 10 - 6 = 4.
+      // Bahan: 10 - 6 = 4 (scale 3).
       final material = await costLayerRepo.getById('layer_bm');
-      expect(material!.remainingQuantity, Quantity(value: 4, scale: 0));
+      expect(material!.remainingQuantity, Quantity(value: 4, scale: 3));
 
       // Output: satu CostLayer untuk Bumbu Utama.
       final outputLayers =
@@ -184,7 +184,7 @@ void main() {
 
       // Hanya satu konsumsi.
       final material = await costLayerRepo.getById('layer_bm');
-      expect(material!.remainingQuantity, Quantity(value: 4, scale: 0));
+      expect(material!.remainingQuantity, Quantity(value: 4, scale: 3));
       expect(await costLayerRepo.getByProductId('prod_bumbu_utama'),
           hasLength(1));
     });
@@ -232,11 +232,18 @@ void main() {
       await tester.pumpWidget(buildApp());
       await selectPortionProduct(tester, 'Bawang Merah');
 
+      // Isi field yang diperlukan untuk kalkulasi
+      await tester.enterText(
+          find.byKey(const Key('portion_price_field')), '10000');
+      await tester.enterText(
+          find.byKey(const Key('portion_margin_field')), '30');
+      await tester.enterText(
+          find.byKey(const Key('portion_pkg_cost_field')), '300');
+
       await tester.tap(find.text('HITUNG TAKARAN GRAM OTOMATIS'));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('HASIL REKOMENDASI TAKARAN'), findsOneWidget);
-
       // Kalkulasi rekomendasi TIDAK mengonsumsi layer FIFO.
       final layer = await costLayerRepo.getById('layer_bm');
       expect(layer!.remainingQuantity.value, equals(10));

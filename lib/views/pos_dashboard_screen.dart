@@ -255,8 +255,16 @@ class _PosDashboardScreenState extends State<PosDashboardScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Pemicu checkout dialog
+                          onPressed: () async {
+                            final scaffoldMessenger = ScaffoldMessenger.of(context);
+                            final success = await provider.processCheckout(paymentMethod: 'cash');
+                            if (!mounted) return;
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(
+                                content: Text(success ? 'Pembayaran berhasil!' : 'Pembayaran gagal'),
+                                backgroundColor: success ? Colors.green : Colors.red,
+                              ),
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),

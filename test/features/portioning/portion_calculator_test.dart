@@ -19,14 +19,15 @@ void main() {
         'Harus menghitung takaran Lada Ketengan Rp 5.000 (Margin 30%, Modal Rp 160rb/kg)',
         () async {
       // Stock Layer Lada: Rp 160.000 / kg = Rp 160 / gram
+      // Quantity scale 0 = gram, jadi unitCost per gram = 16000 minor units (Rp 160)
       await costLayerRepo.save(
         CostLayer(
           id: 'layer_lada_01',
           productId: 'lada_biji',
-          originalQuantity: Quantity(value: 10, scale: 0),
-          remainingQuantity: Quantity(value: 10, scale: 0),
+          originalQuantity: Quantity(value: 1000, scale: 0), // 1000 gram = 1 kg
+          remainingQuantity: Quantity(value: 1000, scale: 0),
           unitCost:
-              const Money(minorUnits: 16000000, currency: 'IDR'), // Rp 160.000
+              const Money(minorUnits: 16000, currency: 'IDR'), // Rp 160 per gram
           acquiredAt: DateTime.now(),
         ),
       );
@@ -54,10 +55,10 @@ void main() {
         CostLayer(
           id: 'layer_lada_01',
           productId: 'lada_biji',
-          originalQuantity: Quantity(value: 5, scale: 0),
-          remainingQuantity: Quantity(value: 5, scale: 0),
+          originalQuantity: Quantity(value: 1000, scale: 0), // 1000 gram = 1 kg
+          remainingQuantity: Quantity(value: 1000, scale: 0),
           unitCost:
-              const Money(minorUnits: 16000000, currency: 'IDR'), // Rp 160.000
+              const Money(minorUnits: 16000, currency: 'IDR'), // Rp 160 per gram
           acquiredAt: DateTime.now(),
         ),
       );

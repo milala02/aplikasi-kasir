@@ -105,7 +105,10 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
         icon: Icons.dashboard,
         title: 'Selamat datang kembali 👋',
         label: 'Beranda',
-        page: DashboardScreen(controller: widget.dashboardController),
+        page: DashboardScreen(
+          controller: widget.dashboardController,
+          onNavigate: _selectTabByLabel,
+        ),
       ),
       _NavItem(
         icon: Icons.point_of_sale,
@@ -183,6 +186,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           ),
         ),
     ];
+  }
+
+  void _selectTabByLabel(String label) {
+    final index = _navItems.indexWhere((item) => item.label == label);
+    if (index >= 0) setState(() => _selectedIndex = index);
   }
 
   /// Aksi AppBar: indikator status sinkronisasi + sync manual + login.

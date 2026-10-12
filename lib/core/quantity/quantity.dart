@@ -113,6 +113,9 @@ class Quantity {
     return result;
   }
 
+  /// Public accessor for scale factor (10^scale).
+  static int factor(int scale) => _factor(scale);
+
   @override
   bool operator ==(Object other) {
     return other is Quantity &&

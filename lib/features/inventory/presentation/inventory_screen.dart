@@ -117,75 +117,149 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   void _showAddStockDialog(BuildContext context) {
+    final qtyController = TextEditingController(text: '1');
+    final costController = TextEditingController(text: '160000');
+    Product? selectedProduct;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Tambah Stok Barang',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-            const SizedBox(height: 16),
-            TextField(
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Nama Barang',
-                labelStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: Colors.black26,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Tambah Stok Barang',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<Product>(
+                initialValue: selectedProduct,
+                hint: const Text('Pilih Produk',
+                    style: TextStyle(color: Colors.grey)),
+                dropdownColor: const Color(0xFF2D2D2D),
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Produk',
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                items: _products.map((p) {
+                  return DropdownMenuItem(
+                    value: p,
+                    child: Text(p.name, overflow: TextOverflow.ellipsis),
+                  );
+                }).toList(),
+                onChanged: (p) => setDialogState(() => selectedProduct = p),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Jumlah Stok',
-                labelStyle: const TextStyle(color: Colors.grey),
-                filled: true,
-                fillColor: Colors.black26,
-                border:
-                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: qtyController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Jumlah Kuantitas',
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border:
+                      OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    padding: const EdgeInsets.symmetric(vertical: 14)),
-                onPressed: () {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content:
-                          Text('Simulasi: Barang ditambahkan ke Database!')));
-                },
-                child: const Text('Simpan Data',
-                    style: TextStyle(color: Colors.white, fontSize: 16)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: costController,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Harga Beli Modal per Unit (Rp)',
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.black26,
+                  border:
+                      OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 14)),
+                  onPressed: () {
+                    final productId = selectedProduct?.id;
+                    final qtyVal = int.tryParse(qtyController.text) ?? 0;
+                    final costVal = (int.tryParse(costController.text) ?? 0) * 100;
+
+                    if (productId == null || qtyVal <= 0 || costVal <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(
+                                'Pilih produk dan isi semua field dengan benar.')),
+                      );
+                      return;
+                    }
+
+                    Navigator.pop(ctx);
+                    _addCostLayerWithValues(productId, qtyVal, costVal);
+                  },
+                  child: const Text('Simpan Data',
+                      style: TextStyle(color: Colors.white, fontSize: 16)),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _addCostLayerWithValues(
+      String productId, int qtyVal, int costVal) async {
+    try {
+      final newLayer = CostLayer(
+        id: 'layer_${DateTime.now().millisecondsSinceEpoch}',
+        productId: productId,
+        originalQuantity: Quantity(value: qtyVal, scale: 0),
+        remainingQuantity: Quantity(value: qtyVal, scale: 0),
+        unitCost: Money(minorUnits: costVal, currency: 'IDR'),
+        acquiredAt: DateTime.now(),
+      );
+
+      await widget.costLayerRepository.save(newLayer);
+      await _loadActiveLayers();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Stok FIFO Layer baru ($qtyVal unit @ Rp ${costVal ~/ 100}) berhasil ditambahkan!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menambah stok: $e')),
+      );
+    }
   }
 
   @override

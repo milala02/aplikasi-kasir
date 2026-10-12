@@ -5,14 +5,21 @@ import 'dashboard_controller.dart';
 
 class DashboardScreen extends StatefulWidget {
   final DashboardController controller;
+  final ValueChanged<String>? onNavigate;
 
-  const DashboardScreen({super.key, required this.controller});
+  const DashboardScreen({
+    super.key,
+    required this.controller,
+    this.onNavigate,
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _showThirtyDays = false;
+
   @override
   void initState() {
     super.initState();
@@ -180,6 +187,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildLineChartCard() {
+    final dayCount = _showThirtyDays ? 30 : 7;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final firstDay = today.subtract(Duration(days: dayCount - 1));
+    final dailySales = List<double>.filled(dayCount, 0);
+
+    for (final sale in widget.controller.recentSales) {
+      final saleDay = DateTime(
+        sale.createdAt.year,
+        sale.createdAt.month,
+        sale.createdAt.day,
+      );
+      final index = saleDay.difference(firstDay).inDays;
+      if (index >= 0 && index < dayCount) {
+        for (final item in sale.items) {
+          dailySales[index] += item.subtotal.minorUnits / 100.0;
+        }
+      }
+    }
+    final spots = [
+      for (var index = 0; index < dayCount; index++)
+        FlSpot(index.toDouble(), dailySales[index]),
+    ];
+    final chartTitle = _showThirtyDays ? 'Penjualan 30 Hari Terakhir' : 'Penjualan 7 Hari Terakhir';
+    final interval = _showThirtyDays ? 5.0 : 1.0;
+    final dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -189,12 +223,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Penjualan 7 Hari Terakhir', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                DropdownButton<String>(
-                  value: '7 Hari',
+                Text(chartTitle, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                DropdownButton<bool>(
+                  value: _showThirtyDays,
                   isDense: true,
-                  items: const [DropdownMenuItem(value: '7 Hari', child: Text('7 Hari'))],
-                  onChanged: (_) {},
+                  items: const [
+                    DropdownMenuItem(value: false, child: Text('7 Hari')),
+                    DropdownMenuItem(value: true, child: Text('30 Hari')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _showThirtyDays = value);
+                  },
                 ),
               ],
             ),
@@ -204,25 +243,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: LineChart(
                 LineChartData(
                   gridData: const FlGridData(show: false),
-                  titlesData: const FlTitlesData(show: true),
+                  titlesData: FlTitlesData(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= dayCount || value != index) {
+                            return const SizedBox.shrink();
+                          }
+                          final date = firstDay.add(Duration(days: index));
+                          final label = _showThirtyDays
+                              ? '${date.day}/${date.month}'
+                              : dayLabels[date.weekday % 7];
+                          return Text(label, style: const TextStyle(fontSize: 10));
+                        },
+                        interval: interval,
+                        reservedSize: 24,
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (value, meta) {
+                          return Text('${(value / 1000).toStringAsFixed(0)}k', style: const TextStyle(fontSize: 10));
+                        },
+                        reservedSize: 36,
+                      ),
+                    ),
+                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: const [
-                        FlSpot(0, 500),
-                        FlSpot(1, 750),
-                        FlSpot(2, 550),
-                        FlSpot(3, 700),
-                        FlSpot(4, 720),
-                        FlSpot(5, 950),
-                        FlSpot(6, 1240),
-                      ],
+                      spots: spots,
                       isCurved: true,
                       color: Colors.blueAccent,
                       barWidth: 3,
                       dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: Colors.blueAccent.withValues(alpha: 0.1),
+                      ),
                     ),
                   ],
+                  minY: 0,
                 ),
               ),
             ),
@@ -233,13 +299,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildDonutChartCard() {
+    final summary = widget.controller.summary;
+    final recentSales = widget.controller.recentSales;
+    
+    // Calculate category distribution from recent sales
+    final productSales = <String, double>{};
+    for (final sale in recentSales) {
+      for (final item in sale.items) {
+        final subtotal = item.subtotal.minorUnits / 100.0;
+        if (subtotal > 0) {
+          productSales[item.productName] =
+              (productSales[item.productName] ?? 0) + subtotal;
+        }
+      }
+    }
+    
+    final sections = <PieChartSectionData>[];
+    final colors = [Colors.blue, Colors.purple, Colors.orange, Colors.teal, Colors.green, Colors.red];
+    
+    if (productSales.isNotEmpty) {
+      final entries = productSales.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      final visibleEntries = entries.take(colors.length).toList();
+      final otherSales = entries.skip(colors.length).fold<double>(
+        0,
+        (total, entry) => total + entry.value,
+      );
+      if (otherSales > 0) {
+        visibleEntries.add(MapEntry('Lainnya', otherSales));
+      }
+      final total = visibleEntries.fold<double>(
+        0,
+        (sum, entry) => sum + entry.value,
+      );
+      for (var index = 0; index < visibleEntries.length; index++) {
+        final entry = visibleEntries[index];
+        sections.add(PieChartSectionData(
+          color: colors[index % colors.length],
+          value: entry.value,
+          title: '${(entry.value / total * 100).round()}%',
+          radius: 25,
+          titleStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ));
+      }
+    } else {
+      final total = summary.totalOmset.minorUnits;
+      if (total > 0) {
+        if (summary.grossProfit.minorUnits > 0) {
+          sections.add(PieChartSectionData(
+            color: Colors.green,
+            value: summary.grossProfit.minorUnits.toDouble(),
+            title: '${(summary.grossProfit.minorUnits * 100 / total).round()}%',
+            radius: 25,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ));
+        }
+        if (summary.totalHppFifo.minorUnits > 0) {
+          sections.add(PieChartSectionData(
+            color: Colors.red,
+            value: summary.totalHppFifo.minorUnits.toDouble(),
+            title: '${(summary.totalHppFifo.minorUnits * 100 / total).round()}%',
+            radius: 25,
+            titleStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ));
+        }
+      }
+    }
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Penjualan per Kategori', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+            const Text('Penjualan per Produk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
             const SizedBox(height: 16),
             SizedBox(
               height: 160,
@@ -247,12 +392,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 PieChartData(
                   sectionsSpace: 2,
                   centerSpaceRadius: 40,
-                  sections: [
-                    PieChartSectionData(color: Colors.blue, value: 60, title: '60%', radius: 25),
-                    PieChartSectionData(color: Colors.purple, value: 25, title: '25%', radius: 25),
-                    PieChartSectionData(color: Colors.orange, value: 10, title: '10%', radius: 25),
-                    PieChartSectionData(color: Colors.teal, value: 5, title: '5%', radius: 25),
-                  ],
+                  sections: sections.isEmpty 
+                      ? [
+                          PieChartSectionData(color: Colors.grey, value: 1, title: 'No Data', radius: 25),
+                        ]
+                      : sections,
                 ),
               ),
             ),
@@ -261,7 +405,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
+  
   Widget _buildStockAlertCard() {
     final alerts = [
       {'name': 'Cabai Merah Keriting', 'qty': 'Sisa 0,8 kg', 'status': 'Kritis', 'color': Colors.red},
@@ -279,7 +423,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Stock Alert', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                TextButton(onPressed: () {}, child: const Text('Lihat Semua')),
+                TextButton(
+                  onPressed: () => widget.onNavigate?.call('Inventory'),
+                  child: const Text('Lihat Semua'),
+                ),
               ],
             ),
             ListView.builder(
@@ -316,10 +463,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildQuickActions(BuildContext context) {
     final actions = [
-      {'label': 'Buat Pesanan', 'icon': Icons.add_shopping_cart, 'color': Colors.green},
-      {'label': 'Produksi Bumbu', 'icon': Icons.blender, 'color': Colors.purple},
-      {'label': 'Stok Masuk', 'icon': Icons.input, 'color': Colors.blue},
-      {'label': 'Laporan', 'icon': Icons.bar_chart, 'color': Colors.orange},
+      {'label': 'Buat Pesanan', 'icon': Icons.add_shopping_cart, 'color': Colors.green, 'destination': 'Pembelian'},
+      {'label': 'Produksi Bumbu', 'icon': Icons.blender, 'color': Colors.purple, 'destination': 'Produksi'},
+      {'label': 'Stok Masuk', 'icon': Icons.input, 'color': Colors.blue, 'destination': 'Penerimaan'},
+      {'label': 'Laporan', 'icon': Icons.bar_chart, 'color': Colors.orange, 'destination': 'Penjualan'},
     ];
 
     return Column(
@@ -332,7 +479,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return Expanded(
               child: Card(
                 child: InkWell(
-                  onTap: () {},
+                  onTap: () => widget.onNavigate?.call(act['destination'] as String),
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),

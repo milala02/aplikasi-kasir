@@ -124,9 +124,13 @@ class _POSScreenState extends State<POSScreen> {
               const SizedBox(height: 4),
               Text('Rp ${product.sellingPrice.minorUnits ~/ 100}'),
               const SizedBox(height: 4),
-              ElevatedButton(
-                onPressed: () => widget.controller.addToCart(product),
-                child: const Text('Tambah'),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => widget.controller.addToCart(product),
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Tambah'),
+                ),
               ),
             ],
           ),

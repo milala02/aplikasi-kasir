@@ -190,9 +190,18 @@ class ProcessStockOutUseCase {
           'targetScale ($targetScale) must be >= quantity scale '
           '(${quantity.scale}).');
     }
+    // Guard against overflow: max safe multiplication before int overflow
+    final diff = targetScale - quantity.scale;
+    if (diff > 9) {
+      throw ArgumentError('Scale difference too large ($diff), would overflow int');
+    }
     var factor = 1;
-    for (var i = 0; i < targetScale - quantity.scale; i++) {
+    for (var i = 0; i < diff; i++) {
       factor *= 10;
+    }
+    // Check multiplication overflow
+    if (quantity.value > (1 << 62) ~/ factor) {
+      throw ArgumentError('Quantity value too large for target scale');
     }
     return quantity.value * factor;
   }
