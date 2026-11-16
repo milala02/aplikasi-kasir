@@ -1,6 +1,6 @@
 # 🚀 Smart POS & Cashier System (Flutter)
 
-[![Flutter CI](https://github.com/milala/aplikasi-kasir/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/milala/aplikasi-kasir/actions)
+[![Flutter CI](https://github.com/milala02/aplikasi-kasir/actions/workflows/flutter_ci.yml/badge.svg)](https://github.com/milala02/aplikasi-kasir/actions)
 ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)
@@ -41,7 +41,7 @@ Repositori ini dikawal oleh alur kerja otomatisasi CI/CD untuk memastikan kualit
 ### Jalankan Lokal
 
 1. Clone repositori:
-   `git clone https://github.com/milala/aplikasi-kasir.git`
+   `git clone https://github.com/milala02/aplikasi-kasir.git`
 2. Masuk ke direktori:
    `cd aplikasi-kasir`
 3. Install dependensi:
